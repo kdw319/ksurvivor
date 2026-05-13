@@ -668,8 +668,8 @@ const mCtx = document.getElementById('minimapCanvas').getContext('2d');
 
 function resize() { 
     // 기기 해상도 비율 동적 계산 (레터박스 최소화)
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const vw = window.innerWidth || 1080;
+    const vh = window.innerHeight || 1920;
     const isPortrait = vh > vw;
     
     // 기준 픽셀(1080) 대비 유동적인 비율 적용
@@ -683,13 +683,19 @@ function resize() {
         logicalHeight = baseSize;
         logicalWidth = baseSize * (vw / vh);
     }
+    
+    // 유효성 검사 (Infinity/NaN 방지)
+    if (!isFinite(logicalWidth)) logicalWidth = baseSize;
+    if (!isFinite(logicalHeight)) logicalHeight = baseSize * 1.77;
 
     const container = document.getElementById('gameContainer');
-    container.style.width = logicalWidth + 'px';
-    container.style.height = logicalHeight + 'px';
+    if (container) {
+        container.style.width = logicalWidth + 'px';
+        container.style.height = logicalHeight + 'px';
 
-    globalScale = Math.min(vw / logicalWidth, vh / logicalHeight);
-    container.style.transform = `scale(${globalScale})`;
+        globalScale = Math.min(vw / logicalWidth, vh / logicalHeight);
+        container.style.transform = `translate(-50%, -50%) scale(${globalScale})`;
+    }
 
     gameWidth = logicalWidth; 
     gameHeight = logicalHeight; 
@@ -712,17 +718,21 @@ lCtx.fillStyle = '#1c1c24'; lCtx.fillRect(0,0,100,100);
 lCtx.strokeStyle = '#2a2a35'; lCtx.lineWidth = 2; lCtx.strokeRect(0,0,100,100);
 
 function loadSlotsFromLocal() {
-    let rawData = localStorage.getItem('op_save_slot_0');
-    if(rawData) {
-        let data = JSON.parse(rawData);
-        playerBadges = data.playerBadges || 0;
-        unlockedWeapons = data.unlockedWeapons || [];
-        permanentStats = data.permanentStats || {damage:0, cooldown:0, speed:0, maxHp:0};
-        currentStage = data.currentStage || 1;
-        maxStageReached = data.maxStageReached || 1;
-        currentOutfitId = data.currentOutfitId || 'default1';
-        statsTracking = data.statsTracking || { totalKills: 0, totalBadges: 0 };
-        achievements = data.achievements || { kills: false, stage5: false, rich: false };
+    try {
+        let rawData = localStorage.getItem('op_save_slot_0');
+        if(rawData) {
+            let data = JSON.parse(rawData);
+            playerBadges = data.playerBadges || 0;
+            unlockedWeapons = data.unlockedWeapons || [];
+            permanentStats = data.permanentStats || {damage:0, cooldown:0, speed:0, maxHp:0};
+            currentStage = data.currentStage || 1;
+            maxStageReached = data.maxStageReached || 1;
+            currentOutfitId = data.currentOutfitId || 'default1';
+            statsTracking = data.statsTracking || { totalKills: 0, totalBadges: 0 };
+            achievements = data.achievements || { kills: false, stage5: false, rich: false };
+        }
+    } catch (e) {
+        console.error("Save Load Error:", e);
     }
     loadAssets();
 }
@@ -1073,8 +1083,9 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
     ctx.fillStyle = cSkin; 
     ctx.fillRect(-2, -3, 4, 4); 
     ctx.beginPath(); 
-    ctx.roundRect(-8, -12, 16, 14, 4); 
-    ctx.fill();
+    if (ctx.roundRect) ctx.roundRect(-8, -12, 16, 14, 4); 
+    else ctx.rect(-8, -12, 16, 14);
+    ctx.fill(); 
     
     ctx.fillStyle = cEye; 
     ctx.fillRect(1, -5, 3, 2); 
@@ -1088,7 +1099,8 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
     
     ctx.fillStyle = cHair; 
     ctx.beginPath(); 
-    ctx.roundRect(-10, -14, 20, 12, 5); 
+    if (ctx.roundRect) ctx.roundRect(-10, -14, 20, 12, 5); 
+    else ctx.rect(-10, -14, 20, 12);
     ctx.fill(); 
     ctx.fillRect(-9, -14, 12, 6); 
     ctx.fillRect(1, -14, 6, 8);
