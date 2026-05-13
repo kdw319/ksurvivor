@@ -301,14 +301,25 @@
 
 <script type="module">
 // ==========================================
-// [1-A] 외부 에셋 Base64 데이터 슬롯
+// [1-A] 외부 에셋 데이터 슬롯 (URL, 파일명, Base64 모두 지원)
 // ==========================================
 const GAME_ASSETS = {
-    player: "", // 여기에 플레이어 Base64 문자열 붙여넣기
-    mob: "",    // 여기에 잡몹 Base64 문자열 붙여넣기
-    boss: ""    // 여기에 보스 Base64 문자열 붙여넣기
+    player: "", // 예: "https://.../player.png" 또는 Base64 문자열
+    mob: "",    // 예: "mob.png"
+    boss: ""    // 예: "boss.png"
 };
 const loadedImages = {};
+
+function loadAssets() {
+    for (const [key, srcData] of Object.entries(GAME_ASSETS)) {
+        if (srcData && srcData.trim() !== "") {
+            const img = new Image();
+            img.src = srcData.startsWith('data:') || srcData.startsWith('http') ? srcData : './assets/' + srcData;
+            loadedImages[key] = img;
+        }
+    }
+}
+loadAssets();
 
 // ==========================================
 // 1. Data Definitions & Meta Progression
@@ -380,7 +391,7 @@ const GameSettings = {
     },
     specialWeapons: {
         magicMic: { name: "마이크", icon: "🎤", desc: "강력한 음파로 적들을 관통합니다.", damage: 45, cooldown: 1.5, speed: 350, color: '#ff9ff3', statBonus: { type: 'damageMult', value: 0.1, label: '공격력' } },
-        smartPhone: { name: "스마트폰", icon: "📱", desc: "Causes flash explosions around you.", damage: 60, cooldown: 3.0, radius: 150, color: '#feca57', statBonus: { type: 'cooldownMult', value: -0.1, label: '쿨타임' } },
+        smartPhone: { name: "스마트폰", icon: "📱", desc: "주변에 플래시 폭발을 일으킵니다.", damage: 60, cooldown: 3.0, radius: 150, color: '#feca57', statBonus: { type: 'cooldownMult', value: -0.1, label: '쿨타임' } },
         laserPointer: { name: "레이저 포인터", icon: "🔦", desc: "빛의 속도로 적을 관통합니다.", damage: 30, cooldown: 0.8, speed: 800, color: '#ff7979', statBonus: { type: 'damageMult', value: 0.05, label: '공격력' } },
         energyDrink: { name: "에너지 드링크", icon: "🥫", desc: "주변에 강력한 에너지를 분출합니다.", damage: 80, cooldown: 4.0, radius: 180, color: '#badc58', statBonus: { type: 'speedMult', value: 0.1, label: '이동속도' } },
         studentID: { name: "학생증", icon: "🪪", desc: "플레이어 주변을 넓게 방어합니다.", damage: 15, cooldown: 0.1, radius: 130, color: '#c7ecee', statBonus: { type: 'none', value: 0, label: '' } },
@@ -431,8 +442,8 @@ const I18N = {
         saveTitle: "데이터 센터", saveDesc: "메타 프로그레션(재화, 해금 무기, 영구 스탯)을 보존합니다.", saveCloseBtn: "닫기", saveEmpty: "빈 데이터 슬롯", saveBadges: "보유 뱃지: ", saveWeapons: "해금 무기: ", saveBtn: "저장", loadBtn: "로드", saveUnit: "개", saveType: "종",
         upgradeTitle: "능력치 강화 (영구)", upgradeDesc: "획득한 뱃지로 기본 능력치를 영구적으로 강화합니다.", upg_dmg: "기본 공격력 증폭", upg_cool: "기본 쿨타임 감소", upg_spd: "기본 이동속도 증가", upg_hp: "기본 최대 체력 증가", btnMax: "최대치",
         pauseVolLbl: "사운드 음량 🔊",
-        map1: "낡은 재판소", map2: "피 묻은 보건실", map3: "폐쇄된 체육관", map4: "붉은 운동장", map5: "밤의 신주쿠 거리",
-        statsTitle: "능력치", btnPause: "일시정지 (ESC)", pauseTitle: "일시정지", pauseResume: "게임 재개", pauseExit: "로비로 나가기", levelUpTitle: "레벨 업!"
+        statsTitle: "능력치", btnPause: "일시정지 (ESC)", pauseTitle: "일시정지", pauseResume: "게임 재개", pauseExit: "로비로 나가기", levelUpTitle: "레벨 업!",
+        map1: "낡은 재판소", map2: "피 묻은 보건실", map3: "폐쇄된 체육관", map4: "붉은 운동장", map5: "밤의 신주쿠 거리"
     },
     en: {
         langBtn: "🌐 EN", title: "K-Schoolgirl Survivor", subtitle: "Bell of Turnabout",
@@ -473,7 +484,7 @@ const I18N = {
 };
 
 let gameState = 'story'; 
-let isPaused = false;
+let isPaused = false; 
 let currentStage = 1; 
 let stageTime = 0; 
 let gameSpeedMultiplier = 1.0; 
@@ -619,16 +630,13 @@ function playSFX(type) {
         gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05); osc.start(now); osc.stop(now + 0.05);
     }
     else if(type === 'perfectDash') {
-        // Punchy impact layer
-        osc.type = 'triangle'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(40, now + 0.2);
-        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25); 
-        osc.start(now); osc.stop(now + 0.25);
-
-        // High-pitch shimmer layer
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now); osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
+        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4); osc.start(now); osc.stop(now + 0.4);
         const osc2 = audioCtx.createOscillator(); osc2.connect(gain);
-        osc2.type = 'sine'; osc2.frequency.setValueAtTime(800, now); osc2.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
-        osc2.start(now); osc2.stop(now + 0.15);
-    }}
+        osc2.type = 'square'; osc2.frequency.setValueAtTime(400, now); osc2.frequency.exponentialRampToValueAtTime(10, now + 0.3);
+        osc2.start(now); osc2.stop(now + 0.3);
+    }
+}
 
 // ==========================================
 // 3. System Initialization
@@ -638,15 +646,28 @@ const ctx = canvas.getContext('2d');
 const mCtx = document.getElementById('minimapCanvas').getContext('2d');
 
 function resize() { 
-    const isPortrait = window.innerHeight > window.innerWidth;
-    const logicalWidth = isPortrait ? 1080 : 1920;
-    const logicalHeight = isPortrait ? 1920 : 1080;
+    // 기기 해상도 비율 동적 계산 (레터박스 최소화)
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const isPortrait = vh > vw;
+    
+    // 기준 픽셀(1080) 대비 유동적인 비율 적용
+    const baseSize = 1080;
+    let logicalWidth, logicalHeight;
+    
+    if (isPortrait) {
+        logicalWidth = baseSize;
+        logicalHeight = baseSize * (vh / vw);
+    } else {
+        logicalHeight = baseSize;
+        logicalWidth = baseSize * (vw / vh);
+    }
 
     const container = document.getElementById('gameContainer');
     container.style.width = logicalWidth + 'px';
     container.style.height = logicalHeight + 'px';
 
-    globalScale = Math.min(window.innerWidth / logicalWidth, window.innerHeight / logicalHeight);
+    globalScale = Math.min(vw / logicalWidth, vh / logicalHeight);
     container.style.transform = `scale(${globalScale})`;
 
     gameWidth = logicalWidth; 
@@ -685,15 +706,6 @@ function loadSlotsFromLocal() {
     loadAssets();
 }
 
-function loadAssets() {
-    ['player', 'mob', 'boss'].forEach(key => {
-        if (GAME_ASSETS[key] && GAME_ASSETS[key].length > 100) {
-            let img = new Image();
-            img.src = GAME_ASSETS[key];
-            loadedImages[key] = img;
-        }
-    });
-}
 loadSlotsFromLocal();
 
 
@@ -979,7 +991,7 @@ function drawMinimap() {
 }
 
 function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0) {
-    if (loadedImages.player && loadedImages.player.complete) {
+    if (loadedImages.player && loadedImages.player.complete && loadedImages.player.naturalWidth > 0) {
         ctx.save();
         ctx.scale(dirX * scale, scale);
         let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
@@ -1119,8 +1131,9 @@ function toggleLanguage() {
     setTxt('upgradeUIDesc', lang.upgradeDesc); 
     setTxt('upgradeUICloseBtn', lang.saveCloseBtn); 
     setTxt('upgUIOwnedText', lang.gachaOwnedText);
+    
+    // 이전에 누락되었던 텍스트 설정 복원
     setTxt('lblPauseVol', lang.pauseVolLbl);
-
     setTxt('statsTitle', lang.statsTitle);
     setTxt('pauseBtn', lang.btnPause);
     setTxt('pauseUITitle', lang.pauseTitle);
@@ -2028,7 +2041,7 @@ class Player {
 
         if(keys['shift'] && this.dashCooldownTimer <= 0 && this.dashTimer <= 0) {
             this.executeDash(dx, dy);
-            keys['shift'] = false; 
+            keys['shift'] = false; // 입력을 강제로 소모시켜 물리적 키 홀드(Hold)로 인한 프레임 단위 연타 방지
         }
 
         let currentSpeed = this.baseSpeed * this.stats.speedMult;
@@ -2134,7 +2147,7 @@ class Enemy {
         ctx.save(); ctx.translate((this.x - camera.x) | 0, (this.y - camera.y) | 0);
         
         let img = this.type === 'boss' ? loadedImages.boss : loadedImages.mob;
-        if (img && img.complete) {
+        if (img && img.complete && img.naturalWidth > 0) {
             let size = this.radius * 2.5; 
             ctx.drawImage(img, -size/2, -size + this.radius/2, size, size);
         } else {
@@ -2363,6 +2376,7 @@ function gameLoop(timestamp) {
         if (hitStopTimer > 0) {
             hitStopTimer -= rawDt;
             dt *= 0.05; 
+            let invertVal = Math.min(1, hitStopTimer * 5);
             canvas.style.filter = `brightness(${1 + hitStopTimer * 2}) contrast(1.2)`;
         } else {
             canvas.style.filter = 'none';
