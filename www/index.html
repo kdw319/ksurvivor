@@ -26,13 +26,127 @@
             transform: translate(-50%, -50%);
         }
 
-        /* Safe Area Padding for UI elements */
-        #hudLeft, #expBarContainer { padding-top: env(safe-area-inset-top); padding-left: env(safe-area-inset-left); }
-        #hudRight { padding-top: env(safe-area-inset-top); padding-right: env(safe-area-inset-right); }
-        #lobbyTopBar { padding-top: env(safe-area-inset-top); padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
-        #lobbyBottomBar, #mobileDashBtn, #minimapCanvas, #pauseBtn { padding-bottom: env(safe-area-inset-bottom); }
-        #statsPanel, #systemNoticeList { padding-right: env(safe-area-inset-right); }
+        /* 
+           [20년차 시니어 클라 가이드: Mobile UX & Dual-Layout Final Polishing]
+           1. Landscape: 사이드 여백을 80px(또는 10%)로 확장하여 기기별 제스처 및 베젤 간섭 완전 차단.
+           2. Portrait Lobby: 버튼을 2열 그리드로 배치하여 세로 공간 압축, 모든 기능 노출 보장.
+           3. Portrait HUD: 능력치 창(StatsPanel)을 상단 HUD 아래로 고정 배치하여 조작계와 겹침 방지.
+        */
+        :root {
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+            --safe-left: env(safe-area-inset-left);
+            --safe-right: env(safe-area-inset-right);
+            --interact-margin: 80px; /* 제스처 영역 회피를 위한 대폭 확장 */
+        }
 
+        #hudLeft, #hudRight, #hudCenter, #statsPanel, #inventory, #lobbyTopBar, #lobbyBottomBar, #pauseBtn, #mobileDashBtn, #minimapCanvas, #systemNoticeList {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- Landscape Mode (가로: 터치 안정성 최우선) --- */
+        @media screen and (orientation: landscape) {
+            #lobbyTopBar { 
+                top: calc(15px + var(--safe-top)); 
+                left: var(--safe-left); 
+                right: var(--safe-right);
+                padding: 0 var(--interact-margin);
+            }
+            #hudLeft { 
+                top: calc(25px + var(--safe-top)); 
+                left: max(var(--interact-margin), calc(25px + var(--safe-left))); 
+            }
+            #hudRight { 
+                top: calc(25px + var(--safe-top)); 
+                right: max(var(--interact-margin), calc(25px + var(--safe-right))); 
+            }
+            #pauseBtn { 
+                bottom: calc(30px + var(--safe-bottom)); 
+                right: max(var(--interact-margin), calc(30px + var(--safe-right))); 
+            }
+            #mobileDashBtn { 
+                bottom: calc(120px + var(--safe-bottom)); 
+                right: max(var(--interact-margin), calc(40px + var(--safe-right))); 
+            }
+            #minimapCanvas { 
+                bottom: calc(30px + var(--safe-bottom)); 
+                left: max(var(--interact-margin), calc(30px + var(--safe-left))); 
+            }
+            #inventory { top: 220px; left: max(var(--interact-margin), calc(30px + var(--safe-left))); }
+            #statsPanel { top: 200px; right: max(var(--interact-margin), calc(30px + var(--safe-right))); }
+            #lobbyBottomBar { bottom: calc(40px + var(--safe-bottom)); flex-direction: row; }
+            #systemNoticeList { top: 380px; right: max(var(--interact-margin), var(--safe-right)); }
+        }
+
+        /* --- Portrait Mode (세로: 가시성 및 공간 효율 최우선) --- */
+        @media screen and (orientation: portrait) {
+            #lobbyTopBar { 
+                top: calc(45px + var(--safe-top)); 
+                flex-direction: row; 
+                justify-content: space-between; 
+                padding: 0 20px; 
+                width: 100%; 
+                box-sizing: border-box;
+            }
+            #lobbyTitle { top: 180px; }
+            #hudLeft { top: calc(35px + var(--safe-top)); left: 20px; }
+            #hudRight { top: calc(35px + var(--safe-top)); right: 20px; }
+            
+            /* 세로 모드 HUD 배치: 좌측 인벤토리, 우측 능력치 상단 고정 */
+            #inventory { top: 180px; left: 20px; flex-direction: row; flex-wrap: wrap; max-width: 50%; }
+            #statsPanel { 
+                top: 180px; right: 20px; bottom: auto;
+                min-width: 120px; padding: 10px; font-size: 11px;
+                background: rgba(0,0,0,0.6);
+            }
+
+            #lobbyBottomBar { 
+                bottom: calc(40px + var(--safe-bottom)); 
+                display: grid; grid-template-columns: 1fr 1fr; 
+                gap: 10px; padding: 0 20px; width: 100%; box-sizing: border-box;
+            }
+            #lobbyBottomBar .btn { margin: 0; width: 100%; padding: 12px 5px; font-size: 0.9rem; }
+            #btnStartLobby { grid-column: span 2; padding: 18px !important; font-size: 1.1rem !important; }
+
+            #mobileDashBtn { bottom: 180px; right: 30px; }
+            #pauseBtn { bottom: 100px; right: 30px; }
+            #minimapCanvas { bottom: 40px; left: 30px; width: 120px; height: 120px; }
+        }
+
+        #gameCanvas { display: block; width: 100%; height: 100%; touch-action: none; transition: filter 0.1s; }
+
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(0, 0, 0, 0.8); color: white; z-index: 20; transition: opacity 0.3s;
+        }
+
+        .hidden { display: none !important; }
+
+        .panel {
+            background: #2a2a35; border: 4px solid #b89947; border-radius: 8px; padding: 30px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            max-width: 600px; width: 90%; position: relative;
+        }
+
+        h1, h2 { font-family: 'Press Start 2P', 'Noto Sans KR', cursive; color: #e0d0a0; text-shadow: 2px 2px 0 #000; margin-bottom: 20px; line-height: 1.5; }
+
+        .btn {
+            background: #b89947; color: #111; border: none; padding: 15px 30px;
+            font-size: 1.2rem; font-weight: bold; cursor: pointer; margin: 10px; border-radius: 4px;
+            font-family: 'Noto Sans KR', sans-serif; transition: transform 0.1s, background 0.2s;
+            pointer-events: auto; /* 명시적으로 활성화 */
+        }
+        .btn.primary { background: #ff6b6b; color: #fff; }
+        .btn.primary:hover { background: #ff4757; }
+        .btn:hover { background: #d4b86a; transform: scale(1.05); }
+        .btn:active { transform: scale(0.95); }
+        .btn:disabled { background: #555; color: #888; cursor: not-allowed; transform: none; border-color: #444; }
+
+        #lobbyTopBar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-start; z-index: 25; pointer-events: none; }
+        .currency-badge { background: rgba(0,0,0,0.6); border: 2px solid #ffb142; padding: 10px 20px; border-radius: 20px; font-size: 18px; color: white; font-weight: bold; display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+        #lobbyBottomBar { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
+        .lobby-title { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
         #gameCanvas { display: block; width: 100%; height: 100%; touch-action: none; transition: filter 0.1s; }
 
         .overlay {
@@ -385,11 +499,11 @@ const GameSettings = {
     rhythm: { beatInterval: 1.5, perfectWindow: 0.15, perfectDamage: 300 },
     spotlight: { spawnInterval: 40.0, reqTime: 10.0, penalty: 0.5, startRadius: 600, endRadius: 180 },
     maps: [
-        { id: 'map1', bg: '#2c1e16', line: '#1a110c', type: 'grid', lineWidth: 2 },
-        { id: 'map2', bg: '#e0e0e0', line: '#b2bec3', type: 'tile', decor: 'blood', lineWidth: 1 },
-        { id: 'map3', bg: '#d1a054', line: '#f8efba', type: 'court', lineWidth: 4 },
-        { id: 'map4', bg: '#b33939', line: '#ffb8b8', type: 'dirt', lineWidth: 2 },
-        { id: 'map5', bg: '#2f3640', line: '#fbc531', type: 'street', lineWidth: 5 }
+        { id: 'map1', bg: '#1a110c', line: '#0d0805', type: 'grid', lineWidth: 2 },
+        { id: 'map2', bg: '#242b33', line: '#1a1f24', type: 'tile', decor: 'blood', lineWidth: 1 },
+        { id: 'map3', bg: '#5d4d33', line: '#3d3221', type: 'court', lineWidth: 4 },
+        { id: 'map4', bg: '#4d1616', line: '#2d0d0d', type: 'dirt', lineWidth: 2 },
+        { id: 'map5', bg: '#1e272e', line: '#0a0d0f', type: 'street', lineWidth: 5 }
     ],
     weapons: {
         chalk: { name: "분필", icon: "✏️", desc: "가장 가까운 적에게 투사체를 던집니다.", damage: 20, cooldown: 1.0, speed: 400, color: '#fff', statBonus: { type: 'damageMult', value: 0.05, label: '공격력' } },
@@ -1034,6 +1148,20 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
 
     ctx.save(); 
     ctx.scale(scale * dirX, scale); 
+
+    // [2.5D R&D] 캐릭터 발밑 동적 그림자 (Depth 효과)
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // [2.5D R&D] 피격 또는 이동 시 미세한 외곽 광원 효과 (Rim-light)
+    if (animState === 'run' || animState === 'dash') {
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+    }
     
     let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
     const { cSkin, cHair, cHairShadow, cDress, cDressDark, cEye } = outfit.colors;
@@ -2224,8 +2352,7 @@ class Enemy {
                 playSFX('bossKill');
                 setTimeout(() => triggerStageClear(), 1500); 
             } else if (this.type === 'midboss') {
-                hitStopTimer = 0.1; 
-                screenShake = 20;
+                // [Logic Fix] 중간보스 사망 시 효과 제거
             }
         }
     }
