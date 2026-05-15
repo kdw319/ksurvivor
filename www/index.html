@@ -709,6 +709,7 @@ let bgPattern = null;
 let lobbyPattern = null;
 let currentBgPattern = null;
 let gameLoopId = null;
+let currentBgmAudio = null;
 
 // ==========================================
 // 2. Audio System
@@ -724,29 +725,29 @@ function initAudio() {
 }
 
 function startBGM() {
-    if(!audioCtx) return; 
-    if(bgmInterval) clearInterval(bgmInterval);
-    const notes = [146.83, 164.81, 174.61, 220.00, 174.61, 164.81]; 
-    let noteIdx = 0;
-    
-    bgmInterval = setInterval(() => {
-        if(gameState !== 'playing' || isPaused || masterVolume <= 0) return;
-        const osc = audioCtx.createOscillator(); 
-        const gain = audioCtx.createGain();
-        osc.connect(gain); 
-        gain.connect(masterGainNode);
-        osc.type = 'triangle'; 
-        osc.frequency.setValueAtTime(notes[noteIdx], audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.05, audioCtx.currentTime); 
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-        osc.start(audioCtx.currentTime); 
-        osc.stop(audioCtx.currentTime + 0.3);
-        noteIdx = (noteIdx + 1) % notes.length;
-    }, 400);
+    if(!audioCtx) initAudio();
+    if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    stopBGM();
+    const bgmFile = (gameState === 'playing') ? 'battle_bgm.mp3' : 'lobby_bgm.mp3';
+    currentBgmAudio = new Audio('./assets/bgm/' + bgmFile);
+    currentBgmAudio.loop = true;
+    currentBgmAudio.volume = masterVolume * 0.55;
+    try {
+        const source = audioCtx.createMediaElementSource(currentBgmAudio);
+        source.connect(masterGainNode);
+        currentBgmAudio.play().catch(e => console.log("BGM Blocked:", e));
+    } catch(e) {
+        currentBgmAudio.play().catch(ex => console.log("BGM Error:", ex));
+    }
 }
 
-function stopBGM() { 
-    if(bgmInterval) clearInterval(bgmInterval); 
+function stopBGM() {
+    if(bgmInterval) clearInterval(bgmInterval);
+    if(currentBgmAudio) {
+        currentBgmAudio.pause();
+        currentBgmAudio.currentTime = 0;
+        currentBgmAudio = null;
+    }
 }
 
 function changeVolume(val) {
@@ -1410,7 +1411,7 @@ function togglePause() {
 
 function returnToLobby() {
     if (gameState === 'gameover') currentStage = 1; else if (gameState === 'clear') currentStage++; 
-    gameState = 'lobby'; isPaused = false; stopBGM(); gameSpeedMultiplier = 1.0;
+    gameState = 'lobby'; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
     ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
     let orbPocketUI = document.getElementById('orbPocketUI');
     if (orbPocketUI) {
