@@ -580,7 +580,9 @@ const I18N = {
         tut_title: "튜토리얼", tut_close: "닫기", tut_prev: "이전", tut_next: "다음",
         tut_p1_t: "조작법", tut_p1_d: "WASD / 방향키 : 이동<br>SHIFT : 대쉬 (박자에 맞춰!)",
         tut_p2_t: "성장 시스템", tut_p2_d: "스테이지에서 획득한 뱃지로 '능력치 강화' 메뉴에서 영구적인 스탯 업이 가능합니다.",
-        tut_p3_t: "가챠 및 무기", tut_p3_d: "가챠를 통해 특수 무기를 해금하세요. 해금된 무기는 게임 중 레벨업 풀에 1.5배 확률로 등장합니다!"
+        tut_p3_t: "가챠 및 무기", tut_p3_d: "가챠를 통해 특수 무기를 해금하세요. 해금된 무기는 게임 중 레벨업 풀에 1.5배 확률로 등장합니다!",
+        orb_get: "⚖️ 심판의 구슬 획득!", orb_fury: "분노의 심판 (공격력)", orb_life: "생명의 심판 (체력)", orb_wind: "신속의 심판 (이동속도)",
+        syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)"
     },
     en: {
         langBtn: "🌐 EN", title: "Last Girl Survivor", subtitle: "Bell of Turnabout",
@@ -620,7 +622,9 @@ const I18N = {
         tut_title: "Tutorial", tut_close: "Close", tut_prev: "Prev", tut_next: "Next",
         tut_p1_t: "Controls", tut_p1_d: "WASD / Arrows : Move<br>SHIFT : Dash (Timed to beat!)",
         tut_p2_t: "Growth", tut_p2_d: "Badges from stages can be used in the 'Upgrade' menu for permanent stat boosts.",
-        tut_p3_t: "Gacha", tut_p3_d: "Unlock special weapons via Gacha. Unlocked weapons appear in the level-up pool with 1.5x weight!"
+        tut_p3_t: "Gacha", tut_p3_d: "Unlock special weapons via Gacha. Unlocked weapons appear in the level-up pool with 1.5x weight!",
+        orb_get: "⚖️ Verdict Orb Acquired!", orb_fury: "Verdict of Fury (ATK)", orb_life: "Verdict of Life (HP)", orb_wind: "Verdict of Wind (SPD)",
+        syn_triple: "Transcendent Synergy (25%)", syn_double: "Resonance Synergy (15%)", syn_mix: "Harmonious Verdict (10%)"
     }
 };
 
@@ -630,6 +634,16 @@ const TUTORIAL_DATA = [
     { icon: "🎁", titleKey: "tut_p3_t", descKey: "tut_p3_d" }
 ];
 let currentTutPage = 0;
+
+let stageKills = 0;
+let stageMarblesDropped = 0;
+let verdictOrbs = []; // Current orbs on field
+const MAX_MARBLES_PER_STAGE = 6;
+const MARBLE_TYPES = [
+    { type: 'red', color: '#ff4757', glow: 'rgba(255, 71, 87, 0.5)', icon: '🔴' },
+    { type: 'yellow', color: '#f1c40f', glow: 'rgba(241, 196, 15, 0.5)', icon: '🟡' },
+    { type: 'green', color: '#2ed573', glow: 'rgba(46, 213, 115, 0.5)', icon: '🟢' }
+];
 
 let gameState = 'story'; 
 let isPaused = false; 
@@ -1457,6 +1471,14 @@ function returnToLobby() {
     if (gameState === 'gameover') currentStage = 1; else if (gameState === 'clear') currentStage++; 
     gameState = 'lobby'; isPaused = false; stopBGM(); gameSpeedMultiplier = 1.0;
     ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
+    let orbPocketUI = document.getElementById('orbPocketUI');
+    if (orbPocketUI) {
+        orbPocketUI.innerHTML = player.marblePocket.map(t => {
+            const data = MARBLE_TYPES.find(m => t === m.type);
+            return `<span style="text-shadow: 0 0 10px ${data.glow};">${data.icon}</span>`;
+        }).join('');
+    }
+
     let speedBtn = document.getElementById('speedBtn'); if (speedBtn) { speedBtn.innerText = '1X'; speedBtn.style.color = '#e0d0a0'; }
     ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove('hidden'); });
     updateLobbyCurrency();
@@ -1491,6 +1513,7 @@ function nextStage() {
 
 function resetStage(fullReset = false) {
     stageTime = 0; enemies = []; projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = [];
+    verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0;
     isStageCleared = false;
     hasSpawnedMidBoss = false;
     hasSpawnedFinalBoss = false;
@@ -2819,6 +2842,60 @@ Object.assign(window, {
 if (typeof gameLoopId !== 'undefined' && gameLoopId) cancelAnimationFrame(gameLoopId);
 startStory();
 gameLoopId = requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>       let zx = gameWidth / 2 - zoneWidth / 2;
+                ctx.fillStyle = 'rgba(241, 196, 15, 0.4)';
+                ctx.fillRect(zx, by, zoneWidth, barHeight);
+
+                let cx = gameWidth / 2;
+                ctx.fillStyle = '#f1c40f';
+                let lineH = barHeight * beatScale;
+                ctx.fillRect(cx - 2, by - (lineH - barHeight)/2, 4, lineH);
+
+                let progress = (stageTime % GameSettings.rhythm.beatInterval) / GameSettings.rhythm.beatInterval;
+                let distFromCenter = Math.min(progress, 1.0 - progress) * 2;
+                let cursorX1 = cx - (barWidth / 2) * distFromCenter;
+                let cursorX2 = cx + (barWidth / 2) * distFromCenter;
+
+                ctx.fillStyle = '#fff';
+                ctx.shadowColor = '#fff';
+                ctx.shadowBlur = 5;
+                ctx.fillRect(cursorX1 - 2, by - 5, 4, barHeight + 10);
+                ctx.fillRect(cursorX2 - 2, by - 5, 4, barHeight + 10);
+
+                ctx.restore();
+            }
+        }
+    } catch(e) { 
+        console.error("GameLoop Safe Error Catch:", e); 
+    }
+    
+    gameLoopId = requestAnimationFrame(gameLoop);
+}
+
+// ==========================================
+// 10. 명시적 전역 API 내보내기
+// ==========================================
+Object.assign(window, {
+    toggleLanguage, changeVolume, toggleGameSpeed, startStory, playStoryStep,
+    nextStoryStep, skipStory, togglePause, returnToLobby, startGame, triggerStageClear,
+    nextStage, resetStage, triggerLevelUp, openGacha, closeGacha, rollGacha,
+    openUpgrade, closeUpgrade, doUpgrade, renderUpgradeList, openSaveLoad, closeSaveLoad,
+    renderSaveSlots, saveToSlot, loadFromSlot, openCloset, closeCloset, equipOutfit,
+    renderClosetList, openAchieve, closeAchieve, renderAchieveList,
+    openTutorial, closeTutorial, nextTutorialPage, prevTutorialPage, renderTutorialPage
+});
+
+// 게임 부팅
+if (typeof gameLoopId !== 'undefined' && gameLoopId) cancelAnimationFrame(gameLoopId);
+startStory();
+gameLoopId = requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>mationFrame(gameLoop);
 
 </script>
 </body>
