@@ -428,7 +428,6 @@
             <div id="storyText" class="typewriter-text"></div>
             <button id="storyNextBtn" class="btn primary hidden" onclick="window.nextStoryStep()">다음</button>
         </div>
-        <button id="storyLangBtn" class="btn" style="position: absolute; top: 20px; left: 20px; font-size: 14px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #555;" onclick="window.toggleLanguage()">🌐 KO</button>
         <button id="storySkipBtn" class="btn skip-btn" onclick="window.skipStory()">Skip</button>
     </div>
 
@@ -565,12 +564,7 @@ const I18N = {
         btnAchieveLobby: "도전과제", achieveTitle: "도전과제 (Achievements)", achieveDesc: "특정 조건을 만족하여 칭호를 획득하세요.",
         outfitEquipped: "착용 중", outfitEquipBtn: "착용하기", outfitReq: "해금: STAGE",
         speech: ["빨리 시작하자!", "가챠 돌릴 시간이야!", "대역전의 종소리가 울린다!", "지각하겠어!"],
-        storyLines: [ 
-            "수학여행 중 끔찍한 교통사고를 당했다. 분명 그게 마지막 기억이었는데...", 
-            "눈을 떠보니 차가운 법정 바닥이었다. 내 이름은 '윤이솔'. 모든 것이 격리된 실험체.",
-            "사고는 조작된 기억일 뿐인가? 이 기이한 재판소의 진실이 나를 기다리고 있다.",
-            "기억의 조각을 되찾고 나를 가둔 이들에게 복수하기 위해, 나는 최후의 소녀가 되겠다!" 
-        ],
+        storyLines: [ "수학여행의 들뜬 기분도 잠시...", "눈을 떠보니 기이한 재판소 한가운데였다.", "사방에서 조여오는 기계 인형들.", "살아남으려면... 가진 것을 무기로 삼아야 해!" ],
         storyNext: "다음 (Click)", storySkip: "Skip",
         w_chalk: { name: "분필", desc: "가장 가까운 적에게 투사체를 던집니다.", stat: "공격력" },
         w_textbook: { name: "교과서", desc: "주변을 맴도는 마법의 교과서.", stat: "쿨타임" },
@@ -612,12 +606,7 @@ const I18N = {
         btnAchieveLobby: "Achievements", achieveTitle: "Achievements", achieveDesc: "Meet specific conditions to earn titles.",
         outfitEquipped: "Equipped", outfitEquipBtn: "Equip", outfitReq: "Req: STAGE",
         speech: ["Let's go!", "Gacha time!", "The bell tolls!", "I'm late!"],
-        storyLines: [ 
-            "A terrible car accident during the school trip. That was my last memory...", 
-            "But I woke up on a cold courthouse floor. My name is 'Yoon Isul'. An isolated experiment.",
-            "Was the accident just a fabricated memory? The truth of this trial awaits.",
-            "To reclaim my past and take revenge, I will become the Last Girl!" 
-        ],
+        storyLines: [ "The excitement of the school trip was fleeting...", "I woke up in the middle of a bizarre courthouse.", "Mechanical dolls closing in from all sides.", "To survive... I must use whatever I have as a weapon!" ],
         storyNext: "Next (Click)", storySkip: "Skip",
         w_chalk: { name: "Chalk", desc: "Throws chalk at the nearest enemy.", stat: "ATK" },
         w_textbook: { name: "Textbook", desc: "A magic textbook orbiting you.", stat: "Cooldown" },
@@ -721,7 +710,6 @@ let bgPattern = null;
 let lobbyPattern = null;
 let currentBgPattern = null;
 let gameLoopId = null;
-let currentBgmAudio = null;
 
 // ==========================================
 // 2. Audio System
@@ -737,32 +725,50 @@ function initAudio() {
 }
 
 function startBGM() {
-    if(!audioCtx) return;
-    stopBGM();
+    if(!audioCtx) return; 
+    if(bgmInterval) clearInterval(bgmInterval);
+    const notes = [146.83, 164.81, 174.61, 220.00, 174.61, 164.81]; 
+    let noteIdx = 0;
     
-    // [BGM Selection] Switch between lobby and battle music
-    const bgmFile = (gameState === 'playing') ? 'battle_bgm.mp3' : 'lobby_bgm.mp3';
-    currentBgmAudio = new Audio('./assets/bgm/' + bgmFile);
-    currentBgmAudio.loop = true;
-    currentBgmAudio.volume = masterVolume * 0.55; 
-    
-    try {
-        const source = audioCtx.createMediaElementSource(currentBgmAudio);
-        source.connect(masterGainNode);
-        currentBgmAudio.play().catch(e => console.log("BGM Autoplay block:", e));
-    } catch(e) {
-        // Fallback for re-using source if needed, though new Audio() usually needs new source
-        currentBgmAudio.play().catch(ex => console.log("BGM Play Error:", ex));
-    }
+    bgmInterval = setInterval(() => {
+        if(gameState !== 'playing' || isPaused || masterVolume <= 0) return;
+        const osc = audioCtx.createOscillator(); 
+        const gain = audioCtx.createGain();
+        osc.connect(gain); 
+        gain.connect(masterGainNode);
+        osc.type = 'triangle'; 
+        osc.frequency.setValueAtTime(notes[noteIdx], audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime); 
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.start(audioCtx.currentTime); 
+        osc.stop(audioCtx.currentTime + 0.3);
+        noteIdx = (noteIdx + 1) % notes.length;
+    }, 400);
 }
+
 function stopBGM() { 
     if(bgmInterval) clearInterval(bgmInterval); 
-    if(currentBgmAudio) {
-        currentBgmAudio.pause();
-        currentBgmAudio.currentTime = 0;
-        currentBgmAudio = null;
-    }
-} 
+}
+
+function changeVolume(val) {
+    masterVolume = parseFloat(val);
+    if(masterGainNode) masterGainNode.gain.value = masterVolume;
+    const lVol = document.getElementById('lobbyVol'); if(lVol && lVol.value !== val) lVol.value = val;
+    const pVol = document.getElementById('pauseVol'); if(pVol && pVol.value !== val) pVol.value = val;
+}
+
+function playSFX(type) {
+    if(!audioCtx || isPaused || masterVolume <= 0) return;
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(masterGainNode);
+    const now = audioCtx.currentTime;
+    
+    const pitch = 0.9 + Math.random() * 0.2;
+
+    if(type === 'hit') { 
+        osc.type = 'square'; osc.frequency.setValueAtTime(150 * pitch, now); osc.frequency.exponentialRampToValueAtTime(40 * pitch, now + 0.1); 
+        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); 
+    } 
     else if(type === 'shoot') { 
         osc.type = 'triangle'; osc.frequency.setValueAtTime(600 * pitch, now); osc.frequency.exponentialRampToValueAtTime(200 * pitch, now + 0.1); 
         gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); 
@@ -1185,7 +1191,6 @@ function drawMinimap() {
 
 function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
     let imgKey = 'player_idle';
-    
     if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
     else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
     else if (animState === 'dash') imgKey = 'player_dash';
@@ -1195,38 +1200,26 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
         else imgKey = 'player_down';
     }
     else if (['throw', 'swing', 'cast'].includes(animState)) {
-        // [Directional Combat] Use current direction for attacks instead of popping to front
         if (animDir === 'up') imgKey = 'player_up';
         else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
-        else imgKey = 'player_idle';
+        else imgKey = 'player_down'; 
     }
 
     const targetImg = loadedImages[imgKey] || loadedImages['player_idle'];
 
-    // [Visual] Shared Shadow
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.beginPath();
-    ctx.ellipse(0, 2, 10 * scale, 5 * scale, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
     if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
         ctx.save();
         let flipX = 1;
-        // [Left Flip Fix]
-        if (imgKey === 'player_left') flipX = -1;
+        if (imgKey === 'player_left') flipX = -1; 
         if (imgKey === 'player_dash' && dirX === -1) flipX = -1;
-        
         ctx.scale(scale * flipX, scale);
+        
         let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
         let w = 64; let h = 64; 
         ctx.drawImage(targetImg, -w/2, -h + 10 + bobY, w, h);
         ctx.restore();
         return; 
     }
-    
-    // Procedural Fallback
     ctx.save(); ctx.scale(scale * dirX, scale);
     ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
     let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
@@ -1243,17 +1236,6 @@ function toggleLanguage() {
     
     const setTxt = (id, text) => { let e = document.getElementById(id); if(e) e.innerText = text; };
     const setHtml = (id, html) => { let e = document.getElementById(id); if(e) e.innerHTML = html; };
-    
-    setTxt('storyLangBtn', lang.langBtn);
-    setTxt('storySkipBtn', lang.storySkip);
-    setTxt('storyNextBtn', lang.storyNext);
-
-    if (gameState === 'story') {
-        const textEl = document.getElementById('storyText');
-        if (textEl && !isTyping) {
-            textEl.innerHTML = lang.storyLines[storyStep];
-        }
-    }
 
     setTxt('langBtn', lang.langBtn); 
     setHtml('lobbyTitleText', `${lang.title}<br><span id="lobbySubtitle" style="font-size:1.2rem; color:#ccc;">${lang.subtitle}</span>`);
@@ -1424,7 +1406,7 @@ function togglePause() {
 
 function returnToLobby() {
     if (gameState === 'gameover') currentStage = 1; else if (gameState === 'clear') currentStage++; 
-    gameState = 'lobby'; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
+    gameState = 'lobby'; isPaused = false; stopBGM(); gameSpeedMultiplier = 1.0;
     
     ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI'].forEach(id => { 
         let el = document.getElementById(id); if(el) el.classList.add('hidden'); 
@@ -2195,8 +2177,6 @@ class Player {
 
         this.dashTimer = GameSettings.player.dashDuration; 
         this.invincibleTimer = GameSettings.player.dashDuration;
-        this.animState = 'dash';
-        this.animTimer = GameSettings.player.dashDuration;
         
         this.dashDir.x = (dx === 0 && dy === 0) ? this.dirX : dx; 
         this.dashDir.y = (dx === 0 && dy === 0) ? 0 : dy;
@@ -2238,29 +2218,13 @@ class Player {
         
         if (joystick.active) { dx = joystick.dx; dy = joystick.dy; if (dx < 0) this.dirX = -1; else if (dx > 0) this.dirX = 1; }
         
-                let moveMag = Math.hypot(dx, dy);
-        if(moveMag > 0.05) {
+        let moveMag = Math.hypot(dx, dy);
+        if(moveMag > 0) {
             dx /= moveMag; dy /= moveMag;
             this.aimX = dx; this.aimY = dy;
-            
-            // [Stable Directional Fix]
-            if (Math.abs(dx) > 0.4) {
-                this.animDir = 'side';
-            } else if (dy < -0.3) {
-                this.animDir = 'up';
-            } else if (dy > 0.3) {
-                this.animDir = 'down';
-            }
         }
 
-        if (this.animTimer <= 0) { 
-            if (moveMag > 0.1) {
-                this.animState = 'run';
-            } else {
-                this.animState = 'idle';
-                this.animDir = 'down'; // Stop = Face Front
-            }
-        }
+        if (this.animTimer <= 0) { this.animState = (moveMag > 0) ? 'run' : 'idle'; }
 
         if(keys['shift'] && this.dashCooldownTimer <= 0 && this.dashTimer <= 0) {
             this.executeDash(dx, dy);
