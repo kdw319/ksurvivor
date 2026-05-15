@@ -1488,7 +1488,7 @@ function startGame() {
     initAudio(); 
     let bubble = document.getElementById('speechBubble'); if(bubble) bubble.style.opacity = 0;
     ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
-    ['hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'pauseBtn', 'mobileDashBtn'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove('hidden'); });
+    ['hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove('hidden'); });
     let synList = document.getElementById('systemNoticeList'); if(synList) synList.innerHTML = ''; 
     resetStage(true); 
     lastTime = performance.now(); gameState = 'playing'; isPaused = false; startBGM(); 
@@ -2891,6 +2891,15 @@ Object.assign(window, {
 // 게임 부팅
 if (typeof gameLoopId !== 'undefined' && gameLoopId) cancelAnimationFrame(gameLoopId);
 startStory();
+gameLoopId = requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>mationFrame(gameLoop);
+
+</script>
+</body>
+</html>();
 gameLoopId = requestAnimationFrame(gameLoop);
 
 </script>
