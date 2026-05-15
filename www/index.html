@@ -438,9 +438,14 @@
 // [1-A] 외부 에셋 데이터 슬롯 (URL, 파일명, Base64 모두 지원)
 // ==========================================
 const GAME_ASSETS = {
-    player: "", // 예: "https://.../player.png" 또는 Base64 문자열
-    mob: "",    // 예: "mob.png"
-    boss: ""    // 예: "boss.png"
+    player_idle: "character_idle.webp", 
+    player_down: "character_front_walk_walk_down.webp",
+    player_up: "character_back_walk_walk_up.webp",
+    player_side: "character_right_walk_walk_right.webp",
+    player_hurt: "character_hurt.webp",
+    player_attack: "character_attack.webp",
+    player_death: "character_death.webp",
+    mob: "", boss: ""    
 };
 const loadedImages = {};
 
@@ -1174,13 +1179,25 @@ function drawMinimap() {
     mCtx.fillRect(center - 2, center - 2, 4, 4);
 }
 
-function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0) {
-    if (loadedImages.player && loadedImages.player.complete && loadedImages.player.naturalWidth > 0) {
+function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
+    let imgKey = 'player_idle';
+    if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
+    else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
+    else if (animState === 'run' || animState === 'dash') {
+        if (animDir === 'up') imgKey = 'player_up';
+        else if (animDir === 'side') imgKey = 'player_side';
+        else imgKey = 'player_down';
+    }
+    else if (['throw', 'swing', 'cast'].includes(animState)) imgKey = 'player_attack';
+
+    const targetImg = loadedImages[imgKey] || loadedImages['player_idle'];
+
+    if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
         ctx.save();
         ctx.scale(dirX * scale, scale);
         let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
-        let w = 48; let h = 48; 
-        ctx.drawImage(loadedImages.player, -w/2, -h + 10 + bobY, w, h);
+        let w = 64; let h = 64; 
+        ctx.drawImage(targetImg, -w/2, -h + 10 + bobY, w, h);
         ctx.restore();
         return; 
     }
@@ -1204,90 +1221,15 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
     
     let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
     const { cSkin, cHair, cHairShadow, cDress, cDressDark, cEye } = outfit.colors;
-    let bobY = 0, armAngle = 0, legSwing = 0;
-    
-    if (animState === 'idle') { 
-        bobY = Math.sin(performance.now() * 0.005) * 1.5; 
-    } else if (animState === 'run') { 
-        bobY = Math.abs(Math.sin(performance.now() * 0.01)) * -3; 
-        legSwing = Math.sin(performance.now() * 0.015) * 6; 
-        armAngle = Math.sin(performance.now() * 0.015) * 0.5; 
-    } else if (animState === 'throw') { 
-        armAngle = -Math.PI / 2 + (animTimer * 2); 
-    } else if (animState === 'swing') { 
-        armAngle = -Math.PI + (animTimer * 5); 
-    } else if (animState === 'cast') { 
-        armAngle = -Math.PI / 1.5; 
-        bobY = -2; 
-    }
-
+    let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
     ctx.translate(0, bobY);
-    
-    ctx.save(); 
-    ctx.translate(2, -8); 
-    ctx.rotate(animState === 'cast' ? armAngle : -armAngle); 
-    ctx.fillStyle = cSkin; 
-    ctx.fillRect(-2, 0, 4, 10); 
-    ctx.fillStyle = cDressDark; 
-    ctx.fillRect(-2.5, -2, 5, 6); 
-    ctx.restore();
-    
-    ctx.fillStyle = cSkin; 
-    ctx.fillRect(1 - legSwing*0.5, 0, 4, 14); 
-    ctx.fillRect(-3 + legSwing*0.5, 0, 4, 15);
-    
-    ctx.fillStyle = cDress; 
-    ctx.fillRect(-6, -14, 12, 10); 
-    ctx.beginPath(); 
-    ctx.moveTo(-6, -4); ctx.lineTo(6, -4); ctx.lineTo(8, 6); ctx.lineTo(3, 6); ctx.lineTo(0, -2); ctx.lineTo(-4, 8); ctx.lineTo(-7, 4); 
-    ctx.fill();
-    
-    ctx.fillStyle = cDressDark; 
-    ctx.fillRect(4, -4, 2, 8); 
-    ctx.fillRect(-6, -4, 2, 10);
-    
-    ctx.translate(0, -14); 
     ctx.fillStyle = cSkin; 
     ctx.fillRect(-2, -3, 4, 4); 
     ctx.beginPath(); 
-    if (ctx.roundRect) ctx.roundRect(-8, -12, 16, 14, 4); 
-    else ctx.rect(-8, -12, 16, 14);
+    if (ctx.roundRect) ctx.roundRect(-8, -26, 16, 14, 4); 
+    else ctx.rect(-8, -26, 16, 14);
     ctx.fill(); 
-    
-    ctx.fillStyle = cEye; 
-    ctx.fillRect(1, -5, 3, 2); 
-    ctx.fillStyle = '#fff'; 
-    ctx.fillRect(1.5, -5, 1, 1);
-    
-    ctx.fillStyle = '#2d3436'; 
-    ctx.fillRect(0, -6, 5, 1); 
-    ctx.fillStyle = 'rgba(255, 100, 100, 0.3)'; 
-    ctx.fillRect(2, -2, 3, 2);
-    
-    ctx.fillStyle = cHair; 
-    ctx.beginPath(); 
-    if (ctx.roundRect) ctx.roundRect(-10, -14, 20, 12, 5); 
-    else ctx.rect(-10, -14, 20, 12);
-    ctx.fill(); 
-    ctx.fillRect(-9, -14, 12, 6); 
-    ctx.fillRect(1, -14, 6, 8);
-    
-    ctx.fillStyle = cHairShadow; 
-    ctx.fillRect(-10, -4, 4, 8); 
-    ctx.fillRect(6, -4, 3, 6);
-    
-    ctx.restore(); 
-    
-    ctx.save(); 
-    ctx.translate(0, bobY - 12); 
-    ctx.rotate(armAngle); 
-    ctx.fillStyle = cSkin; 
-    ctx.fillRect(-2, 0, 4, 12); 
-    ctx.fillStyle = cDress; 
-    ctx.fillRect(-2.5, -2, 5, 6); 
     ctx.restore();
-    
-    ctx.restore(); 
 }
 
 // ==========================================
@@ -1866,6 +1808,34 @@ class Spotlight {
     }
 }
 
+class VerdictOrb {
+    constructor(x, y, data) {
+        this.x = x; this.y = y;
+        this.type = data.type; this.color = data.color; this.glow = data.glow; this.icon = data.icon;
+        this.life = 30.0; this.radius = 15;
+    }
+    update(dt) {
+        this.life -= dt;
+        let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy;
+        if (distSq < 10000) {
+            let dist = Math.sqrt(distSq);
+            this.x += (dx/dist) * 300 * dt; this.y += (dy/dist) * 300 * dt;
+            if (dist < player.radius + this.radius) {
+                player.addOrb(this.type);
+                this.life = 0;
+            }
+        }
+    }
+    draw(ctx) {
+        if (isOffScreen(this.x, this.y)) return;
+        ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0);
+        ctx.shadowBlur = 15; ctx.shadowColor = this.glow;
+        ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(this.icon, 0, 0);
+        ctx.restore();
+    }
+}
 class DamageText {
     constructor(x, y, amount, isPlayer = false) { 
         this.x = x; 
@@ -2206,7 +2176,7 @@ class Player {
         this.baseSpeed = GameSettings.player.baseSpeed; this.radius = 15; this.dirX = 1; this.level = 1; this.exp = 0; this.maxExp = 10;
         this.weapons = []; this.activeSynergies = {}; this.passiveTimer = 0;
         this.dashTimer = 0; this.dashCooldownTimer = 0; this.invincibleTimer = 0; this.dashDir = { x: 1, y: 0 };
-        this.animState = 'idle'; this.animTimer = 0;
+        this.animState = 'idle'; this.animTimer = 0; this.animDir = 'down';
         this.aimX = 1; this.aimY = 0; 
         this.hitTimer = 0;
     }
@@ -2308,7 +2278,7 @@ class Player {
         if (this.hitTimer > 0) { ctx.filter = 'brightness(50%) sepia(1) hue-rotate(-50deg) saturate(500%)'; }
         if (this.invincibleTimer > 0) { ctx.globalAlpha = 0.5 + Math.sin(performance.now() * 0.02) * 0.3; }
         
-        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer); 
+        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer, this.animDir); 
         
         ctx.filter = 'none';
         ctx.restore();
@@ -2842,60 +2812,6 @@ Object.assign(window, {
 if (typeof gameLoopId !== 'undefined' && gameLoopId) cancelAnimationFrame(gameLoopId);
 startStory();
 gameLoopId = requestAnimationFrame(gameLoop);
-
-</script>
-</body>
-</html>       let zx = gameWidth / 2 - zoneWidth / 2;
-                ctx.fillStyle = 'rgba(241, 196, 15, 0.4)';
-                ctx.fillRect(zx, by, zoneWidth, barHeight);
-
-                let cx = gameWidth / 2;
-                ctx.fillStyle = '#f1c40f';
-                let lineH = barHeight * beatScale;
-                ctx.fillRect(cx - 2, by - (lineH - barHeight)/2, 4, lineH);
-
-                let progress = (stageTime % GameSettings.rhythm.beatInterval) / GameSettings.rhythm.beatInterval;
-                let distFromCenter = Math.min(progress, 1.0 - progress) * 2;
-                let cursorX1 = cx - (barWidth / 2) * distFromCenter;
-                let cursorX2 = cx + (barWidth / 2) * distFromCenter;
-
-                ctx.fillStyle = '#fff';
-                ctx.shadowColor = '#fff';
-                ctx.shadowBlur = 5;
-                ctx.fillRect(cursorX1 - 2, by - 5, 4, barHeight + 10);
-                ctx.fillRect(cursorX2 - 2, by - 5, 4, barHeight + 10);
-
-                ctx.restore();
-            }
-        }
-    } catch(e) { 
-        console.error("GameLoop Safe Error Catch:", e); 
-    }
-    
-    gameLoopId = requestAnimationFrame(gameLoop);
-}
-
-// ==========================================
-// 10. 명시적 전역 API 내보내기
-// ==========================================
-Object.assign(window, {
-    toggleLanguage, changeVolume, toggleGameSpeed, startStory, playStoryStep,
-    nextStoryStep, skipStory, togglePause, returnToLobby, startGame, triggerStageClear,
-    nextStage, resetStage, triggerLevelUp, openGacha, closeGacha, rollGacha,
-    openUpgrade, closeUpgrade, doUpgrade, renderUpgradeList, openSaveLoad, closeSaveLoad,
-    renderSaveSlots, saveToSlot, loadFromSlot, openCloset, closeCloset, equipOutfit,
-    renderClosetList, openAchieve, closeAchieve, renderAchieveList,
-    openTutorial, closeTutorial, nextTutorialPage, prevTutorialPage, renderTutorialPage
-});
-
-// 게임 부팅
-if (typeof gameLoopId !== 'undefined' && gameLoopId) cancelAnimationFrame(gameLoopId);
-startStory();
-gameLoopId = requestAnimationFrame(gameLoop);
-
-</script>
-</body>
-</html>mationFrame(gameLoop);
 
 </script>
 </body>
