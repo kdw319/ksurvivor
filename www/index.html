@@ -710,7 +710,6 @@ let lobbyPattern = null;
 let currentBgPattern = null;
 let gameLoopId = null;
 let currentBgmAudio = null;
-let currentBgmAudio = null;
 
 // ==========================================
 // 2. Audio System
@@ -722,8 +721,6 @@ function initAudio() {
         masterGainNode.gain.value = masterVolume;
         masterGainNode.connect(audioCtx.destination);
     }
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-}
     if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
