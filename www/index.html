@@ -1207,16 +1207,11 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
         }
         else imgKey = 'player_down';
     }
-    // [Fix] Only show attack animation if idle to prevent direction flickering
+    // [Fix] Remove attack animation to prevent direction flickering (uses walk/idle instead)
     else if (['throw', 'swing', 'cast'].includes(animState)) {
-        if (isMoving) {
-            // Keep walking direction if attacking while moving
-            if (animDir === 'up') imgKey = 'player_up';
-            else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
-            else imgKey = 'player_down';
-        } else {
-            imgKey = 'player_attack';
-        }
+        if (animDir === 'up') imgKey = 'player_up';
+        else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
+        else imgKey = 'player_idle'; 
     }
 
     const targetImg = loadedImages[imgKey] || loadedImages['player_idle'];
