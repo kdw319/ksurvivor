@@ -710,6 +710,7 @@ let lobbyPattern = null;
 let currentBgPattern = null;
 let gameLoopId = null;
 let currentBgmAudio = null;
+let currentBgmAudio = null;
 
 // ==========================================
 // 2. Audio System
@@ -721,6 +722,8 @@ function initAudio() {
         masterGainNode.gain.value = masterVolume;
         masterGainNode.connect(audioCtx.destination);
     }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
     if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
@@ -1236,6 +1239,7 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
 // 8. Main UI Action Functions
 // ==========================================
 function toggleLanguage() {
+    initAudio();
     currentLang = currentLang === 'ko' ? 'en' : 'ko';
     const lang = I18N[currentLang];
     
@@ -1381,6 +1385,7 @@ function playStoryStep() {
 }
 
 function nextStoryStep() {
+    initAudio();
     if(isTyping) { 
         anime.remove('#storyText span'); 
         document.querySelectorAll('#storyText span').forEach(span => { 
@@ -1397,7 +1402,8 @@ function nextStoryStep() {
     }
 }
 
-function skipStory() { 
+function skipStory() {
+    initAudio(); 
     let ui = document.getElementById('storyUI');
     if (ui) ui.classList.add('hidden'); 
     returnToLobby(); 
