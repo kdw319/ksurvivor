@@ -566,10 +566,10 @@ const I18N = {
         outfitEquipped: "착용 중", outfitEquipBtn: "착용하기", outfitReq: "해금: STAGE",
         speech: ["빨리 시작하자!", "가챠 돌릴 시간이야!", "대역전의 종소리가 울린다!", "지각하겠어!"],
         storyLines: [ 
-            "수학여행의 들뜬 기분도 잠시, 나는 차가운 법정 바닥에서 깨어났다.", 
-            "내 이름은 '윤이솔'. 모든 것이 격리된 채(Isolated) 살아남아야 하는 실험체.",
-            "조작된 기억 너머, 이 기이한 재판소의 진실이 나를 기다리고 있다.",
-            "나를 가둔 이들에게 복수하기 위해, 나는 기꺼이 최후의 소녀(Last Girl)가 되겠다!" 
+            "수학여행 중 끔찍한 교통사고를 당했다. 분명 그게 마지막 기억이었는데...", 
+            "눈을 떠보니 차가운 법정 바닥이었다. 내 이름은 '윤이솔'. 모든 것이 격리된 실험체.",
+            "사고는 조작된 기억일 뿐인가? 이 기이한 재판소의 진실이 나를 기다리고 있다.",
+            "기억의 조각을 되찾고 나를 가둔 이들에게 복수하기 위해, 나는 최후의 소녀가 되겠다!" 
         ],
         storyNext: "다음 (Click)", storySkip: "Skip",
         w_chalk: { name: "분필", desc: "가장 가까운 적에게 투사체를 던집니다.", stat: "공격력" },
@@ -613,10 +613,10 @@ const I18N = {
         outfitEquipped: "Equipped", outfitEquipBtn: "Equip", outfitReq: "Req: STAGE",
         speech: ["Let's go!", "Gacha time!", "The bell tolls!", "I'm late!"],
         storyLines: [ 
-            "The thrill of the trip faded as I woke up on a cold courthouse floor.", 
-            "My name is 'Yoon Isul'. An experiment born to be isolated and survive.",
-            "Beyond manipulated memories, the truth of this bizarre trial awaits.",
-            "To take revenge on those who caged me, I will gladly become the Last Girl!" 
+            "A terrible car accident during the school trip. That was my last memory...", 
+            "But I woke up on a cold courthouse floor. My name is 'Yoon Isul'. An isolated experiment.",
+            "Was the accident just a fabricated memory? The truth of this trial awaits.",
+            "To reclaim my past and take revenge, I will become the Last Girl!" 
         ],
         storyNext: "Next (Click)", storySkip: "Skip",
         w_chalk: { name: "Chalk", desc: "Throws chalk at the nearest enemy.", stat: "ATK" },
@@ -757,27 +757,12 @@ function startBGM() {
 }
 function stopBGM() { 
     if(bgmInterval) clearInterval(bgmInterval); 
-}
-
-function changeVolume(val) {
-    masterVolume = parseFloat(val);
-    if(masterGainNode) masterGainNode.gain.value = masterVolume; if(currentBgmAudio) currentBgmAudio.volume = masterVolume * 0.55;
-    const lVol = document.getElementById('lobbyVol'); if(lVol && lVol.value !== val) lVol.value = val;
-    const pVol = document.getElementById('pauseVol'); if(pVol && pVol.value !== val) pVol.value = val;
-}
-
-function playSFX(type) {
-    if(!audioCtx || isPaused || masterVolume <= 0) return;
-    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(masterGainNode);
-    const now = audioCtx.currentTime;
-    
-    const pitch = 0.9 + Math.random() * 0.2;
-
-    if(type === 'hit') { 
-        osc.type = 'square'; osc.frequency.setValueAtTime(150 * pitch, now); osc.frequency.exponentialRampToValueAtTime(40 * pitch, now + 0.1); 
-        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); 
-    } 
+    if(currentBgmAudio) {
+        currentBgmAudio.pause();
+        currentBgmAudio.currentTime = 0;
+        currentBgmAudio = null;
+    }
+} 
     else if(type === 'shoot') { 
         osc.type = 'triangle'; osc.frequency.setValueAtTime(600 * pitch, now); osc.frequency.exponentialRampToValueAtTime(200 * pitch, now + 0.1); 
         gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); 
@@ -2210,6 +2195,8 @@ class Player {
 
         this.dashTimer = GameSettings.player.dashDuration; 
         this.invincibleTimer = GameSettings.player.dashDuration;
+        this.animState = 'dash';
+        this.animTimer = GameSettings.player.dashDuration;
         
         this.dashDir.x = (dx === 0 && dy === 0) ? this.dirX : dx; 
         this.dashDir.y = (dx === 0 && dy === 0) ? 0 : dy;
