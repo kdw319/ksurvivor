@@ -729,14 +729,20 @@ function startBGM() {
     if(!audioCtx) return;
     stopBGM();
     
-    currentBgmAudio = new Audio('./assets/bgm/battle_bgm.mp3');
+    // [BGM Selection] Switch between lobby and battle music
+    const bgmFile = (gameState === 'playing') ? 'battle_bgm.mp3' : 'lobby_bgm.mp3';
+    currentBgmAudio = new Audio('./assets/bgm/' + bgmFile);
     currentBgmAudio.loop = true;
-    currentBgmAudio.volume = masterVolume * 0.55; // [BGM Config] 55% Volume
+    currentBgmAudio.volume = masterVolume * 0.55; 
     
-    const source = audioCtx.createMediaElementSource(currentBgmAudio);
-    source.connect(masterGainNode);
-    
-    currentBgmAudio.play().catch(e => console.log("BGM Play Autoplay block:", e));
+    try {
+        const source = audioCtx.createMediaElementSource(currentBgmAudio);
+        source.connect(masterGainNode);
+        currentBgmAudio.play().catch(e => console.log("BGM Autoplay block:", e));
+    } catch(e) {
+        // Fallback for re-using source if needed, though new Audio() usually needs new source
+        currentBgmAudio.play().catch(ex => console.log("BGM Play Error:", ex));
+    }
 }
 function stopBGM() { 
     if(bgmInterval) clearInterval(bgmInterval); 
@@ -1411,7 +1417,7 @@ function togglePause() {
 
 function returnToLobby() {
     if (gameState === 'gameover') currentStage = 1; else if (gameState === 'clear') currentStage++; 
-    gameState = 'lobby'; isPaused = false; stopBGM(); gameSpeedMultiplier = 1.0;
+    gameState = 'lobby'; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
     
     ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI'].forEach(id => { 
         let el = document.getElementById(id); if(el) el.classList.add('hidden'); 
