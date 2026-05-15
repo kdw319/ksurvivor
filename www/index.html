@@ -1211,7 +1211,7 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
     else if (['throw', 'swing', 'cast'].includes(animState)) {
         if (animDir === 'up') imgKey = 'player_up';
         else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
-        else imgKey = 'player_idle'; 
+        else imgKey = 'player_down'; 
     }
 
     const targetImg = loadedImages[imgKey] || loadedImages['player_idle'];
@@ -2272,12 +2272,24 @@ class Player {
         if (joystick.active) { dx = joystick.dx; dy = joystick.dy; if (dx < 0) this.dirX = -1; else if (dx > 0) this.dirX = 1; }
         
         let moveMag = Math.hypot(dx, dy);
-        if(moveMag > 0) {
+        if(moveMag > 0.1) {
             dx /= moveMag; dy /= moveMag;
             this.aimX = dx; this.aimY = dy;
+            
+            // [Directional Fix] Set animation direction with side priority
+            if (Math.abs(dx) > 0.5) this.animDir = 'side';
+            else if (dy < -0.5) this.animDir = 'up';
+            else if (dy > 0.5) this.animDir = 'down';
         }
 
-        if (this.animTimer <= 0) { this.animState = (moveMag > 0.1) ? 'run' : 'idle'; }
+        if (this.animTimer <= 0) { 
+            if (moveMag > 0.1) {
+                this.animState = 'run';
+            } else {
+                this.animState = 'idle';
+                this.animDir = 'down'; // 정면(Front) 고정
+            }
+        }
 
         if(keys['shift'] && this.dashCooldownTimer <= 0 && this.dashTimer <= 0) {
             this.executeDash(dx, dy);
