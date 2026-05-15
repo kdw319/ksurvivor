@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>K-여고생 서바이버 : 대역전의 종소리</title>
+    <title>Last Girl Survivor : 대역전의 종소리</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+KR:wght@400;700&display=swap');
 
@@ -280,6 +280,7 @@
     <button id="pauseBtn" class="hidden" onclick="window.togglePause()">일시정지 (ESC)</button>
     
     <canvas id="minimapCanvas" class="hidden" width="150" height="150"></canvas>
+    <div id="orbPocketUI" class="hidden" style="position: absolute; display: flex; gap: 10px; font-size: 32px; z-index: 10;"></div>
 
     <div id="lobbyTopBar" class="hidden">
         <div class="currency-badge">🏅 <span id="lobbyBadgeDisp">0</span></div>
@@ -438,9 +439,23 @@
 // [1-A] 외부 에셋 데이터 슬롯 (URL, 파일명, Base64 모두 지원)
 // ==========================================
 const GAME_ASSETS = {
-    player: "", // 예: "https://.../player.png" 또는 Base64 문자열
-    mob: "",    // 예: "mob.png"
-    boss: ""    // 예: "boss.png"
+    player_idle: "character_idle.webp", 
+    player_down: "character_front_walk_walk_down.webp",
+    player_up: "character_back_walk_walk_up.webp",
+    player_right: "character_right_walk_walk_right.webp",
+    player_left: "character_left_walk_walk_left.webp",
+    player_hurt: "character_hurt.webp",
+    player_attack: "character_attack.webp",
+    player_death: "character_death.webp",
+    player_dash: "character_dash.png",
+    mob_juror: "mobs/mob_juror.png",
+    mob_gavel: "mobs/mob_gavel.png",
+    mob_spectre: "mobs/mob_spectre.png",
+    mob_evidence: "mobs/mob_evidence.png",
+    boss_mid: "bosses/midboss.png",
+    boss_10: "bosses/boss_10.png",
+    boss_20: "bosses/boss_20.png",
+    boss_30: "bosses/boss_30.png"
 };
 const loadedImages = {};
 
@@ -1124,7 +1139,7 @@ function generateMapPattern(theme) {
         cx.fillStyle = 'rgba(255, 159, 243, 0.2)'; cx.beginPath(); cx.arc(180, 50, 15, 0, Math.PI*2); cx.fill(); 
         cx.fillStyle = 'rgba(0, 210, 211, 0.2)'; cx.beginPath(); cx.arc(20, 150, 20, 0, Math.PI*2); cx.fill(); 
     }
-    return ctx.createPattern(c, 'repeat');
+    return canvas.getContext('2d').createPattern(c, 'repeat');
 }
 
 // ==========================================
@@ -2206,7 +2221,7 @@ class Player {
         this.baseSpeed = GameSettings.player.baseSpeed; this.radius = 15; this.dirX = 1; this.level = 1; this.exp = 0; this.maxExp = 10;
         this.weapons = []; this.activeSynergies = {}; this.passiveTimer = 0;
         this.dashTimer = 0; this.dashCooldownTimer = 0; this.invincibleTimer = 0; this.dashDir = { x: 1, y: 0 };
-        this.animState = 'idle'; this.animTimer = 0;
+        this.animState = 'idle'; this.animTimer = 0; this.animDir = 'down';
         this.aimX = 1; this.aimY = 0; 
         this.hitTimer = 0;
     }
@@ -2308,7 +2323,7 @@ class Player {
         if (this.hitTimer > 0) { ctx.filter = 'brightness(50%) sepia(1) hue-rotate(-50deg) saturate(500%)'; }
         if (this.invincibleTimer > 0) { ctx.globalAlpha = 0.5 + Math.sin(performance.now() * 0.02) * 0.3; }
         
-        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer); 
+        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer, this.animDir); 
         
         ctx.filter = 'none';
         ctx.restore();
