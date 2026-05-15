@@ -441,8 +441,7 @@ const GAME_ASSETS = {
     player_idle: "character_idle.webp", 
     player_down: "character_front_walk_walk_down.webp",
     player_up: "character_back_walk_walk_up.webp",
-    player_right: "character_right_walk_walk_right.webp",
-    player_left: "character_left_walk_walk_left.webp",
+    player_side: "character_right_walk_walk_right.webp",
     player_hurt: "character_hurt.webp",
     player_attack: "character_attack.webp",
     player_death: "character_death.webp",
@@ -1182,16 +1181,11 @@ function drawMinimap() {
 
 function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
     let imgKey = 'player_idle';
-    let forceFlip = 1; // Default no flip for up/down/idle
-
     if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
     else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
     else if (animState === 'run' || animState === 'dash') {
         if (animDir === 'up') imgKey = 'player_up';
-        else if (animDir === 'side') {
-            if (dirX === 1) imgKey = 'player_right';
-            else imgKey = 'player_left';
-        }
+        else if (animDir === 'side') imgKey = 'player_side';
         else imgKey = 'player_down';
     }
     else if (['throw', 'swing', 'cast'].includes(animState)) imgKey = 'player_attack';
@@ -1200,10 +1194,7 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
 
     if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
         ctx.save();
-        // Since we have specific left/right assets, we don't necessarily need to flip using scale(dirX, 1) 
-        // unless the assets themselves are only one-sided. 
-        // Given 'character_left_walk' exists, we use scale(1, 1).
-        ctx.scale(scale, scale); 
+        ctx.scale(dirX * scale, scale);
         let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
         let w = 64; let h = 64; 
         ctx.drawImage(targetImg, -w/2, -h + 10 + bobY, w, h);
@@ -2185,7 +2176,7 @@ class Player {
         this.baseSpeed = GameSettings.player.baseSpeed; this.radius = 15; this.dirX = 1; this.level = 1; this.exp = 0; this.maxExp = 10;
         this.weapons = []; this.activeSynergies = {}; this.passiveTimer = 0;
         this.dashTimer = 0; this.dashCooldownTimer = 0; this.invincibleTimer = 0; this.dashDir = { x: 1, y: 0 };
-        this.animState = 'idle'; this.animTimer = 0; this.animDir = 'down';
+        this.animState = 'idle'; this.animTimer = 0; this.animDir = 'down'; this.animDir = 'down';
         this.aimX = 1; this.aimY = 0; 
         this.hitTimer = 0;
     }
