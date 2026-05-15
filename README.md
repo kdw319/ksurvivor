@@ -23,8 +23,8 @@
 - **Framework**: AppIntos (AIT) 통합 지원
 
 ## 📦 설치 및 실행
-1. 안드로이드 기기에서 `PROJ_ISUL_OFFLINE_V[버전].aab` 파일을 통해 설치하거나, 지원되는 웹 브라우저에서 즉시 실행 가능합니다.
+1. 안드로이드 기기에서 구글 플레이스토어를 통해 설치(6월 중 지원 예정)하거나, 지원되는 웹 브라우저에서 즉시 실행 가능합니다.
 2. 최신 버전은 [GitHub Pages](https://kdw319.github.io/ksurvivor/)에서 확인하실 수 있습니다.
 
 ---
-© 2026 Last Girl Survivor. All rights reserved.
+© 2026 Last Girl Survivor. KIM DONG WOO All rights reserved.
