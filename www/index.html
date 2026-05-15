@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>K-여고생 서바이버 : 대역전의 종소리</title>
+    <title>Last Girl Survivor : 대역전의 종소리</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+KR:wght@400;700&display=swap');
 
@@ -280,6 +280,7 @@
     <button id="pauseBtn" class="hidden" onclick="window.togglePause()">일시정지 (ESC)</button>
     
     <canvas id="minimapCanvas" class="hidden" width="150" height="150"></canvas>
+    <div id="orbPocketUI" class="hidden" style="position: absolute; display: flex; gap: 10px; font-size: 32px; z-index: 10;"></div>
 
     <div id="lobbyTopBar" class="hidden">
         <div class="currency-badge">🏅 <span id="lobbyBadgeDisp">0</span></div>
@@ -426,6 +427,7 @@
             <div id="storyText" class="typewriter-text"></div>
             <button id="storyNextBtn" class="btn primary hidden" onclick="window.nextStoryStep()">다음</button>
         </div>
+        <button id="storyLangBtn" class="btn" style="position: absolute; top: 20px; left: 20px; font-size: 14px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #555; pointer-events: auto; z-index: 60;" onclick="event.stopPropagation(); window.toggleLanguage()">🌐 KO</button>
         <button id="storySkipBtn" class="btn skip-btn" onclick="window.skipStory()">Skip</button>
     </div>
 
@@ -438,9 +440,23 @@
 // [1-A] 외부 에셋 데이터 슬롯 (URL, 파일명, Base64 모두 지원)
 // ==========================================
 const GAME_ASSETS = {
-    player: "", // 예: "https://.../player.png" 또는 Base64 문자열
-    mob: "",    // 예: "mob.png"
-    boss: ""    // 예: "boss.png"
+    player_idle: "character_idle.webp", 
+    player_down: "character_front_walk_walk_down.webp",
+    player_up: "character_back_walk_walk_up.webp",
+    player_right: "character_right_walk_walk_right.webp",
+    player_left: "character_left_walk_walk_left.webp",
+    player_hurt: "character_hurt.webp",
+    player_attack: "character_attack.webp",
+    player_death: "character_death.webp",
+    player_dash: "character_dash.png",
+    mob_juror: "mobs/mob_juror.png",
+    mob_gavel: "mobs/mob_gavel.png",
+    mob_spectre: "mobs/mob_spectre.png",
+    mob_evidence: "mobs/mob_evidence.png",
+    boss_mid: "bosses/midboss.png",
+    boss_10: "bosses/boss_10.png",
+    boss_20: "bosses/boss_20.png",
+    boss_30: "bosses/boss_30.png"
 };
 const loadedImages = {};
 
@@ -549,7 +565,12 @@ const I18N = {
         btnAchieveLobby: "도전과제", achieveTitle: "도전과제 (Achievements)", achieveDesc: "특정 조건을 만족하여 칭호를 획득하세요.",
         outfitEquipped: "착용 중", outfitEquipBtn: "착용하기", outfitReq: "해금: STAGE",
         speech: ["빨리 시작하자!", "가챠 돌릴 시간이야!", "대역전의 종소리가 울린다!", "지각하겠어!"],
-        storyLines: [ "수학여행의 들뜬 기분도 잠시...", "눈을 떠보니 기이한 재판소 한가운데였다.", "사방에서 조여오는 기계 인형들.", "살아남으려면... 가진 것을 무기로 삼아야 해!" ],
+        storyLines: [ 
+            "수학여행 중 끔찍한 교통사고를 당했다. 분명 그게 마지막 기억이었는데...", 
+            "눈을 떠보니 차가운 법정 바닥이었다. 내 이름은 '윤이솔'. 어째서인지 이곳에 갇혀버렸다.",
+            "사고는 조작된 기억일 뿐인가? 이 기이한 재판소의 진실이 나를 기다리고 있다.",
+            "기억의 조각을 되찾고 나를 가둔 이들에게 복수하기 위해, 나는 최후의 소녀가 되겠다!" 
+        ],
         storyNext: "다음 (Click)", storySkip: "Skip",
         w_chalk: { name: "분필", desc: "가장 가까운 적에게 투사체를 던집니다.", stat: "공격력" },
         w_textbook: { name: "교과서", desc: "주변을 맴도는 마법의 교과서.", stat: "쿨타임" },
@@ -695,6 +716,7 @@ let bgPattern = null;
 let lobbyPattern = null;
 let currentBgPattern = null;
 let gameLoopId = null;
+let currentBgmAudio = null;
 
 // ==========================================
 // 2. Audio System
@@ -710,25 +732,28 @@ function initAudio() {
 }
 
 function startBGM() {
-    if(!audioCtx) return; 
+    if(!audioCtx) return;
+    stopBGM();
+    const bgmFile = (gameState === 'playing') ? 'battle_bgm.mp3' : 'lobby_bgm.mp3';
+    currentBgmAudio = new Audio('./assets/bgm/' + bgmFile);
+    currentBgmAudio.loop = true;
+    currentBgmAudio.volume = masterVolume * 0.55;
+    try {
+        const source = audioCtx.createMediaElementSource(currentBgmAudio);
+        source.connect(masterGainNode);
+        currentBgmAudio.play().catch(e => console.log("BGM Blocked:", e));
+    } catch(e) {
+        currentBgmAudio.play().catch(ex => console.log("BGM Error:", ex));
+    }
+}
+function stopBGM() {
     if(bgmInterval) clearInterval(bgmInterval);
-    const notes = [146.83, 164.81, 174.61, 220.00, 174.61, 164.81]; 
-    let noteIdx = 0;
-    
-    bgmInterval = setInterval(() => {
-        if(gameState !== 'playing' || isPaused || masterVolume <= 0) return;
-        const osc = audioCtx.createOscillator(); 
-        const gain = audioCtx.createGain();
-        osc.connect(gain); 
-        gain.connect(masterGainNode);
-        osc.type = 'triangle'; 
-        osc.frequency.setValueAtTime(notes[noteIdx], audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.05, audioCtx.currentTime); 
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-        osc.start(audioCtx.currentTime); 
-        osc.stop(audioCtx.currentTime + 0.3);
-        noteIdx = (noteIdx + 1) % notes.length;
-    }, 400);
+    if(currentBgmAudio) {
+        currentBgmAudio.pause();
+        currentBgmAudio.currentTime = 0;
+        currentBgmAudio = null;
+    }
+}, 400);
 }
 
 function stopBGM() { 
@@ -1124,7 +1149,7 @@ function generateMapPattern(theme) {
         cx.fillStyle = 'rgba(255, 159, 243, 0.2)'; cx.beginPath(); cx.arc(180, 50, 15, 0, Math.PI*2); cx.fill(); 
         cx.fillStyle = 'rgba(0, 210, 211, 0.2)'; cx.beginPath(); cx.arc(20, 150, 20, 0, Math.PI*2); cx.fill(); 
     }
-    return ctx.createPattern(c, 'repeat');
+    return canvas.getContext('2d').createPattern(c, 'repeat');
 }
 
 // ==========================================
@@ -1174,16 +1199,40 @@ function drawMinimap() {
     mCtx.fillRect(center - 2, center - 2, 4, 4);
 }
 
-function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0) {
-    if (loadedImages.player && loadedImages.player.complete && loadedImages.player.naturalWidth > 0) {
-        ctx.save();
-        ctx.scale(dirX * scale, scale);
-        let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
-        let w = 48; let h = 48; 
-        ctx.drawImage(loadedImages.player, -w/2, -h + 10 + bobY, w, h);
-        ctx.restore();
-        return; 
+function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
+    let imgKey = 'player_idle';
+    if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
+    else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
+    else if (animState === 'dash') imgKey = 'player_dash';
+    else if (animState === 'run') {
+        if (animDir === 'up') imgKey = 'player_up';
+        else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
+        else imgKey = 'player_down';
     }
+    else if (['throw', 'swing', 'cast'].includes(animState)) {
+        if (animDir === 'up') imgKey = 'player_up';
+        else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
+        else imgKey = 'player_idle'; 
+    }
+    const targetImg = loadedImages[imgKey] || loadedImages['player_idle'];
+    ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10 * scale, 5 * scale, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
+        ctx.save();
+        let flipX = 1;
+        if (imgKey === 'player_left') flipX = -1;
+        if (imgKey === 'player_dash' && dirX === -1) flipX = -1;
+        ctx.scale(scale * flipX, scale);
+        let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
+        let w = 64; let h = 64;
+        ctx.drawImage(targetImg, -w/2, -h + 10 + bobY, w, h);
+        ctx.restore();
+        return;
+    }
+    ctx.save(); ctx.scale(scale * dirX, scale); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
+    ctx.fillStyle = outfit.colors.cSkin; ctx.fillRect(-2, -3, 4, 4); ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-8, -26, 16, 14, 4); else ctx.rect(-8, -26, 16, 14); ctx.fill();
+    ctx.restore();
+}
 
     ctx.save(); 
     ctx.scale(scale * dirX, scale); 
@@ -1299,6 +1348,17 @@ function toggleLanguage() {
     
     const setTxt = (id, text) => { let e = document.getElementById(id); if(e) e.innerText = text; };
     const setHtml = (id, html) => { let e = document.getElementById(id); if(e) e.innerHTML = html; };
+    
+    setTxt("storyLangBtn", lang.langBtn);
+    setTxt("storySkipBtn", lang.storySkip);
+    setTxt("storyNextBtn", lang.storyNext);
+
+    if (gameState === "story") {
+        const textEl = document.getElementById("storyText");
+        if (textEl && !isTyping) {
+            textEl.innerHTML = lang.storyLines[storyStep];
+        }
+    }l; };
 
     setTxt('langBtn', lang.langBtn); 
     setHtml('lobbyTitleText', `${lang.title}<br><span id="lobbySubtitle" style="font-size:1.2rem; color:#ccc;">${lang.subtitle}</span>`);
@@ -1469,16 +1529,19 @@ function togglePause() {
 
 function returnToLobby() {
     if (gameState === 'gameover') currentStage = 1; else if (gameState === 'clear') currentStage++; 
-    gameState = 'lobby'; isPaused = false; stopBGM(); gameSpeedMultiplier = 1.0;
-    ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
-    let orbPocketUI = document.getElementById('orbPocketUI');
-    if (orbPocketUI) {
-        orbPocketUI.innerHTML = player.marblePocket.map(t => {
-            const data = MARBLE_TYPES.find(m => t === m.type);
-            return `<span style="text-shadow: 0 0 10px ${data.glow};">${data.icon}</span>`;
-        }).join('');
+    gameState = 'lobby'; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
+    ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI'].forEach(id => { 
+        let el = document.getElementById(id); if(el) el.classList.add('hidden'); 
+    });
+    if (player) {
+        let orbPocketUI = document.getElementById('orbPocketUI');
+        if (orbPocketUI) {
+            orbPocketUI.innerHTML = (player.marblePocket || []).map(t => {
+                const data = MARBLE_TYPES.find(m => t === m.type);
+                return "<span style='text-shadow: 0 0 10px " + data.glow + ";'>" + data.icon + "</span>";
+            }).join('');
+        }
     }
-
     let speedBtn = document.getElementById('speedBtn'); if (speedBtn) { speedBtn.innerText = '1X'; speedBtn.style.color = '#e0d0a0'; }
     ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove('hidden'); });
     updateLobbyCurrency();
@@ -2206,7 +2269,7 @@ class Player {
         this.baseSpeed = GameSettings.player.baseSpeed; this.radius = 15; this.dirX = 1; this.level = 1; this.exp = 0; this.maxExp = 10;
         this.weapons = []; this.activeSynergies = {}; this.passiveTimer = 0;
         this.dashTimer = 0; this.dashCooldownTimer = 0; this.invincibleTimer = 0; this.dashDir = { x: 1, y: 0 };
-        this.animState = 'idle'; this.animTimer = 0;
+        this.animState = 'idle'; this.animTimer = 0; this.animDir = 'down';
         this.aimX = 1; this.aimY = 0; 
         this.hitTimer = 0;
     }
@@ -2277,14 +2340,18 @@ class Player {
         
         if (joystick.active) { dx = joystick.dx; dy = joystick.dy; if (dx < 0) this.dirX = -1; else if (dx > 0) this.dirX = 1; }
         
-        let moveMag = Math.hypot(dx, dy);
-        if(moveMag > 0) {
+                let moveMag = Math.hypot(dx, dy);
+        if(moveMag > 0.05) {
             dx /= moveMag; dy /= moveMag;
             this.aimX = dx; this.aimY = dy;
+            if (Math.abs(dx) > 0.4) this.animDir = 'side';
+            else if (dy < -0.3) this.animDir = 'up';
+            else if (dy > 0.3) this.animDir = 'down';
         }
-
-        if (this.animTimer <= 0) { this.animState = (moveMag > 0) ? 'run' : 'idle'; }
-
+        if (this.animTimer <= 0) {
+            if (moveMag > 0.1) this.animState = 'run';
+            else { this.animState = 'idle'; this.animDir = 'down'; }
+        }
         if(keys['shift'] && this.dashCooldownTimer <= 0 && this.dashTimer <= 0) {
             this.executeDash(dx, dy);
             keys['shift'] = false; // 입력을 강제로 소모시켜 물리적 키 홀드(Hold)로 인한 프레임 단위 연타 방지
@@ -2308,7 +2375,7 @@ class Player {
         if (this.hitTimer > 0) { ctx.filter = 'brightness(50%) sepia(1) hue-rotate(-50deg) saturate(500%)'; }
         if (this.invincibleTimer > 0) { ctx.globalAlpha = 0.5 + Math.sin(performance.now() * 0.02) * 0.3; }
         
-        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer); 
+        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer, this.animDir); 
         
         ctx.filter = 'none';
         ctx.restore();
@@ -2842,60 +2909,6 @@ Object.assign(window, {
 if (typeof gameLoopId !== 'undefined' && gameLoopId) cancelAnimationFrame(gameLoopId);
 startStory();
 gameLoopId = requestAnimationFrame(gameLoop);
-
-</script>
-</body>
-</html>       let zx = gameWidth / 2 - zoneWidth / 2;
-                ctx.fillStyle = 'rgba(241, 196, 15, 0.4)';
-                ctx.fillRect(zx, by, zoneWidth, barHeight);
-
-                let cx = gameWidth / 2;
-                ctx.fillStyle = '#f1c40f';
-                let lineH = barHeight * beatScale;
-                ctx.fillRect(cx - 2, by - (lineH - barHeight)/2, 4, lineH);
-
-                let progress = (stageTime % GameSettings.rhythm.beatInterval) / GameSettings.rhythm.beatInterval;
-                let distFromCenter = Math.min(progress, 1.0 - progress) * 2;
-                let cursorX1 = cx - (barWidth / 2) * distFromCenter;
-                let cursorX2 = cx + (barWidth / 2) * distFromCenter;
-
-                ctx.fillStyle = '#fff';
-                ctx.shadowColor = '#fff';
-                ctx.shadowBlur = 5;
-                ctx.fillRect(cursorX1 - 2, by - 5, 4, barHeight + 10);
-                ctx.fillRect(cursorX2 - 2, by - 5, 4, barHeight + 10);
-
-                ctx.restore();
-            }
-        }
-    } catch(e) { 
-        console.error("GameLoop Safe Error Catch:", e); 
-    }
-    
-    gameLoopId = requestAnimationFrame(gameLoop);
-}
-
-// ==========================================
-// 10. 명시적 전역 API 내보내기
-// ==========================================
-Object.assign(window, {
-    toggleLanguage, changeVolume, toggleGameSpeed, startStory, playStoryStep,
-    nextStoryStep, skipStory, togglePause, returnToLobby, startGame, triggerStageClear,
-    nextStage, resetStage, triggerLevelUp, openGacha, closeGacha, rollGacha,
-    openUpgrade, closeUpgrade, doUpgrade, renderUpgradeList, openSaveLoad, closeSaveLoad,
-    renderSaveSlots, saveToSlot, loadFromSlot, openCloset, closeCloset, equipOutfit,
-    renderClosetList, openAchieve, closeAchieve, renderAchieveList,
-    openTutorial, closeTutorial, nextTutorialPage, prevTutorialPage, renderTutorialPage
-});
-
-// 게임 부팅
-if (typeof gameLoopId !== 'undefined' && gameLoopId) cancelAnimationFrame(gameLoopId);
-startStory();
-gameLoopId = requestAnimationFrame(gameLoop);
-
-</script>
-</body>
-</html>mationFrame(gameLoop);
 
 </script>
 </body>
