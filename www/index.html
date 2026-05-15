@@ -441,10 +441,12 @@ const GAME_ASSETS = {
     player_idle: "character_idle.webp", 
     player_down: "character_front_walk_walk_down.webp",
     player_up: "character_back_walk_walk_up.webp",
-    player_side: "character_right_walk_walk_right.webp",
+    player_right: "character_right_walk_walk_right.webp",
+    player_left: "character_left_walk_walk_left.webp",
     player_hurt: "character_hurt.webp",
     player_attack: "character_attack.webp",
     player_death: "character_death.webp",
+    player_dash: "character_dash.png",
     mob: "", boss: ""    
 };
 const loadedImages = {};
@@ -1183,7 +1185,8 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
     let imgKey = 'player_idle';
     if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
     else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
-    else if (animState === 'run' || animState === 'dash') {
+    else if (animState === 'dash') imgKey = 'player_dash';
+    else if (animState === 'run') {
         if (animDir === 'up') imgKey = 'player_up';
         else if (animDir === 'side') imgKey = 'player_side';
         else imgKey = 'player_down';
