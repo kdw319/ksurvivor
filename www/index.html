@@ -281,7 +281,6 @@
     
     <canvas id="minimapCanvas" class="hidden" width="150" height="150"></canvas>
     <div id="orbPocketUI" class="hidden" style="position: absolute; display: flex; gap: 10px; font-size: 32px; z-index: 10;"></div>
-    <div id="orbPocketUI" class="hidden" style="position: absolute; display: flex; gap: 10px; font-size: 32px; z-index: 10;"></div>
 
     <div id="lobbyTopBar" class="hidden">
         <div class="currency-badge">🏅 <span id="lobbyBadgeDisp">0</span></div>
@@ -293,7 +292,7 @@
                 </div>
                 <button id="langBtn" class="btn" style="padding: 10px 20px; font-size: 14px; margin: 0;" onclick="window.toggleLanguage()">🌐 KO</button>
             </div>
-            <button id="tutBtn" class="btn" style="padding: 15px 30px; font-size: 24px; margin: 0; background: #2d3436; color: #fff; border: 2px solid #636e72; border-radius: 40px;" style="padding: 15px 30px; font-size: 24px; margin: 0; background: #2d3436; color: #fff; border: 2px solid #636e72; border-radius: 40px;" onclick="window.openTutorial()">❓ TUTORIAL</button>
+            <button id="tutBtn" class="btn" style="padding: 15px 30px; font-size: 24px; margin: 0; background: #2d3436; color: #fff; border: 2px solid #636e72; border-radius: 40px;" onclick="window.openTutorial()">❓ TUTORIAL</button>
         </div>
     </div>
     <div id="lobbyTitle" class="lobby-title hidden">
@@ -597,9 +596,7 @@ const I18N = {
         tut_p2_t: "성장 시스템", tut_p2_d: "스테이지에서 획득한 뱃지로 '능력치 강화' 메뉴에서 영구적인 스탯 업이 가능합니다.",
         tut_p3_t: "가챠 및 무기", tut_p3_d: "가챠를 통해 특수 무기를 해금하세요. 해금된 무기는 게임 중 레벨업 풀에 1.5배 확률로 등장합니다!",
         orb_get: "⚖️ 심판의 구슬 획득!", orb_fury: "분노의 심판 (공격력)", orb_life: "생명의 심판 (체력)", orb_wind: "신속의 심판 (이동속도)",
-        syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)",
-        mob_juror: "배심원 인형", mob_gavel: "의사봉 파쇄자", mob_spectre: "서류 유령", mob_evidence: "증거 수집기",
-        boss_mid: "재판 감독관", boss_10: "교수형 판사", boss_20: "대검찰관", boss_30: "정의의 여신상"
+        syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)"
     },
     en: {
         langBtn: "🌐 EN", title: "Last Girl Survivor", subtitle: "Bell of Turnabout",
@@ -1191,42 +1188,120 @@ function drawMinimap() {
     mCtx.fillRect(center - 2, center - 2, 4, 4);
 }
 
-function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
-    let imgKey = 'player_idle';
-    if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
-    else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
-    else if (animState === 'dash') imgKey = 'player_dash';
-    else if (animState === 'run') {
-        if (animDir === 'up') imgKey = 'player_up';
-        else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
-        else imgKey = 'player_down';
-    }
-    else if (['throw', 'swing', 'cast'].includes(animState)) {
-        if (animDir === 'up') imgKey = 'player_up';
-        else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
-        else imgKey = 'player_down'; 
-    }
-
-    const targetImg = loadedImages[imgKey] || loadedImages['player_idle'];
-
-    if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
+function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0) {
+    if (loadedImages.player && loadedImages.player.complete && loadedImages.player.naturalWidth > 0) {
         ctx.save();
-        let flipX = 1;
-        if (imgKey === 'player_left') flipX = -1; 
-        if (imgKey === 'player_dash' && dirX === -1) flipX = -1;
-        ctx.scale(scale * flipX, scale);
+        ctx.scale(dirX * scale, scale);
         let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
-        let w = 64; let h = 64; 
-        ctx.drawImage(targetImg, -w/2, -h + 10 + bobY, w, h);
+        let w = 48; let h = 48; 
+        ctx.drawImage(loadedImages.player, -w/2, -h + 10 + bobY, w, h);
         ctx.restore();
         return; 
     }
-    // Procedural Fallback
-    ctx.save(); ctx.scale(scale * dirX, scale);
-    ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-    let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
-    ctx.fillStyle = outfit.colors.cSkin; ctx.fillRect(-2, -3, 4, 4); ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-8, -26, 16, 14, 4); else ctx.rect(-8, -26, 16, 14); ctx.fill();
+
+    ctx.save(); 
+    ctx.scale(scale * dirX, scale); 
+
+    // [2.5D R&D] 캐릭터 발밑 동적 그림자 (Depth 효과)
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
+
+    // [2.5D R&D] 피격 또는 이동 시 미세한 외곽 광원 효과 (Rim-light)
+    if (animState === 'run' || animState === 'dash') {
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+    }
+    
+    let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
+    const { cSkin, cHair, cHairShadow, cDress, cDressDark, cEye } = outfit.colors;
+    let bobY = 0, armAngle = 0, legSwing = 0;
+    
+    if (animState === 'idle') { 
+        bobY = Math.sin(performance.now() * 0.005) * 1.5; 
+    } else if (animState === 'run') { 
+        bobY = Math.abs(Math.sin(performance.now() * 0.01)) * -3; 
+        legSwing = Math.sin(performance.now() * 0.015) * 6; 
+        armAngle = Math.sin(performance.now() * 0.015) * 0.5; 
+    } else if (animState === 'throw') { 
+        armAngle = -Math.PI / 2 + (animTimer * 2); 
+    } else if (animState === 'swing') { 
+        armAngle = -Math.PI + (animTimer * 5); 
+    } else if (animState === 'cast') { 
+        armAngle = -Math.PI / 1.5; 
+        bobY = -2; 
+    }
+
+    ctx.translate(0, bobY);
+    
+    ctx.save(); 
+    ctx.translate(2, -8); 
+    ctx.rotate(animState === 'cast' ? armAngle : -armAngle); 
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(-2, 0, 4, 10); 
+    ctx.fillStyle = cDressDark; 
+    ctx.fillRect(-2.5, -2, 5, 6); 
+    ctx.restore();
+    
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(1 - legSwing*0.5, 0, 4, 14); 
+    ctx.fillRect(-3 + legSwing*0.5, 0, 4, 15);
+    
+    ctx.fillStyle = cDress; 
+    ctx.fillRect(-6, -14, 12, 10); 
+    ctx.beginPath(); 
+    ctx.moveTo(-6, -4); ctx.lineTo(6, -4); ctx.lineTo(8, 6); ctx.lineTo(3, 6); ctx.lineTo(0, -2); ctx.lineTo(-4, 8); ctx.lineTo(-7, 4); 
+    ctx.fill();
+    
+    ctx.fillStyle = cDressDark; 
+    ctx.fillRect(4, -4, 2, 8); 
+    ctx.fillRect(-6, -4, 2, 10);
+    
+    ctx.translate(0, -14); 
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(-2, -3, 4, 4); 
+    ctx.beginPath(); 
+    if (ctx.roundRect) ctx.roundRect(-8, -12, 16, 14, 4); 
+    else ctx.rect(-8, -12, 16, 14);
+    ctx.fill(); 
+    
+    ctx.fillStyle = cEye; 
+    ctx.fillRect(1, -5, 3, 2); 
+    ctx.fillStyle = '#fff'; 
+    ctx.fillRect(1.5, -5, 1, 1);
+    
+    ctx.fillStyle = '#2d3436'; 
+    ctx.fillRect(0, -6, 5, 1); 
+    ctx.fillStyle = 'rgba(255, 100, 100, 0.3)'; 
+    ctx.fillRect(2, -2, 3, 2);
+    
+    ctx.fillStyle = cHair; 
+    ctx.beginPath(); 
+    if (ctx.roundRect) ctx.roundRect(-10, -14, 20, 12, 5); 
+    else ctx.rect(-10, -14, 20, 12);
+    ctx.fill(); 
+    ctx.fillRect(-9, -14, 12, 6); 
+    ctx.fillRect(1, -14, 6, 8);
+    
+    ctx.fillStyle = cHairShadow; 
+    ctx.fillRect(-10, -4, 4, 8); 
+    ctx.fillRect(6, -4, 3, 6);
+    
+    ctx.restore(); 
+    
+    ctx.save(); 
+    ctx.translate(0, bobY - 12); 
+    ctx.rotate(armAngle); 
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(-2, 0, 4, 12); 
+    ctx.fillStyle = cDress; 
+    ctx.fillRect(-2.5, -2, 5, 6); 
+    ctx.restore();
+    
+    ctx.restore(); 
 }
 
 // ==========================================
@@ -1409,13 +1484,7 @@ function togglePause() {
 function returnToLobby() {
     if (gameState === 'gameover') currentStage = 1; else if (gameState === 'clear') currentStage++; 
     gameState = 'lobby'; isPaused = false; stopBGM(); gameSpeedMultiplier = 1.0;
-    
-    // [Fix] Hide layers
-    ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI'].forEach(id => { 
-        let el = document.getElementById(id); if(el) el.classList.add('hidden'); 
-    });
-
-    // [Fix] Safe Orb Update
+    ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
     let orbPocketUI = document.getElementById('orbPocketUI');
     if (orbPocketUI && player) {
         orbPocketUI.innerHTML = (player.marblePocket || []).map(t => {
@@ -1457,7 +1526,7 @@ function nextStage() {
 }
 
 function resetStage(fullReset = false) {
-    stageTime = 0; enemies = []; projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = []; verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0;
+    stageTime = 0; enemies = []; projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = [];
     verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0;
     isStageCleared = false;
     hasSpawnedMidBoss = false;
@@ -2151,7 +2220,7 @@ class Player {
         this.baseSpeed = GameSettings.player.baseSpeed; this.radius = 15; this.dirX = 1; this.level = 1; this.exp = 0; this.maxExp = 10;
         this.weapons = []; this.activeSynergies = {}; this.passiveTimer = 0;
         this.dashTimer = 0; this.dashCooldownTimer = 0; this.invincibleTimer = 0; this.dashDir = { x: 1, y: 0 };
-        this.animState = 'idle'; this.animTimer = 0; this.animDir = 'down';
+        this.animState = 'idle'; this.animTimer = 0;
         this.aimX = 1; this.aimY = 0; 
         this.hitTimer = 0;
     }
@@ -2253,7 +2322,7 @@ class Player {
         if (this.hitTimer > 0) { ctx.filter = 'brightness(50%) sepia(1) hue-rotate(-50deg) saturate(500%)'; }
         if (this.invincibleTimer > 0) { ctx.globalAlpha = 0.5 + Math.sin(performance.now() * 0.02) * 0.3; }
         
-        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer, this.animDir); 
+        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer); 
         
         ctx.filter = 'none';
         ctx.restore();
@@ -2320,7 +2389,6 @@ class Enemy {
             this.subType = 'melee'; this.hp = (type==='midboss'?500:3000) * hpMul; this.speed = type==='midboss'?110:70; this.damage = (type==='midboss'?15:30) * dmgMul; this.color = type==='midboss'?'#e1b12c':'#c23616'; this.exp = type==='midboss'?20:100;
         }
         this.maxHp = this.hp; this.hitTimer = 0;
-
         this.imgKey = '';
         if (this.type === 'boss') {
             if (currentStage === 10) this.imgKey = 'boss_10';
@@ -2337,12 +2405,51 @@ class Enemy {
     }
     update(dt) {
         let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy;
-        if (this.subType === 'melee') { 
-            if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
-        } else if (this.subType === 'ranged') {
-            if(distSq > this.range*this.range) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; }
+        if (this.subType === 'melee') { if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } } 
+        else if (this.subType === 'ranged') {
+            if(distSq > this.range*this.range) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
             else { this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; let dist = Math.sqrt(distSq); enemyProjectiles.push(new EnemyProjectile(this.x, this.y, (dx/dist)*200, (dy/dist)*200, this.damage, this.color)); playSFX('shoot'); } }
-        
+        } else if (this.subType === 'trap') {
+            if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; }
+            this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; groundTraps.push(new EnemyTrap(this.x, this.y, 60, this.damage, this.color)); }
+        }
+        let rSum = this.radius + player.radius;
+        if(distSq < rSum*rSum && this.hitTimer <= 0) { player.takeDamage(this.damage); this.hitTimer = 0.5; }
+        if(this.hitTimer > 0) this.hitTimer -= dt;
+    }
+    draw(ctx) {
+        if(isOffScreen(this.x, this.y, this.radius*2)) return;
+        ctx.save(); ctx.translate((this.x - camera.x) | 0, (this.y - camera.y) | 0);
+        const img = loadedImages[this.imgKey];
+        if (img && img.complete && img.naturalWidth > 0) {
+            let size = this.radius * 3.5; ctx.drawImage(img, -size/2, -size + this.radius, size, size);
+        } else {
+            ctx.fillStyle = this.hitTimer > 0 ? '#fff' : 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, this.radius, this.radius, this.radius/2, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = this.hitTimer > 0 ? '#fff' : this.color; ctx.beginPath(); ctx.arc(0, -this.radius/2, this.radius, 0, Math.PI*2); ctx.fill();
+        }
+        if(this.type === 'boss' || this.type === 'midboss') { 
+            ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(-this.radius, -this.radius*2.2, this.radius*2, 6);
+            ctx.fillStyle = '#ff4757'; ctx.fillRect(-this.radius, -this.radius*2.2, this.radius*2 * (this.hp/this.maxHp), 6); 
+        }
+        ctx.restore();
+    }
+    takeDamage(amount) {
+        if(this.hp <= 0) return; this.hp -= amount; playSFX('hit');
+        damageTexts.push(new DamageText(this.x, this.y - this.radius, amount));
+        if(particles.length < 50) { particles.push(new Particle(this.x, this.y, this.color)); }
+        if(this.hp <= 0) { 
+            statsTracking.totalKills++; stageKills++; checkAchievements(); 
+            if (stageKills >= 50 && stageMarblesDropped < MAX_MARBLES_PER_STAGE) {
+                stageKills = 0; stageMarblesDropped++;
+                let orbData = MARBLE_TYPES[Math.floor(Math.random() * MARBLE_TYPES.length)];
+                verdictOrbs.push(new VerdictOrb(this.x, this.y, orbData));
+            }
+            expGems.push(new ExpGem(this.x, this.y, this.exp)); 
+            if(this.type === 'boss' && !isStageCleared) { isStageCleared = true; hitStopTimer = 0.3; screenShake = 30; playSFX('bossKill'); setTimeout(() => triggerStageClear(), 1500); }
+        }
+    }
+}
+
 class EnemyProjectile {
     constructor(x, y, vx, vy, damage, color) { this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.damage = damage; this.color = color; this.life = 3.0; this.radius = 6; }
     update(dt) { this.x += this.vx * dt; this.y += this.vy * dt; this.life -= dt; let dx = player.x - this.x; let dy = player.y - this.y; let rSum = player.radius + this.radius; if(dx*dx + dy*dy < rSum*rSum) { player.takeDamage(this.damage); this.life = 0; } }
@@ -2742,6 +2849,10 @@ Object.assign(window, {
 if (typeof gameLoopId !== 'undefined' && gameLoopId) cancelAnimationFrame(gameLoopId);
 startStory();
 gameLoopId = requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>ame(gameLoop);
 
 </script>
 </body>
