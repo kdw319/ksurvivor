@@ -1194,21 +1194,36 @@ function drawMinimap() {
 
 function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
     let imgKey = 'player_idle';
+    const isMoving = (animState === 'run' || animState === 'dash');
+
     if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
     else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
     else if (animState === 'dash') imgKey = 'player_dash';
     else if (animState === 'run') {
         if (animDir === 'up') imgKey = 'player_up';
-        else if (animDir === 'side') imgKey = 'player_side';
+        else if (animDir === 'side') {
+            if (dirX === 1) imgKey = 'player_right';
+            else imgKey = 'player_left';
+        }
         else imgKey = 'player_down';
     }
-    else if (['throw', 'swing', 'cast'].includes(animState)) imgKey = 'player_attack';
+    // [Fix] Only show attack animation if idle to prevent direction flickering
+    else if (['throw', 'swing', 'cast'].includes(animState)) {
+        if (isMoving) {
+            // Keep walking direction if attacking while moving
+            if (animDir === 'up') imgKey = 'player_up';
+            else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
+            else imgKey = 'player_down';
+        } else {
+            imgKey = 'player_attack';
+        }
+    }
 
     const targetImg = loadedImages[imgKey] || loadedImages['player_idle'];
 
     if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
         ctx.save();
-        ctx.scale(dirX * scale, scale);
+        ctx.scale(scale, scale); 
         let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
         let w = 64; let h = 64; 
         ctx.drawImage(targetImg, -w/2, -h + 10 + bobY, w, h);
@@ -2267,7 +2282,7 @@ class Player {
             this.aimX = dx; this.aimY = dy;
         }
 
-        if (this.animTimer <= 0) { this.animState = (moveMag > 0) ? 'run' : 'idle'; }
+        if (this.animTimer <= 0) { this.animState = (moveMag > 0.1) ? 'run' : 'idle'; }
 
         if(keys['shift'] && this.dashCooldownTimer <= 0 && this.dashTimer <= 0) {
             this.executeDash(dx, dy);
