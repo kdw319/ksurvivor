@@ -1,6 +1,6 @@
 {
   "appId": "com.lastgirl.app",
-  "appName": "K-Survivor",
+  "appName": "Last Girl Survivor",
   "webDir": "www",
   "server": {
     "androidScheme": "http",
