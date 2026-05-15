@@ -1189,16 +1189,21 @@ function drawMinimap() {
 }
 
 function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
-    let imgKey = 'player_idle';
+    let imgKey = 'player_down';
     if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
     else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
     else if (animState === 'dash') imgKey = 'player_dash';
-    else if (animState === 'run') {
+    else if (animState === 'run' || animState === 'idle') {
         if (animDir === 'up') imgKey = 'player_up';
         else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
         else imgKey = 'player_down';
     }
-    const targetImg = loadedImages[imgKey] || loadedImages['player_idle'];
+    else if (['throw', 'swing', 'cast'].includes(animState)) {
+        if (animDir === 'up') imgKey = 'player_up';
+        else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
+        else imgKey = 'player_down'; 
+    }
+    const targetImg = loadedImages[imgKey] || loadedImages['player_down'];
     
     ctx.save();
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10 * scale, 5 * scale, 0, 0, Math.PI * 2); ctx.fill();
@@ -2172,6 +2177,8 @@ class Player {
 
         this.dashTimer = GameSettings.player.dashDuration; 
         this.invincibleTimer = GameSettings.player.dashDuration;
+        this.animState = 'dash';
+        this.animTimer = GameSettings.player.dashDuration;
         
         this.dashDir.x = (dx === 0 && dy === 0) ? this.dirX : dx; 
         this.dashDir.y = (dx === 0 && dy === 0) ? 0 : dy;
@@ -2214,12 +2221,18 @@ class Player {
         if (joystick.active) { dx = joystick.dx; dy = joystick.dy; if (dx < 0) this.dirX = -1; else if (dx > 0) this.dirX = 1; }
         
         let moveMag = Math.hypot(dx, dy);
-        if(moveMag > 0) {
+        if(moveMag > 0.05) {
             dx /= moveMag; dy /= moveMag;
             this.aimX = dx; this.aimY = dy;
+            if (Math.abs(dx) > 0.4) this.animDir = 'side';
+            else if (dy < -0.3) this.animDir = 'up';
+            else if (dy > 0.3) this.animDir = 'down';
         }
 
-        if (this.animTimer <= 0) { this.animState = (moveMag > 0) ? 'run' : 'idle'; }
+        if (this.animTimer <= 0) {
+            if (moveMag > 0.1) this.animState = 'run';
+            else { this.animState = 'idle'; if(!this.animDir) this.animDir = 'down'; }
+        }
 
         if(keys['shift'] && this.dashCooldownTimer <= 0 && this.dashTimer <= 0) {
             this.executeDash(dx, dy);
