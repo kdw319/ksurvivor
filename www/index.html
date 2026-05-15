@@ -2464,7 +2464,7 @@ window.addEventListener('keyup', e => {
 });
 
 window.addEventListener('pointerdown', e => {
-    if(gameState === 'story' && e.target.id !== 'storySkipBtn') { 
+    if(gameState === 'story' && e.target.id !== 'storySkipBtn' && e.target.id !== 'storyLangBtn') { 
         nextStoryStep(); 
         return; 
     }
