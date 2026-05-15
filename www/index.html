@@ -427,6 +427,7 @@
             <div id="storyText" class="typewriter-text"></div>
             <button id="storyNextBtn" class="btn primary hidden" onclick="window.nextStoryStep()">다음</button>
         </div>
+        <button id="storyLangBtn" class="btn" style="position: absolute; top: 20px; left: 20px; font-size: 14px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #555; pointer-events: auto; z-index: 60;" onclick="event.stopPropagation(); window.toggleLanguage()">🌐 KO</button>
         <button id="storySkipBtn" class="btn skip-btn" onclick="window.skipStory()">Skip</button>
     </div>
 
@@ -552,7 +553,12 @@ const I18N = {
         btnAchieveLobby: "도전과제", achieveTitle: "도전과제 (Achievements)", achieveDesc: "특정 조건을 만족하여 칭호를 획득하세요.",
         outfitEquipped: "착용 중", outfitEquipBtn: "착용하기", outfitReq: "해금: STAGE",
         speech: ["빨리 시작하자!", "가챠 돌릴 시간이야!", "대역전의 종소리가 울린다!", "지각하겠어!"],
-        storyLines: [ "수학여행의 들뜬 기분도 잠시...", "눈을 떠보니 기이한 재판소 한가운데였다.", "사방에서 조여오는 기계 인형들.", "살아남으려면... 가진 것을 무기로 삼아야 해!" ],
+        storyLines: [ 
+            "수학여행 중 끔찍한 교통사고를 당했다. 분명 그게 마지막 기억이었는데...", 
+            "눈을 떠보니 차가운 법정 바닥이었다. 내 이름은 '윤이솔'. 어째서인지 이곳에 갇혀버렸다.",
+            "사고는 조작된 기억일 뿐인가? 이 기이한 재판소의 진실이 나를 기다리고 있다.",
+            "기억의 조각을 되찾고 나를 가둔 이들에게 복수하기 위해, 나는 최후의 소녀가 되겠다!" 
+        ],
         storyNext: "다음 (Click)", storySkip: "Skip",
         w_chalk: { name: "분필", desc: "가장 가까운 적에게 투사체를 던집니다.", stat: "공격력" },
         w_textbook: { name: "교과서", desc: "주변을 맴도는 마법의 교과서.", stat: "쿨타임" },
@@ -1472,16 +1478,19 @@ function togglePause() {
 
 function returnToLobby() {
     if (gameState === 'gameover') currentStage = 1; else if (gameState === 'clear') currentStage++; 
-    gameState = 'lobby'; isPaused = false; stopBGM(); gameSpeedMultiplier = 1.0;
-    ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
-    let orbPocketUI = document.getElementById('orbPocketUI');
-    if (orbPocketUI && player) {
-        orbPocketUI.innerHTML = (player.marblePocket || []).map(t => {
-            const data = MARBLE_TYPES.find(m => t === m.type);
-            return `<span style="text-shadow: 0 0 10px ${data.glow};">${data.icon}</span>`;
-        }).join('');
+    gameState = 'lobby'; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
+    ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI'].forEach(id => { 
+        let el = document.getElementById(id); if(el) el.classList.add('hidden'); 
+    });
+    if (player) {
+        let orbPocketUI = document.getElementById('orbPocketUI');
+        if (orbPocketUI) {
+            orbPocketUI.innerHTML = (player.marblePocket || []).map(t => {
+                const data = MARBLE_TYPES.find(m => t === m.type);
+                return "<span style='text-shadow: 0 0 10px " + data.glow + ";'>" + data.icon + "</span>";
+            }).join('');
+        }
     }
-
     let speedBtn = document.getElementById('speedBtn'); if (speedBtn) { speedBtn.innerText = '1X'; speedBtn.style.color = '#e0d0a0'; }
     ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove('hidden'); });
     updateLobbyCurrency();
@@ -2209,7 +2218,7 @@ class Player {
         this.baseSpeed = GameSettings.player.baseSpeed; this.radius = 15; this.dirX = 1; this.level = 1; this.exp = 0; this.maxExp = 10;
         this.weapons = []; this.activeSynergies = {}; this.passiveTimer = 0;
         this.dashTimer = 0; this.dashCooldownTimer = 0; this.invincibleTimer = 0; this.dashDir = { x: 1, y: 0 };
-        this.animState = 'idle'; this.animTimer = 0;
+        this.animState = 'idle'; this.animTimer = 0; this.animDir = 'down';
         this.aimX = 1; this.aimY = 0; 
         this.hitTimer = 0;
     }
@@ -2311,7 +2320,7 @@ class Player {
         if (this.hitTimer > 0) { ctx.filter = 'brightness(50%) sepia(1) hue-rotate(-50deg) saturate(500%)'; }
         if (this.invincibleTimer > 0) { ctx.globalAlpha = 0.5 + Math.sin(performance.now() * 0.02) * 0.3; }
         
-        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer); 
+        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer, this.animDir); 
         
         ctx.filter = 'none';
         ctx.restore();
