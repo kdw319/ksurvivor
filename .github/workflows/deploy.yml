@@ -18,40 +18,22 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Main Branch
+      - name: Checkout
         uses: actions/checkout@v4
-        continue-on-error: true
         with:
-          ref: main
-          path: main_ref
-
-      - name: Checkout Sandbox Branch
-        uses: actions/checkout@v4
-        continue-on-error: true
-        with:
-          ref: sandbox
-          path: sandbox_ref
+          fetch-depth: 0
 
       - name: Prepare Deployment Directory
         run: |
-          mkdir -p deploy_out
+          mkdir -p deploy_out/sandbox
           
-          # 1. Main branch contents to root
-          if [ -d "main_ref/www" ]; then
-            echo "Copying Main to root..."
-            cp -a main_ref/www/. deploy_out/
-          else
-            echo "Main branch www directory not found."
-          fi
+          # 1. Export Main to root
+          git checkout main
+          cp -a www/. deploy_out/
           
-          # 2. Sandbox branch contents to /sandbox folder
-          if [ -d "sandbox_ref/www" ]; then
-            echo "Copying Sandbox to /sandbox..."
-            mkdir -p deploy_out/sandbox
-            cp -a sandbox_ref/www/. deploy_out/sandbox/
-          else
-            echo "Sandbox branch www directory not found."
-          fi
+          # 2. Export Sandbox to /sandbox
+          git checkout sandbox
+          cp -a www/. deploy_out/sandbox/
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
