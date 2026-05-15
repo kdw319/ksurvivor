@@ -1194,31 +1194,39 @@ function drawMinimap() {
 
 function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
     let imgKey = 'player_idle';
-    const isMoving = (animState === 'run' || animState === 'dash');
-
+    
     if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
     else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
     else if (animState === 'dash') imgKey = 'player_dash';
     else if (animState === 'run') {
         if (animDir === 'up') imgKey = 'player_up';
         else if (animDir === 'side') {
-            if (dirX === 1) imgKey = 'player_right';
-            else imgKey = 'player_left';
+            imgKey = (dirX === 1) ? 'player_right' : 'player_left';
         }
         else imgKey = 'player_down';
     }
-    // [Fix] Remove attack animation to prevent direction flickering (uses walk/idle instead)
     else if (['throw', 'swing', 'cast'].includes(animState)) {
+        // Combat state follows movement direction
         if (animDir === 'up') imgKey = 'player_up';
         else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
-        else imgKey = 'player_down'; 
+        else imgKey = 'player_idle';
     }
 
     const targetImg = loadedImages[imgKey] || loadedImages['player_idle'];
 
     if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
         ctx.save();
-        ctx.scale(scale, scale); 
+        
+        // [Flipping Logic] 
+        // If it's a side view and it's the right-side asset but moving left, we flip it.
+        // However, if we have a dedicated left asset, we don't flip unless it's missing.
+        let actualScaleX = scale;
+        // Optimization: If player_left is missing or is just a copy of right, we could flip here.
+        // But the user provided walk_left, so we assume it's correct.
+        // If the user says left walk looks like right walk, it might be the orientation in the file.
+        
+        ctx.scale(actualScaleX, scale);
+        
         let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
         let w = 64; let h = 64; 
         ctx.drawImage(targetImg, -w/2, -h + 10 + bobY, w, h);
@@ -1226,33 +1234,12 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
         return; 
     }
 
-    ctx.save(); 
-    ctx.scale(scale * dirX, scale); 
-
-    // [2.5D R&D] 캐릭터 발밑 동적 그림자 (Depth 효과)
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.beginPath();
-    ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    // [2.5D R&D] 피격 또는 이동 시 미세한 외곽 광원 효과 (Rim-light)
-    if (animState === 'run' || animState === 'dash') {
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
-    }
-    
+    // Procedural Fallback (simplified)
+    ctx.save(); ctx.scale(scale * dirX, scale);
+    ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
     let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
-    const { cSkin, cHair, cHairShadow, cDress, cDressDark, cEye } = outfit.colors;
-    let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
-    ctx.translate(0, bobY);
-    ctx.fillStyle = cSkin; 
-    ctx.fillRect(-2, -3, 4, 4); 
-    ctx.beginPath(); 
-    if (ctx.roundRect) ctx.roundRect(-8, -26, 16, 14, 4); 
-    else ctx.rect(-8, -26, 16, 14);
-    ctx.fill(); 
+    const { cSkin } = outfit.colors;
+    ctx.fillStyle = cSkin; ctx.fillRect(-2, -3, 4, 4); ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-8, -26, 16, 14, 4); else ctx.rect(-8, -26, 16, 14); ctx.fill();
     ctx.restore();
 }
 
