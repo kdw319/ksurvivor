@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Last Girl Survivor : 대역전의 종소리</title>
+    <title>K-여고생 서바이버 : 대역전의 종소리</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+KR:wght@400;700&display=swap');
 
@@ -438,23 +438,9 @@
 // [1-A] 외부 에셋 데이터 슬롯 (URL, 파일명, Base64 모두 지원)
 // ==========================================
 const GAME_ASSETS = {
-    player_idle: "character_idle.webp", 
-    player_down: "character_front_walk_walk_down.webp",
-    player_up: "character_back_walk_walk_up.webp",
-    player_right: "character_right_walk_walk_right.webp",
-    player_left: "character_left_walk_walk_left.webp",
-    player_hurt: "character_hurt.webp",
-    player_attack: "character_attack.webp",
-    player_death: "character_death.webp",
-    player_dash: "character_dash.png",
-    mob_juror: "mobs/mob_juror.png",
-    mob_gavel: "mobs/mob_gavel.png",
-    mob_spectre: "mobs/mob_spectre.png",
-    mob_evidence: "mobs/mob_evidence.png",
-    boss_mid: "bosses/midboss.png",
-    boss_10: "bosses/boss_10.png",
-    boss_20: "bosses/boss_20.png",
-    boss_30: "bosses/boss_30.png"
+    player: "", // 예: "https://.../player.png" 또는 Base64 문자열
+    mob: "",    // 예: "mob.png"
+    boss: ""    // 예: "boss.png"
 };
 const loadedImages = {};
 
@@ -596,9 +582,7 @@ const I18N = {
         tut_p2_t: "성장 시스템", tut_p2_d: "스테이지에서 획득한 뱃지로 '능력치 강화' 메뉴에서 영구적인 스탯 업이 가능합니다.",
         tut_p3_t: "가챠 및 무기", tut_p3_d: "가챠를 통해 특수 무기를 해금하세요. 해금된 무기는 게임 중 레벨업 풀에 1.5배 확률로 등장합니다!",
         orb_get: "⚖️ 심판의 구슬 획득!", orb_fury: "분노의 심판 (공격력)", orb_life: "생명의 심판 (체력)", orb_wind: "신속의 심판 (이동속도)",
-        syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)",
-        mob_juror: "배심원 인형", mob_gavel: "의사봉 파쇄자", mob_spectre: "서류 유령", mob_evidence: "증거 수집기",
-        boss_mid: "재판 감독관", boss_10: "교수형 판사", boss_20: "대검찰관", boss_30: "정의의 여신상"
+        syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)"
     },
     en: {
         langBtn: "🌐 EN", title: "Last Girl Survivor", subtitle: "Bell of Turnabout",
@@ -640,9 +624,7 @@ const I18N = {
         tut_p2_t: "Growth", tut_p2_d: "Badges from stages can be used in the 'Upgrade' menu for permanent stat boosts.",
         tut_p3_t: "Gacha", tut_p3_d: "Unlock special weapons via Gacha. Unlocked weapons appear in the level-up pool with 1.5x weight!",
         orb_get: "⚖️ Verdict Orb Acquired!", orb_fury: "Verdict of Fury (ATK)", orb_life: "Verdict of Life (HP)", orb_wind: "Verdict of Wind (SPD)",
-        syn_triple: "Transcendent Synergy (25%)", syn_double: "Resonance Synergy (15%)", syn_mix: "Harmonious Verdict (10%)",
-        mob_juror: "Juror Puppet", mob_gavel: "Gavel Smasher", mob_spectre: "Paperwork Spectre", mob_evidence: "Evidence Crawler",
-        boss_mid: "Trial Overseer", boss_10: "The Hanging Judge", boss_20: "Grand Prosecutor", boss_30: "Blind Justice"
+        syn_triple: "Transcendent Synergy (25%)", syn_double: "Resonance Synergy (15%)", syn_mix: "Harmonious Verdict (10%)"
     }
 };
 
@@ -1192,55 +1174,120 @@ function drawMinimap() {
     mCtx.fillRect(center - 2, center - 2, 4, 4);
 }
 
-function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
-    let imgKey = 'player_idle';
-    
-    if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
-    else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
-    else if (animState === 'dash') imgKey = 'player_dash';
-    else if (animState === 'run') {
-        if (animDir === 'up') imgKey = 'player_up';
-        else if (animDir === 'side') {
-            // [Fix] Since character_left_walk exists, use it.
-            // If the user says it looks like right, we might need a flip.
-            if (dirX === 1) imgKey = 'player_right';
-            else imgKey = 'player_left';
-        }
-        else imgKey = 'player_down';
-    }
-    else if (['throw', 'swing', 'cast'].includes(animState)) {
-        // [Fix] Attack should NOT default to front. It should follow current direction.
-        if (animDir === 'up') imgKey = 'player_up';
-        else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
-        else imgKey = 'player_down'; 
-    }
-
-    const targetImg = loadedImages[imgKey] || loadedImages['player_idle'];
-
-    if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
+function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0) {
+    if (loadedImages.player && loadedImages.player.complete && loadedImages.player.naturalWidth > 0) {
         ctx.save();
-        
-        let flipX = 1;
-        // [Fix] If player_left is active, force -1 flip if it's mirroring right.
-        if (imgKey === 'player_left') flipX = -1; 
-        if (imgKey === 'player_dash' && dirX === -1) flipX = -1;
-
-        ctx.scale(scale * flipX, scale);
-        
+        ctx.scale(dirX * scale, scale);
         let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
-        let w = 64; let h = 64; 
-        ctx.drawImage(targetImg, -w/2, -h + 10 + bobY, w, h);
+        let w = 48; let h = 48; 
+        ctx.drawImage(loadedImages.player, -w/2, -h + 10 + bobY, w, h);
         ctx.restore();
         return; 
     }
 
-    // Procedural Fallback (simplified)
-    ctx.save(); ctx.scale(scale * dirX, scale);
-    ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-    let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
-    const { cSkin } = outfit.colors;
-    ctx.fillStyle = cSkin; ctx.fillRect(-2, -3, 4, 4); ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-8, -26, 16, 14, 4); else ctx.rect(-8, -26, 16, 14); ctx.fill();
+    ctx.save(); 
+    ctx.scale(scale * dirX, scale); 
+
+    // [2.5D R&D] 캐릭터 발밑 동적 그림자 (Depth 효과)
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
+
+    // [2.5D R&D] 피격 또는 이동 시 미세한 외곽 광원 효과 (Rim-light)
+    if (animState === 'run' || animState === 'dash') {
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+    }
+    
+    let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
+    const { cSkin, cHair, cHairShadow, cDress, cDressDark, cEye } = outfit.colors;
+    let bobY = 0, armAngle = 0, legSwing = 0;
+    
+    if (animState === 'idle') { 
+        bobY = Math.sin(performance.now() * 0.005) * 1.5; 
+    } else if (animState === 'run') { 
+        bobY = Math.abs(Math.sin(performance.now() * 0.01)) * -3; 
+        legSwing = Math.sin(performance.now() * 0.015) * 6; 
+        armAngle = Math.sin(performance.now() * 0.015) * 0.5; 
+    } else if (animState === 'throw') { 
+        armAngle = -Math.PI / 2 + (animTimer * 2); 
+    } else if (animState === 'swing') { 
+        armAngle = -Math.PI + (animTimer * 5); 
+    } else if (animState === 'cast') { 
+        armAngle = -Math.PI / 1.5; 
+        bobY = -2; 
+    }
+
+    ctx.translate(0, bobY);
+    
+    ctx.save(); 
+    ctx.translate(2, -8); 
+    ctx.rotate(animState === 'cast' ? armAngle : -armAngle); 
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(-2, 0, 4, 10); 
+    ctx.fillStyle = cDressDark; 
+    ctx.fillRect(-2.5, -2, 5, 6); 
+    ctx.restore();
+    
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(1 - legSwing*0.5, 0, 4, 14); 
+    ctx.fillRect(-3 + legSwing*0.5, 0, 4, 15);
+    
+    ctx.fillStyle = cDress; 
+    ctx.fillRect(-6, -14, 12, 10); 
+    ctx.beginPath(); 
+    ctx.moveTo(-6, -4); ctx.lineTo(6, -4); ctx.lineTo(8, 6); ctx.lineTo(3, 6); ctx.lineTo(0, -2); ctx.lineTo(-4, 8); ctx.lineTo(-7, 4); 
+    ctx.fill();
+    
+    ctx.fillStyle = cDressDark; 
+    ctx.fillRect(4, -4, 2, 8); 
+    ctx.fillRect(-6, -4, 2, 10);
+    
+    ctx.translate(0, -14); 
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(-2, -3, 4, 4); 
+    ctx.beginPath(); 
+    if (ctx.roundRect) ctx.roundRect(-8, -12, 16, 14, 4); 
+    else ctx.rect(-8, -12, 16, 14);
+    ctx.fill(); 
+    
+    ctx.fillStyle = cEye; 
+    ctx.fillRect(1, -5, 3, 2); 
+    ctx.fillStyle = '#fff'; 
+    ctx.fillRect(1.5, -5, 1, 1);
+    
+    ctx.fillStyle = '#2d3436'; 
+    ctx.fillRect(0, -6, 5, 1); 
+    ctx.fillStyle = 'rgba(255, 100, 100, 0.3)'; 
+    ctx.fillRect(2, -2, 3, 2);
+    
+    ctx.fillStyle = cHair; 
+    ctx.beginPath(); 
+    if (ctx.roundRect) ctx.roundRect(-10, -14, 20, 12, 5); 
+    else ctx.rect(-10, -14, 20, 12);
+    ctx.fill(); 
+    ctx.fillRect(-9, -14, 12, 6); 
+    ctx.fillRect(1, -14, 6, 8);
+    
+    ctx.fillStyle = cHairShadow; 
+    ctx.fillRect(-10, -4, 4, 8); 
+    ctx.fillRect(6, -4, 3, 6);
+    
+    ctx.restore(); 
+    
+    ctx.save(); 
+    ctx.translate(0, bobY - 12); 
+    ctx.rotate(armAngle); 
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(-2, 0, 4, 12); 
+    ctx.fillStyle = cDress; 
+    ctx.fillRect(-2.5, -2, 5, 6); 
+    ctx.restore();
+    
+    ctx.restore(); 
 }
 
 // ==========================================
@@ -1465,7 +1512,7 @@ function nextStage() {
 }
 
 function resetStage(fullReset = false) {
-    stageTime = 0; enemies = []; projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = []; verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0;
+    stageTime = 0; enemies = []; projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = [];
     verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0;
     isStageCleared = false;
     hasSpawnedMidBoss = false;
@@ -1819,34 +1866,6 @@ class Spotlight {
     }
 }
 
-class VerdictOrb {
-    constructor(x, y, data) {
-        this.x = x; this.y = y;
-        this.type = data.type; this.color = data.color; this.glow = data.glow; this.icon = data.icon;
-        this.life = 30.0; this.radius = 15;
-    }
-    update(dt) {
-        this.life -= dt;
-        let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy;
-        if (distSq < 10000) {
-            let dist = Math.sqrt(distSq);
-            this.x += (dx/dist) * 300 * dt; this.y += (dy/dist) * 300 * dt;
-            if (dist < player.radius + this.radius) {
-                player.addOrb(this.type);
-                this.life = 0;
-            }
-        }
-    }
-    draw(ctx) {
-        if (isOffScreen(this.x, this.y)) return;
-        ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0);
-        ctx.shadowBlur = 15; ctx.shadowColor = this.glow;
-        ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-        ctx.fillStyle = '#fff'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(this.icon, 0, 0);
-        ctx.restore();
-    }
-}
 class DamageText {
     constructor(x, y, amount, isPlayer = false) { 
         this.x = x; 
@@ -2187,7 +2206,7 @@ class Player {
         this.baseSpeed = GameSettings.player.baseSpeed; this.radius = 15; this.dirX = 1; this.level = 1; this.exp = 0; this.maxExp = 10;
         this.weapons = []; this.activeSynergies = {}; this.passiveTimer = 0;
         this.dashTimer = 0; this.dashCooldownTimer = 0; this.invincibleTimer = 0; this.dashDir = { x: 1, y: 0 };
-        this.animState = 'idle'; this.animTimer = 0; this.animDir = 'down';
+        this.animState = 'idle'; this.animTimer = 0;
         this.aimX = 1; this.aimY = 0; 
         this.hitTimer = 0;
     }
@@ -2210,15 +2229,13 @@ class Player {
         this.stats.cooldownMult = Math.max(0.2, this.stats.cooldownMult); updateHUD(); 
     }
     
-        executeDash(dx, dy) {
+    executeDash(dx, dy) {
         let beatTime = stageTime % GameSettings.rhythm.beatInterval;
         let timeToBeat = Math.min(beatTime, GameSettings.rhythm.beatInterval - beatTime);
         let isPerfect = timeToBeat <= GameSettings.rhythm.perfectWindow;
 
         this.dashTimer = GameSettings.player.dashDuration; 
         this.invincibleTimer = GameSettings.player.dashDuration;
-        this.animState = 'dash';
-        this.animTimer = GameSettings.player.dashDuration;
         
         this.dashDir.x = (dx === 0 && dy === 0) ? this.dirX : dx; 
         this.dashDir.y = (dx === 0 && dy === 0) ? 0 : dy;
@@ -2261,24 +2278,12 @@ class Player {
         if (joystick.active) { dx = joystick.dx; dy = joystick.dy; if (dx < 0) this.dirX = -1; else if (dx > 0) this.dirX = 1; }
         
         let moveMag = Math.hypot(dx, dy);
-        if(moveMag > 0.1) {
+        if(moveMag > 0) {
             dx /= moveMag; dy /= moveMag;
             this.aimX = dx; this.aimY = dy;
-            
-            // [Directional Fix] Set animation direction with side priority
-            if (Math.abs(dx) > 0.5) this.animDir = 'side';
-            else if (dy < -0.5) this.animDir = 'up';
-            else if (dy > 0.5) this.animDir = 'down';
         }
 
-        if (this.animTimer <= 0) { 
-            if (moveMag > 0.1) {
-                this.animState = 'run';
-            } else {
-                this.animState = 'idle';
-                this.animDir = 'down'; // 정면(Front) 고정
-            }
-        }
+        if (this.animTimer <= 0) { this.animState = (moveMag > 0) ? 'run' : 'idle'; }
 
         if(keys['shift'] && this.dashCooldownTimer <= 0 && this.dashTimer <= 0) {
             this.executeDash(dx, dy);
@@ -2303,7 +2308,7 @@ class Player {
         if (this.hitTimer > 0) { ctx.filter = 'brightness(50%) sepia(1) hue-rotate(-50deg) saturate(500%)'; }
         if (this.invincibleTimer > 0) { ctx.globalAlpha = 0.5 + Math.sin(performance.now() * 0.02) * 0.3; }
         
-        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer, this.animDir); 
+        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer); 
         
         ctx.filter = 'none';
         ctx.restore();
@@ -2368,21 +2373,6 @@ class Enemy {
             this.subType = 'melee'; this.hp = (type==='midboss'?500:3000) * hpMul; this.speed = type==='midboss'?110:70; this.damage = (type==='midboss'?15:30) * dmgMul; this.color = type==='midboss'?'#e1b12c':'#c23616'; this.exp = type==='midboss'?20:100;
         }
         this.maxHp = this.hp; this.hitTimer = 0;
-
-        // [Asset Mapping] Assign specific image key
-        this.imgKey = '';
-        if (this.type === 'boss') {
-            if (currentStage === 10) this.imgKey = 'boss_10';
-            else if (currentStage === 20) this.imgKey = 'boss_20';
-            else if (currentStage === 30) this.imgKey = 'boss_30';
-            else this.imgKey = 'boss_mid';
-        } else if (this.type === 'midboss') {
-            this.imgKey = 'boss_mid';
-        } else {
-            if (this.subType === 'ranged') this.imgKey = 'mob_spectre';
-            else if (this.subType === 'trap') this.imgKey = 'mob_evidence';
-            else this.imgKey = (Math.random() < 0.5) ? 'mob_juror' : 'mob_gavel';
-        }
     }
     update(dt) {
         let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy; 
@@ -2391,57 +2381,6 @@ class Enemy {
             if(distSq > this.range*this.range) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
             else { this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; let dist = Math.sqrt(distSq); enemyProjectiles.push(new EnemyProjectile(this.x, this.y, (dx/dist)*200, (dy/dist)*200, this.damage, this.color)); playSFX('shoot'); } }
         } else if (this.subType === 'trap') {
-            if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; }
-            this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; groundTraps.push(new EnemyTrap(this.x, this.y, 60, this.damage, this.color)); }
-        }
-        let rSum = this.radius + player.radius;
-        if(distSq < rSum*rSum && this.hitTimer <= 0) { player.takeDamage(this.damage); this.hitTimer = 0.5; }
-        if(this.hitTimer > 0) this.hitTimer -= dt;
-    }
-    draw(ctx) {
-        if(isOffScreen(this.x, this.y, this.radius*2)) return;
-        ctx.save(); ctx.translate((this.x - camera.x) | 0, (this.y - camera.y) | 0);
-        
-        const img = loadedImages[this.imgKey];
-        if (img && img.complete && img.naturalWidth > 0) {
-            let size = this.radius * 3.5; 
-            ctx.drawImage(img, -size/2, -size + this.radius, size, size);
-        } else {
-            ctx.fillStyle = this.hitTimer > 0 ? '#fff' : 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, this.radius, this.radius, this.radius/2, 0, 0, Math.PI*2); ctx.fill();
-            if(this.type === 'boss') { ctx.fillStyle = this.hitTimer > 0 ? '#fff' : this.color; ctx.fillRect(-this.radius, -this.radius*1.5, this.radius*2, this.radius*2); ctx.fillStyle = '#000'; ctx.fillRect(-10, -this.radius, 20, 10); } 
-            else {
-                ctx.fillStyle = this.hitTimer > 0 ? '#fff' : this.color; ctx.beginPath(); ctx.arc(0, -this.radius/2, this.radius, 0, Math.PI*2); ctx.fill();
-            }
-        }
-        
-        if(this.type === 'boss' || this.type === 'midboss') { ctx.fillStyle = 'red'; ctx.fillRect(-this.radius, -this.radius*2, this.radius*2 * (this.hp/this.maxHp), 5); }
-        ctx.restore();
-    }
-    takeDamage(amount) {
-        if(this.hp <= 0) return; this.hp -= amount; playSFX('hit'); 
-        damageTexts.push(new DamageText(this.x, this.y - this.radius, amount));
-        if(particles.length < 50) { particles.push(new Particle(this.x, this.y, this.color)); }
-        
-        if(this.hp <= 0) { 
-            statsTracking.totalKills++;
-            stageKills++;
-            checkAchievements(); 
-            
-            if (stageKills >= 50 && stageMarblesDropped < MAX_MARBLES_PER_STAGE) {
-                stageKills = 0; stageMarblesDropped++;
-                let orbData = MARBLE_TYPES[Math.floor(Math.random() * MARBLE_TYPES.length)];
-                verdictOrbs.push(new VerdictOrb(this.x, this.y, orbData));
-            }
-
-            expGems.push(new ExpGem(this.x, this.y, this.exp)); 
-            
-            if(this.type === 'boss' && !isStageCleared) { 
-                isStageCleared = true; hitStopTimer = 0.3; screenShake = 30; playSFX('bossKill');
-                setTimeout(() => triggerStageClear(), 1500); 
-            }
-        }
-    }
-} else if (this.subType === 'trap') {
             if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; }
             this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; groundTraps.push(new EnemyTrap(this.x, this.y, 60, this.damage, this.color)); }
         }
@@ -2770,7 +2709,7 @@ function gameLoop(timestamp) {
             if(particles.length > 50) particles.splice(0, particles.length - 50);
             if(damageTexts.length > 15) damageTexts.splice(0, damageTexts.length - 15);
 
-            enemies.forEach(e => e.update(dt)); verdictOrbs.forEach(o => o.update(dt)); 
+            enemies.forEach(e => e.update(dt)); 
             projectiles.forEach(p => p.update(dt)); 
             enemyProjectiles.forEach(p => p.update(dt)); 
             groundTraps.forEach(t => t.update(dt)); 
@@ -2779,7 +2718,7 @@ function gameLoop(timestamp) {
             damageTexts.forEach(d => d.update(dt)); 
             particles.forEach(p => p.update(dt));
             
-            enemies = enemies.filter(e => e.hp > 0); verdictOrbs = verdictOrbs.filter(o => o.life > 0); 
+            enemies = enemies.filter(e => e.hp > 0); 
             projectiles = projectiles.filter(p => p.life > 0); 
             enemyProjectiles = enemyProjectiles.filter(p => p.life > 0); 
             groundTraps = groundTraps.filter(t => t.life > 0); 
@@ -2903,6 +2842,60 @@ Object.assign(window, {
 if (typeof gameLoopId !== 'undefined' && gameLoopId) cancelAnimationFrame(gameLoopId);
 startStory();
 gameLoopId = requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>       let zx = gameWidth / 2 - zoneWidth / 2;
+                ctx.fillStyle = 'rgba(241, 196, 15, 0.4)';
+                ctx.fillRect(zx, by, zoneWidth, barHeight);
+
+                let cx = gameWidth / 2;
+                ctx.fillStyle = '#f1c40f';
+                let lineH = barHeight * beatScale;
+                ctx.fillRect(cx - 2, by - (lineH - barHeight)/2, 4, lineH);
+
+                let progress = (stageTime % GameSettings.rhythm.beatInterval) / GameSettings.rhythm.beatInterval;
+                let distFromCenter = Math.min(progress, 1.0 - progress) * 2;
+                let cursorX1 = cx - (barWidth / 2) * distFromCenter;
+                let cursorX2 = cx + (barWidth / 2) * distFromCenter;
+
+                ctx.fillStyle = '#fff';
+                ctx.shadowColor = '#fff';
+                ctx.shadowBlur = 5;
+                ctx.fillRect(cursorX1 - 2, by - 5, 4, barHeight + 10);
+                ctx.fillRect(cursorX2 - 2, by - 5, 4, barHeight + 10);
+
+                ctx.restore();
+            }
+        }
+    } catch(e) { 
+        console.error("GameLoop Safe Error Catch:", e); 
+    }
+    
+    gameLoopId = requestAnimationFrame(gameLoop);
+}
+
+// ==========================================
+// 10. 명시적 전역 API 내보내기
+// ==========================================
+Object.assign(window, {
+    toggleLanguage, changeVolume, toggleGameSpeed, startStory, playStoryStep,
+    nextStoryStep, skipStory, togglePause, returnToLobby, startGame, triggerStageClear,
+    nextStage, resetStage, triggerLevelUp, openGacha, closeGacha, rollGacha,
+    openUpgrade, closeUpgrade, doUpgrade, renderUpgradeList, openSaveLoad, closeSaveLoad,
+    renderSaveSlots, saveToSlot, loadFromSlot, openCloset, closeCloset, equipOutfit,
+    renderClosetList, openAchieve, closeAchieve, renderAchieveList,
+    openTutorial, closeTutorial, nextTutorialPage, prevTutorialPage, renderTutorialPage
+});
+
+// 게임 부팅
+if (typeof gameLoopId !== 'undefined' && gameLoopId) cancelAnimationFrame(gameLoopId);
+startStory();
+gameLoopId = requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>mationFrame(gameLoop);
 
 </script>
 </body>
