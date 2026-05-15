@@ -1192,7 +1192,7 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
         else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
         else imgKey = 'player_down';
     }
-    else if (['throw', 'swing', 'cast'].includes(improvedAnimState(animState))) {
+    else if (['throw', 'swing', 'cast'].includes(animState)) {
         // [Directional Combat] Use current direction for attacks instead of popping to front
         if (animDir === 'up') imgKey = 'player_up';
         else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
