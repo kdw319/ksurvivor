@@ -1465,7 +1465,7 @@ function nextStage() {
 }
 
 function resetStage(fullReset = false) {
-    stageTime = 0; enemies = []; projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = [];
+    stageTime = 0; enemies = []; projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = []; verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0;
     verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0;
     isStageCleared = false;
     hasSpawnedMidBoss = false;
@@ -2367,9 +2367,9 @@ class Enemy {
         } else {
             this.subType = 'melee'; this.hp = (type==='midboss'?500:3000) * hpMul; this.speed = type==='midboss'?110:70; this.damage = (type==='midboss'?15:30) * dmgMul; this.color = type==='midboss'?'#e1b12c':'#c23616'; this.exp = type==='midboss'?20:100;
         }
-        this.maxHp = this.hp; this.hitTimer = 0; 
-        
-        // [Asset Mapping] Assign specific image key for this enemy
+        this.maxHp = this.hp; this.hitTimer = 0;
+
+        // [Asset Mapping] Assign specific image key
         this.imgKey = '';
         if (this.type === 'boss') {
             if (currentStage === 10) this.imgKey = 'boss_10';
@@ -2391,6 +2391,57 @@ class Enemy {
             if(distSq > this.range*this.range) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
             else { this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; let dist = Math.sqrt(distSq); enemyProjectiles.push(new EnemyProjectile(this.x, this.y, (dx/dist)*200, (dy/dist)*200, this.damage, this.color)); playSFX('shoot'); } }
         } else if (this.subType === 'trap') {
+            if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; }
+            this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; groundTraps.push(new EnemyTrap(this.x, this.y, 60, this.damage, this.color)); }
+        }
+        let rSum = this.radius + player.radius;
+        if(distSq < rSum*rSum && this.hitTimer <= 0) { player.takeDamage(this.damage); this.hitTimer = 0.5; }
+        if(this.hitTimer > 0) this.hitTimer -= dt;
+    }
+    draw(ctx) {
+        if(isOffScreen(this.x, this.y, this.radius*2)) return;
+        ctx.save(); ctx.translate((this.x - camera.x) | 0, (this.y - camera.y) | 0);
+        
+        const img = loadedImages[this.imgKey];
+        if (img && img.complete && img.naturalWidth > 0) {
+            let size = this.radius * 3.5; 
+            ctx.drawImage(img, -size/2, -size + this.radius, size, size);
+        } else {
+            ctx.fillStyle = this.hitTimer > 0 ? '#fff' : 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, this.radius, this.radius, this.radius/2, 0, 0, Math.PI*2); ctx.fill();
+            if(this.type === 'boss') { ctx.fillStyle = this.hitTimer > 0 ? '#fff' : this.color; ctx.fillRect(-this.radius, -this.radius*1.5, this.radius*2, this.radius*2); ctx.fillStyle = '#000'; ctx.fillRect(-10, -this.radius, 20, 10); } 
+            else {
+                ctx.fillStyle = this.hitTimer > 0 ? '#fff' : this.color; ctx.beginPath(); ctx.arc(0, -this.radius/2, this.radius, 0, Math.PI*2); ctx.fill();
+            }
+        }
+        
+        if(this.type === 'boss' || this.type === 'midboss') { ctx.fillStyle = 'red'; ctx.fillRect(-this.radius, -this.radius*2, this.radius*2 * (this.hp/this.maxHp), 5); }
+        ctx.restore();
+    }
+    takeDamage(amount) {
+        if(this.hp <= 0) return; this.hp -= amount; playSFX('hit'); 
+        damageTexts.push(new DamageText(this.x, this.y - this.radius, amount));
+        if(particles.length < 50) { particles.push(new Particle(this.x, this.y, this.color)); }
+        
+        if(this.hp <= 0) { 
+            statsTracking.totalKills++;
+            stageKills++;
+            checkAchievements(); 
+            
+            if (stageKills >= 50 && stageMarblesDropped < MAX_MARBLES_PER_STAGE) {
+                stageKills = 0; stageMarblesDropped++;
+                let orbData = MARBLE_TYPES[Math.floor(Math.random() * MARBLE_TYPES.length)];
+                verdictOrbs.push(new VerdictOrb(this.x, this.y, orbData));
+            }
+
+            expGems.push(new ExpGem(this.x, this.y, this.exp)); 
+            
+            if(this.type === 'boss' && !isStageCleared) { 
+                isStageCleared = true; hitStopTimer = 0.3; screenShake = 30; playSFX('bossKill');
+                setTimeout(() => triggerStageClear(), 1500); 
+            }
+        }
+    }
+} else if (this.subType === 'trap') {
             if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; }
             this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; groundTraps.push(new EnemyTrap(this.x, this.y, 60, this.damage, this.color)); }
         }
@@ -2719,7 +2770,7 @@ function gameLoop(timestamp) {
             if(particles.length > 50) particles.splice(0, particles.length - 50);
             if(damageTexts.length > 15) damageTexts.splice(0, damageTexts.length - 15);
 
-            enemies.forEach(e => e.update(dt)); 
+            enemies.forEach(e => e.update(dt)); verdictOrbs.forEach(o => o.update(dt)); 
             projectiles.forEach(p => p.update(dt)); 
             enemyProjectiles.forEach(p => p.update(dt)); 
             groundTraps.forEach(t => t.update(dt)); 
@@ -2728,7 +2779,7 @@ function gameLoop(timestamp) {
             damageTexts.forEach(d => d.update(dt)); 
             particles.forEach(p => p.update(dt));
             
-            enemies = enemies.filter(e => e.hp > 0); 
+            enemies = enemies.filter(e => e.hp > 0); verdictOrbs = verdictOrbs.filter(o => o.life > 0); 
             projectiles = projectiles.filter(p => p.life > 0); 
             enemyProjectiles = enemyProjectiles.filter(p => p.life > 0); 
             groundTraps = groundTraps.filter(t => t.life > 0); 
