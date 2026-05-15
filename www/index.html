@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Last Girl Survivor : 대역전의 종소리</title>
+    <title>K-여고생 서바이버 : 대역전의 종소리</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+KR:wght@400;700&display=swap');
 
@@ -438,12 +438,9 @@
 // [1-A] 외부 에셋 데이터 슬롯 (URL, 파일명, Base64 모두 지원)
 // ==========================================
 const GAME_ASSETS = {
-    player: "character_idle.webp", 
-    player_run: "character_front_walk_walk_down.webp",
-    player_hurt: "character_hurt.webp",
-    player_attack: "character_attack.webp",
-    player_death: "character_death.webp",
-    mob: "", boss: ""    
+    player: "", // 예: "https://.../player.png" 또는 Base64 문자열
+    mob: "",    // 예: "mob.png"
+    boss: ""    // 예: "boss.png"
 };
 const loadedImages = {};
 
@@ -1127,7 +1124,7 @@ function generateMapPattern(theme) {
         cx.fillStyle = 'rgba(255, 159, 243, 0.2)'; cx.beginPath(); cx.arc(180, 50, 15, 0, Math.PI*2); cx.fill(); 
         cx.fillStyle = 'rgba(0, 210, 211, 0.2)'; cx.beginPath(); cx.arc(20, 150, 20, 0, Math.PI*2); cx.fill(); 
     }
-    return canvas.getContext('2d').createPattern(c, 'repeat');
+    return ctx.createPattern(c, 'repeat');
 }
 
 // ==========================================
@@ -1178,20 +1175,12 @@ function drawMinimap() {
 }
 
 function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0) {
-    let imgKey = 'player';
-    if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
-    else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
-    else if (animState === 'run' || animState === 'dash') imgKey = 'player_run';
-    else if (['throw', 'swing', 'cast'].includes(animState)) imgKey = 'player_attack';
-
-    const targetImg = loadedImages[imgKey] || loadedImages['player'];
-
-    if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
+    if (loadedImages.player && loadedImages.player.complete && loadedImages.player.naturalWidth > 0) {
         ctx.save();
         ctx.scale(dirX * scale, scale);
         let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
-        let w = 64; let h = 64; 
-        ctx.drawImage(targetImg, -w/2, -h + 10 + bobY, w, h);
+        let w = 48; let h = 48; 
+        ctx.drawImage(loadedImages.player, -w/2, -h + 10 + bobY, w, h);
         ctx.restore();
         return; 
     }
@@ -1499,7 +1488,7 @@ function startGame() {
     initAudio(); 
     let bubble = document.getElementById('speechBubble'); if(bubble) bubble.style.opacity = 0;
     ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
-    ['hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove('hidden'); });
+    ['hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'pauseBtn', 'mobileDashBtn'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove('hidden'); });
     let synList = document.getElementById('systemNoticeList'); if(synList) synList.innerHTML = ''; 
     resetStage(true); 
     lastTime = performance.now(); gameState = 'playing'; isPaused = false; startBGM(); 
@@ -2902,15 +2891,6 @@ Object.assign(window, {
 // 게임 부팅
 if (typeof gameLoopId !== 'undefined' && gameLoopId) cancelAnimationFrame(gameLoopId);
 startStory();
-gameLoopId = requestAnimationFrame(gameLoop);
-
-</script>
-</body>
-</html>mationFrame(gameLoop);
-
-</script>
-</body>
-</html>();
 gameLoopId = requestAnimationFrame(gameLoop);
 
 </script>
