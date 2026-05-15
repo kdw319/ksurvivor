@@ -710,6 +710,7 @@ let bgPattern = null;
 let lobbyPattern = null;
 let currentBgPattern = null;
 let gameLoopId = null;
+let currentBgmAudio = null;
 
 // ==========================================
 // 2. Audio System
@@ -725,34 +726,25 @@ function initAudio() {
 }
 
 function startBGM() {
-    if(!audioCtx) return; 
-    if(bgmInterval) clearInterval(bgmInterval);
-    const notes = [146.83, 164.81, 174.61, 220.00, 174.61, 164.81]; 
-    let noteIdx = 0;
+    if(!audioCtx) return;
+    stopBGM();
     
-    bgmInterval = setInterval(() => {
-        if(gameState !== 'playing' || isPaused || masterVolume <= 0) return;
-        const osc = audioCtx.createOscillator(); 
-        const gain = audioCtx.createGain();
-        osc.connect(gain); 
-        gain.connect(masterGainNode);
-        osc.type = 'triangle'; 
-        osc.frequency.setValueAtTime(notes[noteIdx], audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.05, audioCtx.currentTime); 
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-        osc.start(audioCtx.currentTime); 
-        osc.stop(audioCtx.currentTime + 0.3);
-        noteIdx = (noteIdx + 1) % notes.length;
-    }, 400);
+    currentBgmAudio = new Audio('./assets/bgm/battle_bgm.mp3');
+    currentBgmAudio.loop = true;
+    currentBgmAudio.volume = masterVolume * 0.55; // [BGM Config] 55% Volume
+    
+    const source = audioCtx.createMediaElementSource(currentBgmAudio);
+    source.connect(masterGainNode);
+    
+    currentBgmAudio.play().catch(e => console.log("BGM Play Autoplay block:", e));
 }
-
 function stopBGM() { 
     if(bgmInterval) clearInterval(bgmInterval); 
 }
 
 function changeVolume(val) {
     masterVolume = parseFloat(val);
-    if(masterGainNode) masterGainNode.gain.value = masterVolume;
+    if(masterGainNode) masterGainNode.gain.value = masterVolume; if(currentBgmAudio) currentBgmAudio.volume = masterVolume * 0.55;
     const lVol = document.getElementById('lobbyVol'); if(lVol && lVol.value !== val) lVol.value = val;
     const pVol = document.getElementById('pauseVol'); if(pVol && pVol.value !== val) pVol.value = val;
 }
@@ -1191,6 +1183,7 @@ function drawMinimap() {
 
 function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
     let imgKey = 'player_idle';
+    
     if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
     else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
     else if (animState === 'dash') imgKey = 'player_dash';
@@ -1199,27 +1192,39 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
         else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
         else imgKey = 'player_down';
     }
-    else if (['throw', 'swing', 'cast'].includes(animState)) {
+    else if (['throw', 'swing', 'cast'].includes(improvedAnimState(animState))) {
+        // [Directional Combat] Use current direction for attacks instead of popping to front
         if (animDir === 'up') imgKey = 'player_up';
         else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
-        else imgKey = 'player_down'; 
+        else imgKey = 'player_idle';
     }
 
     const targetImg = loadedImages[imgKey] || loadedImages['player_idle'];
 
+    // [Visual] Shared Shadow
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(0, 2, 10 * scale, 5 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
     if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
         ctx.save();
         let flipX = 1;
-        if (imgKey === 'player_left') flipX = -1; 
+        // [Left Flip Fix]
+        if (imgKey === 'player_left') flipX = -1;
         if (imgKey === 'player_dash' && dirX === -1) flipX = -1;
-        ctx.scale(scale * flipX, scale);
         
+        ctx.scale(scale * flipX, scale);
         let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
         let w = 64; let h = 64; 
         ctx.drawImage(targetImg, -w/2, -h + 10 + bobY, w, h);
         ctx.restore();
         return; 
     }
+    
+    // Procedural Fallback
     ctx.save(); ctx.scale(scale * dirX, scale);
     ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
     let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
@@ -2218,13 +2223,29 @@ class Player {
         
         if (joystick.active) { dx = joystick.dx; dy = joystick.dy; if (dx < 0) this.dirX = -1; else if (dx > 0) this.dirX = 1; }
         
-        let moveMag = Math.hypot(dx, dy);
-        if(moveMag > 0) {
+                let moveMag = Math.hypot(dx, dy);
+        if(moveMag > 0.05) {
             dx /= moveMag; dy /= moveMag;
             this.aimX = dx; this.aimY = dy;
+            
+            // [Stable Directional Fix]
+            if (Math.abs(dx) > 0.4) {
+                this.animDir = 'side';
+            } else if (dy < -0.3) {
+                this.animDir = 'up';
+            } else if (dy > 0.3) {
+                this.animDir = 'down';
+            }
         }
 
-        if (this.animTimer <= 0) { this.animState = (moveMag > 0) ? 'run' : 'idle'; }
+        if (this.animTimer <= 0) { 
+            if (moveMag > 0.1) {
+                this.animState = 'run';
+            } else {
+                this.animState = 'idle';
+                this.animDir = 'down'; // Stop = Face Front
+            }
+        }
 
         if(keys['shift'] && this.dashCooldownTimer <= 0 && this.dashTimer <= 0) {
             this.executeDash(dx, dy);
