@@ -2301,13 +2301,18 @@ class Player {
         
         if (joystick.active) { dx = joystick.dx; dy = joystick.dy; if (dx < 0) this.dirX = -1; else if (dx > 0) this.dirX = 1; }
         
-        let moveMag = Math.hypot(dx, dy);
-        if(moveMag > 0) {
+                let moveMag = Math.hypot(dx, dy);
+        if(moveMag > 0.05) {
             dx /= moveMag; dy /= moveMag;
             this.aimX = dx; this.aimY = dy;
+            if (Math.abs(dx) > 0.4) this.animDir = 'side';
+            else if (dy < -0.3) this.animDir = 'up';
+            else if (dy > 0.3) this.animDir = 'down';
         }
-
-        if (this.animTimer <= 0) { this.animState = (moveMag > 0) ? 'run' : 'idle'; }
+        if (this.animTimer <= 0) {
+            if (moveMag > 0.1) this.animState = 'run';
+            else { this.animState = 'idle'; this.animDir = 'down'; }
+        }
 
         if(keys['shift'] && this.dashCooldownTimer <= 0 && this.dashTimer <= 0) {
             this.executeDash(dx, dy);
