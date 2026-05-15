@@ -1244,6 +1244,12 @@ function toggleLanguage() {
     const setTxt = (id, text) => { let e = document.getElementById(id); if(e) e.innerText = text; };
     const setHtml = (id, html) => { let e = document.getElementById(id); if(e) e.innerHTML = html; };
 
+    setTxt('storyLangBtn', lang.langBtn);
+    if (gameState === 'story') {
+        const textEl = document.getElementById('storyText');
+        if (textEl) textEl.innerHTML = lang.storyLines[storyStep];
+    }
+
     setTxt('langBtn', lang.langBtn); 
     setHtml('lobbyTitleText', `${lang.title}<br><span id="lobbySubtitle" style="font-size:1.2rem; color:#ccc;">${lang.subtitle}</span>`);
     setTxt('btnStartLobby', lang.btnStart); 
