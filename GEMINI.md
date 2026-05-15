@@ -30,6 +30,11 @@
 - **Offline Config:** `androidScheme: "http"`, `cleartext: true` in `capacitor.config.json`.
 - **Signing:** Use `LASTGIRL_KEY.jks` on Desktop (Pass: pass1234, Alias: lastgirl).
 
+## Deployment Environments (Strict Agreement)
+- **Live Environment:** `main` branch -> `github-pages`.
+- **QA Environment:** `sandbox` branch -> `Sandbox-Env`.
+- **Subdirectory:** Sandbox deployments are served from the `/sandbox/` path.
+
 ## Game Mechanics
 - **Verdict Orbs (Marble System):**
     - Drops every 50 kills (Max 6 per stage).
