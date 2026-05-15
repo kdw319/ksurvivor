@@ -75,16 +75,23 @@
 
         /* --- Portrait Mode (세로: 좁은 화면 중앙 정렬) --- */
         @media screen and (orientation: portrait) {
-            #lobbyTopBar { top: 180px; padding: 0 60px; justify-content: space-around; }
+            #lobbyTopBar { 
+                top: 180px; /* 노치 및 상태바 대폭 회피 */
+                padding: 0 60px;
+                justify-content: space-around;
+            }
             #lobbyTitle { top: 300px; font-size: 1.6rem; }
+            
             #hudLeft { top: 180px; left: 60px; }
             #hudRight { top: 180px; right: 60px; }
+            
             #inventory { top: 350px; left: 50%; transform: translateX(-50%); width: 90%; justify-content: center; }
             #statsPanel { 
                 top: 480px; left: 50%; transform: translateX(-50%);
                 width: 70%; max-height: 150px; padding: 15px; font-size: 12px;
                 background: rgba(0,0,0,0.6); border-radius: 10px; border-left: 4px solid #b89947;
             }
+
             #lobbyBottomBar { 
                 bottom: 250px; /* 네비게이션 바 완전 회피 */
                 display: grid; grid-template-columns: 1fr 1fr; 
@@ -274,7 +281,6 @@
     
     <canvas id="minimapCanvas" class="hidden" width="150" height="150"></canvas>
     <div id="orbPocketUI" class="hidden" style="position: absolute; display: flex; gap: 10px; font-size: 32px; z-index: 10;"></div>
-    <div id="orbPocketUI" class="hidden" style="position: absolute; display: flex; gap: 10px; font-size: 32px; z-index: 10;"></div>
 
     <div id="lobbyTopBar" class="hidden">
         <div class="currency-badge">🏅 <span id="lobbyBadgeDisp">0</span></div>
@@ -286,7 +292,7 @@
                 </div>
                 <button id="langBtn" class="btn" style="padding: 10px 20px; font-size: 14px; margin: 0;" onclick="window.toggleLanguage()">🌐 KO</button>
             </div>
-            <button id="tutBtn" class="btn" style="padding: 15px 30px; font-size: 24px; margin: 0; background: #2d3436; color: #fff; border: 2px solid #636e72; border-radius: 40px;" style="padding: 15px 30px; font-size: 24px; margin: 0; background: #2d3436; color: #fff; border: 2px solid #636e72; border-radius: 40px;" onclick="window.openTutorial()">❓ TUTORIAL</button>
+            <button id="tutBtn" class="btn" style="padding: 15px 30px; font-size: 24px; margin: 0; background: #2d3436; color: #fff; border: 2px solid #636e72; border-radius: 40px;" onclick="window.openTutorial()">❓ TUTORIAL</button>
         </div>
     </div>
     <div id="lobbyTitle" class="lobby-title hidden">
@@ -421,7 +427,6 @@
             <div id="storyText" class="typewriter-text"></div>
             <button id="storyNextBtn" class="btn primary hidden" onclick="window.nextStoryStep()">다음</button>
         </div>
-        <button id="storyLangBtn" class="btn" style="position: absolute; top: 20px; left: 20px; font-size: 14px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #555;" onclick="window.toggleLanguage()">🌐 KO</button>
         <button id="storySkipBtn" class="btn skip-btn" onclick="window.skipStory()">Skip</button>
     </div>
 
@@ -434,23 +439,12 @@
 // [1-A] 외부 에셋 데이터 슬롯 (URL, 파일명, Base64 모두 지원)
 // ==========================================
 const GAME_ASSETS = {
-    player_idle: "character_idle.webp", 
-    player_down: "character_front_walk_walk_down.webp",
-    player_up: "character_back_walk_walk_up.webp",
-    player_right: "character_right_walk_walk_right.webp",
-    player_left: "character_left_walk_walk_left.webp",
+    player: "character_idle.webp", 
+    player_run: "character_front_walk_walk_down.webp",
     player_hurt: "character_hurt.webp",
     player_attack: "character_attack.webp",
     player_death: "character_death.webp",
-    player_dash: "character_dash.png",
-    mob_juror: "mobs/mob_juror.png",
-    mob_gavel: "mobs/mob_gavel.png",
-    mob_spectre: "mobs/mob_spectre.png",
-    mob_evidence: "mobs/mob_evidence.png",
-    boss_mid: "bosses/midboss.png",
-    boss_10: "bosses/boss_10.png",
-    boss_20: "bosses/boss_20.png",
-    boss_30: "bosses/boss_30.png"
+    mob: "", boss: ""    
 };
 const loadedImages = {};
 function loadAssets() {
@@ -558,12 +552,7 @@ const I18N = {
         btnAchieveLobby: "도전과제", achieveTitle: "도전과제 (Achievements)", achieveDesc: "특정 조건을 만족하여 칭호를 획득하세요.",
         outfitEquipped: "착용 중", outfitEquipBtn: "착용하기", outfitReq: "해금: STAGE",
         speech: ["빨리 시작하자!", "가챠 돌릴 시간이야!", "대역전의 종소리가 울린다!", "지각하겠어!"],
-        storyLines: [ 
-            "수학여행 중 끔찍한 교통사고를 당했다. 분명 그게 마지막 기억이었는데...", 
-            "눈을 떠보니 차가운 법정 바닥이었다. 내 이름은 '윤이솔'. 모든 것이 격리된 실험체.",
-            "사고는 조작된 기억일 뿐인가? 이 기이한 재판소의 진실이 나를 기다리고 있다.",
-            "기억의 조각을 되찾고 나를 가둔 이들에게 복수하기 위해, 나는 최후의 소녀가 되겠다!" 
-        ],
+        storyLines: [ "수학여행의 들뜬 기분도 잠시...", "눈을 떠보니 기이한 재판소 한가운데였다.", "사방에서 조여오는 기계 인형들.", "살아남으려면... 가진 것을 무기로 삼아야 해!" ],
         storyNext: "다음 (Click)", storySkip: "Skip",
         w_chalk: { name: "분필", desc: "가장 가까운 적에게 투사체를 던집니다.", stat: "공격력" },
         w_textbook: { name: "교과서", desc: "주변을 맴도는 마법의 교과서.", stat: "쿨타임" },
@@ -596,9 +585,7 @@ const I18N = {
         tut_p2_t: "성장 시스템", tut_p2_d: "스테이지에서 획득한 뱃지로 '능력치 강화' 메뉴에서 영구적인 스탯 업이 가능합니다.",
         tut_p3_t: "가챠 및 무기", tut_p3_d: "가챠를 통해 특수 무기를 해금하세요. 해금된 무기는 게임 중 레벨업 풀에 1.5배 확률로 등장합니다!",
         orb_get: "⚖️ 심판의 구슬 획득!", orb_fury: "분노의 심판 (공격력)", orb_life: "생명의 심판 (체력)", orb_wind: "신속의 심판 (이동속도)",
-        syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)",
-        mob_juror: "배심원 인형", mob_gavel: "의사봉 파쇄자", mob_spectre: "서류 유령", mob_evidence: "증거 수집기",
-        boss_mid: "재판 감독관", boss_10: "교수형 판사", boss_20: "대검찰관", boss_30: "정의의 여신상"
+        syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)"
     },
     en: {
         langBtn: "🌐 EN", title: "Last Girl Survivor", subtitle: "Bell of Turnabout",
@@ -711,26 +698,44 @@ let bgPattern = null;
 let lobbyPattern = null;
 let currentBgPattern = null;
 let gameLoopId = null;
-let currentBgmAudio = null;
+
+// ==========================================
+// 2. Audio System
+// ==========================================
+function initAudio() {
+    if(!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGainNode = audioCtx.createGain();
+        masterGainNode.gain.value = masterVolume;
+        masterGainNode.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
 
 function startBGM() {
-    if(!audioCtx) return;
-    stopBGM();
-    const bgmFile = (gameState === 'playing') ? 'battle_bgm.mp3' : 'lobby_bgm.mp3';
-    currentBgmAudio = new Audio('./assets/bgm/' + bgmFile);
-    currentBgmAudio.loop = true;
-    currentBgmAudio.volume = masterVolume * 0.55;
-    try {
-        const source = audioCtx.createMediaElementSource(currentBgmAudio);
-        source.connect(masterGainNode);
-        currentBgmAudio.play().catch(e => console.log("BGM Blocked:", e));
-    } catch(e) {
-        currentBgmAudio.play().catch(ex => console.log("BGM Error:", ex));
-    }
-}
-function stopBGM() {
+    if(!audioCtx) return; 
     if(bgmInterval) clearInterval(bgmInterval);
-    if(currentBgmAudio) { currentBgmAudio.pause(); currentBgmAudio.currentTime = 0; currentBgmAudio = null; }
+    const notes = [146.83, 164.81, 174.61, 220.00, 174.61, 164.81]; 
+    let noteIdx = 0;
+    
+    bgmInterval = setInterval(() => {
+        if(gameState !== 'playing' || isPaused || masterVolume <= 0) return;
+        const osc = audioCtx.createOscillator(); 
+        const gain = audioCtx.createGain();
+        osc.connect(gain); 
+        gain.connect(masterGainNode);
+        osc.type = 'triangle'; 
+        osc.frequency.setValueAtTime(notes[noteIdx], audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime); 
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.start(audioCtx.currentTime); 
+        osc.stop(audioCtx.currentTime + 0.3);
+        noteIdx = (noteIdx + 1) % notes.length;
+    }, 400);
+}
+
+function stopBGM() { 
+    if(bgmInterval) clearInterval(bgmInterval); 
 }
 
 function changeVolume(val) {
@@ -1172,44 +1177,120 @@ function drawMinimap() {
     mCtx.fillRect(center - 2, center - 2, 4, 4);
 }
 
-function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
-    let imgKey = 'player_idle';
-    if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
-    else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
-    else if (animState === 'dash') imgKey = 'player_dash';
-    else if (animState === 'run') {
-        if (animDir === 'up') imgKey = 'player_up';
-        else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
-        else imgKey = 'player_down';
-    }
-    else if (['throw', 'swing', 'cast'].includes(animState)) {
-        if (animDir === 'up') imgKey = 'player_up';
-        else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
-        else imgKey = 'player_idle'; 
-    }
-
-    const targetImg = loadedImages[imgKey] || loadedImages['player_idle'];
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10 * scale, 5 * scale, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
-
-    if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
+function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0) {
+    if (loadedImages.player && loadedImages.player.complete && loadedImages.player.naturalWidth > 0) {
         ctx.save();
-        let flipX = 1;
-        if (imgKey === 'player_left') flipX = -1;
-        if (imgKey === 'player_dash' && dirX === -1) flipX = -1;
-        ctx.scale(scale * flipX, scale);
+        ctx.scale(dirX * scale, scale);
         let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
-        let w = 64; let h = 64;
-        ctx.drawImage(targetImg, -w/2, -h + 10 + bobY, w, h);
+        let w = 48; let h = 48; 
+        ctx.drawImage(loadedImages.player, -w/2, -h + 10 + bobY, w, h);
         ctx.restore();
-        return;
+        return; 
     }
-    // Fallback
-    ctx.save(); ctx.scale(scale * dirX, scale); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
-    let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
-    ctx.fillStyle = outfit.colors.cSkin; ctx.fillRect(-2, -3, 4, 4); ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-8, -26, 16, 14, 4); else ctx.rect(-8, -26, 16, 14); ctx.fill();
+
+    ctx.save(); 
+    ctx.scale(scale * dirX, scale); 
+
+    // [2.5D R&D] 캐릭터 발밑 동적 그림자 (Depth 효과)
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
+
+    // [2.5D R&D] 피격 또는 이동 시 미세한 외곽 광원 효과 (Rim-light)
+    if (animState === 'run' || animState === 'dash') {
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+    }
+    
+    let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
+    const { cSkin, cHair, cHairShadow, cDress, cDressDark, cEye } = outfit.colors;
+    let bobY = 0, armAngle = 0, legSwing = 0;
+    
+    if (animState === 'idle') { 
+        bobY = Math.sin(performance.now() * 0.005) * 1.5; 
+    } else if (animState === 'run') { 
+        bobY = Math.abs(Math.sin(performance.now() * 0.01)) * -3; 
+        legSwing = Math.sin(performance.now() * 0.015) * 6; 
+        armAngle = Math.sin(performance.now() * 0.015) * 0.5; 
+    } else if (animState === 'throw') { 
+        armAngle = -Math.PI / 2 + (animTimer * 2); 
+    } else if (animState === 'swing') { 
+        armAngle = -Math.PI + (animTimer * 5); 
+    } else if (animState === 'cast') { 
+        armAngle = -Math.PI / 1.5; 
+        bobY = -2; 
+    }
+
+    ctx.translate(0, bobY);
+    
+    ctx.save(); 
+    ctx.translate(2, -8); 
+    ctx.rotate(animState === 'cast' ? armAngle : -armAngle); 
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(-2, 0, 4, 10); 
+    ctx.fillStyle = cDressDark; 
+    ctx.fillRect(-2.5, -2, 5, 6); 
+    ctx.restore();
+    
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(1 - legSwing*0.5, 0, 4, 14); 
+    ctx.fillRect(-3 + legSwing*0.5, 0, 4, 15);
+    
+    ctx.fillStyle = cDress; 
+    ctx.fillRect(-6, -14, 12, 10); 
+    ctx.beginPath(); 
+    ctx.moveTo(-6, -4); ctx.lineTo(6, -4); ctx.lineTo(8, 6); ctx.lineTo(3, 6); ctx.lineTo(0, -2); ctx.lineTo(-4, 8); ctx.lineTo(-7, 4); 
+    ctx.fill();
+    
+    ctx.fillStyle = cDressDark; 
+    ctx.fillRect(4, -4, 2, 8); 
+    ctx.fillRect(-6, -4, 2, 10);
+    
+    ctx.translate(0, -14); 
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(-2, -3, 4, 4); 
+    ctx.beginPath(); 
+    if (ctx.roundRect) ctx.roundRect(-8, -12, 16, 14, 4); 
+    else ctx.rect(-8, -12, 16, 14);
+    ctx.fill(); 
+    
+    ctx.fillStyle = cEye; 
+    ctx.fillRect(1, -5, 3, 2); 
+    ctx.fillStyle = '#fff'; 
+    ctx.fillRect(1.5, -5, 1, 1);
+    
+    ctx.fillStyle = '#2d3436'; 
+    ctx.fillRect(0, -6, 5, 1); 
+    ctx.fillStyle = 'rgba(255, 100, 100, 0.3)'; 
+    ctx.fillRect(2, -2, 3, 2);
+    
+    ctx.fillStyle = cHair; 
+    ctx.beginPath(); 
+    if (ctx.roundRect) ctx.roundRect(-10, -14, 20, 12, 5); 
+    else ctx.rect(-10, -14, 20, 12);
+    ctx.fill(); 
+    ctx.fillRect(-9, -14, 12, 6); 
+    ctx.fillRect(1, -14, 6, 8);
+    
+    ctx.fillStyle = cHairShadow; 
+    ctx.fillRect(-10, -4, 4, 8); 
+    ctx.fillRect(6, -4, 3, 6);
+    
+    ctx.restore(); 
+    
+    ctx.save(); 
+    ctx.translate(0, bobY - 12); 
+    ctx.rotate(armAngle); 
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(-2, 0, 4, 12); 
+    ctx.fillStyle = cDress; 
+    ctx.fillRect(-2.5, -2, 5, 6); 
+    ctx.restore();
+    
+    ctx.restore(); 
 }
 
 // ==========================================
@@ -1391,19 +1472,16 @@ function togglePause() {
 
 function returnToLobby() {
     if (gameState === 'gameover') currentStage = 1; else if (gameState === 'clear') currentStage++; 
-    gameState = 'lobby'; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
-    ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI'].forEach(id => { 
-        let el = document.getElementById(id); if(el) el.classList.add('hidden'); 
-    });
-    if (player) {
-        let orbPocketUI = document.getElementById('orbPocketUI');
-        if (orbPocketUI) {
-            orbPocketUI.innerHTML = (player.marblePocket || []).map(t => {
-                const data = MARBLE_TYPES.find(m => t === m.type);
-                return `<span style="text-shadow: 0 0 10px ${data.glow};">${data.icon}</span>`;
-            }).join('');
-        }
+    gameState = 'lobby'; isPaused = false; stopBGM(); gameSpeedMultiplier = 1.0;
+    ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
+    let orbPocketUI = document.getElementById('orbPocketUI');
+    if (orbPocketUI && player) {
+        orbPocketUI.innerHTML = (player.marblePocket || []).map(t => {
+            const data = MARBLE_TYPES.find(m => t === m.type);
+            return `<span style="text-shadow: 0 0 10px ${data.glow};">${data.icon}</span>`;
+        }).join('');
     }
+
     let speedBtn = document.getElementById('speedBtn'); if (speedBtn) { speedBtn.innerText = '1X'; speedBtn.style.color = '#e0d0a0'; }
     ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove('hidden'); });
     updateLobbyCurrency();
@@ -1750,9 +1828,572 @@ class Spotlight {
         spotlight = null;
     }
     draw(ctx) {
+        if (isOffScreen(this.x, this.y, this.settings.startRadius)) return;
+        ctx.save();
+        ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0);
+        
+        let curRad = this.getCurrentRadius();
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, this.settings.startRadius, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([10, 10]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.arc(0, 0, curRad, 0, Math.PI*2);
+        ctx.fillStyle = this.playerInside ? 'rgba(46, 204, 113, 0.25)' : 'rgba(241, 196, 15, 0.1)';
+        ctx.fill();
+        
+        ctx.strokeStyle = this.playerInside ? '#2ecc71' : '#f1c40f';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 16px "Noto Sans KR", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 4;
+        let safeText = currentLang === 'ko' ? '🌟 생존 시 광역 소탕!' : '🌟 SURVIVE FOR CLEAR!';
+        ctx.fillText(safeText, 0, -curRad - 35);
+        
+        ctx.font = 'bold 16px "Press Start 2P"';
+        ctx.fillStyle = '#f1c40f';
+        ctx.fillText((this.settings.reqTime - this.progress).toFixed(1) + 's', 0, -curRad - 10);
+
+        ctx.restore();
+    }
+}
+
+class DamageText {
+    constructor(x, y, amount, isPlayer = false) { 
+        this.x = x; 
+        this.y = y; 
+        this.amount = Math.floor(amount); 
+        this.life = 0.5; 
+        this.maxLife = 0.5; 
+        this.isPlayer = isPlayer;
+        this.scaleBonus = 0;
+    }
+    update(dt) { 
+        this.y -= 50 * dt; 
+        this.life -= dt; 
+    }
+    draw(ctx) { 
+        if(isOffScreen(this.x, this.y)) return; 
+        
+        let scale = 1 + (this.life / this.maxLife) * 0.5 + this.scaleBonus; 
+        ctx.save(); 
+        ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); 
+        ctx.scale(scale, scale); 
+        ctx.globalAlpha = this.life / this.maxLife; 
+        ctx.font = 'bold 16px sans-serif'; 
+        
+        ctx.fillStyle = this.isPlayer ? '#fff' : '#000'; 
+        ctx.fillText(this.amount, 1, 1); 
+        
+        ctx.fillStyle = this.isPlayer ? '#ff4757' : '#fff'; 
+        ctx.fillText(this.amount, 0, 0); 
+        ctx.restore(); 
+    }
+}
+
+class Particle {
+    constructor(x, y, color, isGhost = false) { 
+        this.x = x; 
+        this.y = y; 
+        this.color = color; 
+        this.isGhost = isGhost; 
+        if (isGhost) { 
+            this.vx = 0; 
+            this.vy = 0; 
+            this.life = 0.15; 
+        } else { 
+            this.vx = (Math.random() - 0.5) * 200; 
+            this.vy = (Math.random() - 0.5) * 200; 
+            this.life = 0.3; 
+        } 
+    }
+    update(dt) { 
+        this.x += this.vx * dt; 
+        this.y += this.vy * dt; 
+        this.life -= dt; 
+    }
+    draw(ctx) { 
+        if(isOffScreen(this.x, this.y)) return; 
+        
+        ctx.save(); 
+        ctx.fillStyle = this.color; 
+        ctx.globalAlpha = Math.max(0, this.life / (this.isGhost ? 0.15 : 0.3)); 
+        
+        let px = (this.x - camera.x)|0; 
+        let py = (this.y - camera.y)|0;
+        
+        if(this.isGhost) { 
+            ctx.fillRect(px - 5, py - 5, 10, 10); 
+        } else { 
+            ctx.beginPath(); 
+            ctx.arc(px, py, 3, 0, Math.PI*2); 
+            ctx.fill(); 
+        } 
+        ctx.restore(); 
+    }
+}
+
+class AreaExplosion {
+    constructor(x, y, radius, damage, color) { 
+        this.x = x; this.y = y; this.radius = radius; 
+        this.damage = damage; this.color = color; 
+        this.life = 0.3; this.maxLife = 0.3; this.hitComplete = false; 
+    }
+    update(dt) { 
+        this.life -= dt; 
+        if(!this.hitComplete) { 
+            enemies.forEach(e => { 
+                let dx = e.x - this.x; 
+                let dy = e.y - this.y; 
+                let rSum = this.radius + e.radius; 
+                if(dx*dx + dy*dy < rSum*rSum) {
+                    e.takeDamage(this.damage); 
+                }
+            }); 
+            this.hitComplete = true; 
+            playSFX('explosion'); 
+        } 
+    }
+    draw(ctx) { 
+        if(isOffScreen(this.x, this.y, this.radius*2)) return; 
+        
+        ctx.save(); 
+        ctx.globalAlpha = this.life / this.maxLife; 
+        
+        let cx = (this.x - camera.x)|0; 
+        let cy = (this.y - camera.y)|0; 
+        
+        ctx.fillStyle = this.color; 
+        ctx.beginPath(); 
+        ctx.arc(cx, cy, this.radius, 0, Math.PI*2); 
+        ctx.fill(); 
+        
+        ctx.strokeStyle = '#fff'; 
+        ctx.lineWidth = 5 * (this.life / this.maxLife); 
+        ctx.beginPath(); 
+        ctx.arc(cx, cy, this.radius * (1.5 - this.life / this.maxLife), 0, Math.PI*2); 
+        ctx.stroke(); 
+        ctx.restore(); 
+    }
+}
+
+class Projectile {
+    constructor(x, y, vx, vy, damage, type, color, piercing, level=1) { 
+        this.x = x; this.y = y; this.vx = vx; this.vy = vy; 
+        this.damage = damage; this.type = type; this.color = color; 
+        this.piercing = piercing; this.level = level; 
+        this.life = 3.0; this.hitEnemies = new Set(); 
+        this.sizeScale = 1 + (level * 0.2); 
+    }
+    update(dt) { 
+        this.x += this.vx * dt; 
+        this.y += this.vy * dt; 
+        this.life -= dt; 
+        
+        enemies.forEach(e => { 
+            if(!this.hitEnemies.has(e)) { 
+                let dx = e.x - this.x; 
+                let dy = e.y - this.y; 
+                let rSum = e.radius + (4 * this.sizeScale);
+                
+                if(dx*dx + dy*dy < rSum*rSum) { 
+                    e.takeDamage(this.damage); 
+                    
+                    if(this.type === 'chalk' && player.activeSynergies.studyManiac) { 
+                        projectiles.push(new AreaExplosion(this.x, this.y, 60, this.damage * 0.5, 'rgba(255, 100, 100, 0.5)')); 
+                    } 
+                    if(this.type === 'backpack' && player.activeSynergies.caffeineAddict) {
+                        projectiles.push(new AreaExplosion(this.x, this.y, 120, this.damage * 0.8, 'rgba(186, 220, 88, 0.6)'));
+                    }
+                    if(this.type === 'magicMic' && player.activeSynergies.idolStage) {
+                        if(Math.random() < 0.15) {
+                            player.hp = Math.min(player.maxHp, player.hp + 1); updateHUD();
+                            particles.push(new Particle(player.x, player.y - 20, '#ff9ff3'));
+                        }
+                    }
+                    
+                    if(this.piercing) { 
+                        this.hitEnemies.add(e); 
+                    } else { 
+                        this.life = 0; 
+                    } 
+                } 
+            } 
+        }); 
+    }
+    draw(ctx) { 
+        if(isOffScreen(this.x, this.y)) return; 
+        
+        ctx.save(); 
+        ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); 
+        ctx.fillStyle = this.color;
+        
+        if(this.type === 'compass' || this.type === 'backpack') { 
+            ctx.rotate(Math.atan2(this.vy, this.vx)); 
+            ctx.scale(this.sizeScale, this.sizeScale); 
+            ctx.beginPath(); 
+            ctx.moveTo(10, 0); 
+            ctx.lineTo(-5, -5); 
+            ctx.lineTo(-5, 5); 
+            ctx.fill(); 
+        } 
+        else if(this.type === 'magicMic') { 
+            ctx.rotate(Math.atan2(this.vy, this.vx)); 
+            ctx.scale(this.sizeScale, this.sizeScale); 
+            ctx.strokeStyle = this.color; 
+            ctx.lineWidth = 3; 
+            ctx.beginPath(); 
+            ctx.arc(0, 0, 10, -Math.PI/3, Math.PI/3); 
+            ctx.stroke(); 
+            ctx.beginPath(); 
+            ctx.arc(-5, 0, 15, -Math.PI/2.5, Math.PI/2.5); 
+            ctx.stroke(); 
+        } 
+        else if(this.type === 'laserPointer') { 
+            ctx.rotate(Math.atan2(this.vy, this.vx)); 
+            ctx.scale(this.sizeScale, this.sizeScale); 
+            ctx.fillRect(-10, -2, 20, 4); 
+        } 
+        else { 
+            ctx.beginPath(); 
+            ctx.arc(0, 0, 4 * this.sizeScale, 0, Math.PI*2); 
+            ctx.fill(); 
+            ctx.globalAlpha = 0.4; 
+            ctx.beginPath(); 
+            ctx.arc(0, 0, 8 * this.sizeScale, 0, Math.PI*2); 
+            ctx.fill(); 
+        } 
+        ctx.restore();
+    }
+}
+
+class MeleeEffect {
+    constructor(x, y, angle, range, color, level=1) { 
+        this.x = x; this.y = y; this.angle = angle; 
+        this.range = range; this.color = color; this.level = level; this.life = 0.2; this.maxLife = 0.2; 
+    }
+    update(dt) { this.life -= dt; this.x = player.x; this.y = player.y; }
+    draw(ctx) { 
+        if(isOffScreen(this.x, this.y, this.range*2)) return; 
+        ctx.save(); let alpha = this.life / this.maxLife; ctx.globalAlpha = alpha; 
+        let cx = (this.x - camera.x)|0; let cy = (this.y - camera.y)|0; 
+        ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(cx, cy, this.range, this.angle - Math.PI/3, this.angle + Math.PI/3); ctx.lineTo(cx, cy); ctx.fill(); 
+        if(this.level > 2) { ctx.lineWidth = 4; ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, this.range * 0.9, this.angle - Math.PI/3, this.angle + Math.PI/3); ctx.stroke(); } 
+        ctx.restore(); 
+    }
+}
+
+class Weapon { 
+    constructor(id) { this.id = id; this.level = 1; this.timer = 0; this.settings = getWeaponSettings(id); } 
+}
+
+class ProjectileWeapon extends Weapon {
+    update(dt) {
+        this.timer -= dt;
+        if(this.timer <= 0) {
+            this.timer = (this.settings.cooldown * (1 - this.level*0.1)) * player.stats.cooldownMult;
+            let target = findNearestEnemy();
+            if(target) {
+                player.playAnim('throw');
+                let dx = target.x - player.x; let dy = target.y - player.y; let dist = Math.sqrt(dx*dx + dy*dy);
+                let vx = (dx/dist) * this.settings.speed; let vy = (dy/dist) * this.settings.speed;
+                let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier();
+                let piercing = (this.id === 'compass' || this.id === 'magicMic' || this.id === 'laserPointer' || this.id === 'backpack'); 
+                let count = (this.id === 'magicMic' || this.id === 'backpack') ? 1 : Math.min(3, this.level);
+                for(let i=0; i<count; i++) { setTimeout(() => { projectiles.push(new Projectile(player.x, player.y, vx, vy, finalDamage, this.id, this.settings.color, piercing, this.level)); playSFX('shoot'); }, i * 100); }
+            }
+        }
+    }
+}
+
+class RecorderWeapon extends Weapon {
+    update(dt) {
+        this.timer -= dt;
+        if(this.timer <= 0) {
+            this.timer = (this.settings.cooldown * Math.max(0.4, (1 - this.level*0.1))) * player.stats.cooldownMult;
+            player.playAnim('swing');
+            let hitAny = false; let currentRange = this.settings.range * (1 + this.level*0.2); let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier();
+            
+            let aimAngle = Math.atan2(player.aimY, player.aimX);
+            
+            enemies.forEach(e => { 
+                let dx = e.x - player.x; let dy = e.y - player.y; let distSq = dx*dx + dy*dy; 
+                if(distSq < currentRange*currentRange) { 
+                    let eAngle = Math.atan2(dy, dx);
+                    let diff = Math.abs(eAngle - aimAngle);
+                    if (diff > Math.PI) diff = 2 * Math.PI - diff;
+                    if (diff < Math.PI / 2.5 || distSq < 400) { e.takeDamage(finalDamage); hitAny = true; }
+                } 
+            });
+            
+            if(hitAny) playSFX('hit');
+            projectiles.push(new MeleeEffect(player.x, player.y, aimAngle, currentRange, this.settings.color, this.level));
+            
+            if(player.activeSynergies.musicMath && this.id === 'recorder') { 
+                let angles = [aimAngle - 0.2, aimAngle, aimAngle + 0.2]; let cSpd = GameSettings.weapons.compass.speed; 
+                angles.forEach(ang => { projectiles.push(new Projectile(player.x, player.y, Math.cos(ang)*cSpd, Math.sin(ang)*cSpd, this.settings.damage * player.getDamageMultiplier(), 'compass', '#a0a0a0', true, 1)); }); 
+            }
+        }
+    }
+}
+
+class OrbitWeapon extends Weapon {
+    constructor(id) { super(id); this.angle = 0; }
+    update(dt) {
+        this.angle += dt * 3; this.timer -= dt;
+        if(this.timer <= 0) { 
+            this.timer = this.settings.cooldown; 
+            let rMultiplier = (this.id === 'studentID' && player.activeSynergies.digitalDefense) ? 1.5 : 1.0;
+            let radius = this.settings.radius * (1 + this.level*0.1) * rMultiplier; 
+            let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier(); 
+            enemies.forEach(e => { 
+                let dx=e.x-player.x; let dy=e.y-player.y; 
+                if(dx*dx+dy*dy < radius*radius) { 
+                    e.takeDamage(finalDamage); 
+                    if(this.id === 'studentID' && player.activeSynergies.digitalDefense) {
+                        player.stats.cooldownMult = Math.max(0.1, player.stats.cooldownMult - 0.01);
+                        setTimeout(() => { player.stats.cooldownMult += 0.01; updateHUD(); }, 1500);
+                        updateHUD();
+                    }
+                } 
+            }); 
+        }
+    }
+    draw(ctx) {
+        let rMultiplier = (this.id === 'studentID' && player.activeSynergies.digitalDefense) ? 1.5 : 1.0;
+        let radius = this.settings.radius * (1 + this.level*0.1) * rMultiplier; 
+        let count = Math.min(5, 1 + this.level);
+        if(isOffScreen(player.x, player.y, radius*2)) return;
+        if(this.level >= 3 || rMultiplier > 1.0) { ctx.save(); ctx.translate((player.x - camera.x)|0, (player.y - camera.y)|0); ctx.rotate(this.angle * 0.5); ctx.strokeStyle = rMultiplier > 1.0 ? 'rgba(0, 210, 211, 0.4)' : 'rgba(212, 175, 55, 0.3)'; ctx.lineWidth = rMultiplier > 1.0 ? 4 : 2; ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.stroke(); ctx.restore(); }
+        let bScale = (1 + (this.level * 0.1)) * (rMultiplier > 1.0 ? 1.2 : 1.0); 
+        for(let i=0; i<count; i++) { let a = this.angle + (Math.PI*2 / count) * i; let bx = player.x - camera.x + Math.cos(a) * radius; let by = player.y - camera.y + Math.sin(a) * radius; ctx.save(); ctx.translate(bx|0, by|0); ctx.rotate(a + Math.PI/2); ctx.scale(bScale, bScale); ctx.fillStyle = this.settings.color; ctx.fillRect(-8, -12, 16, 24); ctx.fillStyle = '#fff'; ctx.fillRect(-6, -10, 12, 20); ctx.restore(); }
+    }
+}
+
+class SmartPhoneWeapon extends Weapon {
+    update(dt) {
+        this.timer -= dt;
+        if(this.timer <= 0) {
+            this.timer = (this.settings.cooldown * Math.max(0.4, (1 - this.level*0.1))) * player.stats.cooldownMult;
+            player.playAnim('cast');
+            let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier(); let radius = this.settings.radius * (1 + this.level*0.2);
+            projectiles.push(new AreaExplosion(player.x, player.y, radius, finalDamage, this.settings.color));
+            
+            if(player.activeSynergies.cyberWarrior) {
+                let lSpd = GameSettings.specialWeapons.laserPointer.speed;
+                let lDmg = GameSettings.specialWeapons.laserPointer.damage * player.getDamageMultiplier();
+                [[1,0], [-1,0], [0,1], [0,-1]].forEach(dir => {
+                    projectiles.push(new Projectile(player.x, player.y, dir[0]*lSpd, dir[1]*lSpd, lDmg, 'laserPointer', '#ff7979', true, 1));
+                });
+            }
+        }
+    }
+}
+
+class Player {
+    constructor() {
+        this.x = 0; this.y = 0;
+        this.maxHp = GameSettings.player.baseHp + (permanentStats.maxHp * 10); this.hp = this.maxHp;
+        this.stats = { speedMult: 1.0, damageMult: 1.0, cooldownMult: 1.0 };
+        this.baseSpeed = GameSettings.player.baseSpeed; this.radius = 15; this.dirX = 1; this.level = 1; this.exp = 0; this.maxExp = 10;
+        this.weapons = []; this.activeSynergies = {}; this.passiveTimer = 0;
+        this.dashTimer = 0; this.dashCooldownTimer = 0; this.invincibleTimer = 0; this.dashDir = { x: 1, y: 0 };
+        this.animState = 'idle'; this.animTimer = 0;
+        this.aimX = 1; this.aimY = 0; 
+        this.hitTimer = 0;
+    }
+    
+    getDamageMultiplier() {
+        let mult = this.stats.damageMult;
+        if (spotlight) {
+            let dist = Math.hypot(this.x - spotlight.x, this.y - spotlight.y);
+            if (dist > spotlight.getCurrentRadius()) {
+                mult *= GameSettings.spotlight.penalty;
+            }
+        }
+        return mult;
+    }
+
+    playAnim(stateName) { this.animState = stateName; this.animTimer = 0.2; }
+    recalculateStats() {
+        this.stats.damageMult = 1.0 + (permanentStats.damage * 0.05); this.stats.cooldownMult = 1.0 - (permanentStats.cooldown * 0.02); this.stats.speedMult = 1.0 + (permanentStats.speed * 0.05);
+        this.weapons.forEach(w => { let bonus = w.settings.statBonus; if(bonus && bonus.type !== 'none') { this.stats[bonus.type] += (bonus.value * w.level); } });
+        this.stats.cooldownMult = Math.max(0.2, this.stats.cooldownMult); updateHUD(); 
+    }
+    
+    executeDash(dx, dy) {
+        let beatTime = stageTime % GameSettings.rhythm.beatInterval;
+        let timeToBeat = Math.min(beatTime, GameSettings.rhythm.beatInterval - beatTime);
+        let isPerfect = timeToBeat <= GameSettings.rhythm.perfectWindow;
+
+        this.dashTimer = GameSettings.player.dashDuration; 
+        this.invincibleTimer = GameSettings.player.dashDuration;
+        
+        this.dashDir.x = (dx === 0 && dy === 0) ? this.dirX : dx; 
+        this.dashDir.y = (dx === 0 && dy === 0) ? 0 : dy;
+        
+        if (isPerfect) {
+            this.dashCooldownTimer = 0; 
+            playSFX('perfectDash');
+            hitStopTimer = 0.1;
+            screenShake = 15;
+            showSystemNotice(currentLang === 'ko' ? "퍼펙트 대쉬!" : "PERFECT DASH!");
+            
+            let dashAngle = Math.atan2(this.dashDir.y, this.dashDir.x);
+            projectiles.push(new MeleeEffect(this.x, this.y, dashAngle, 250, '#f1c40f', 5));
+            
+            enemies.forEach(e => {
+                let edx = e.x - this.x; let edy = e.y - this.y;
+                let distSq = edx*edx + edy*edy;
+                if(distSq < 250*250) {
+                    let eAngle = Math.atan2(edy, edx);
+                    let diff = Math.abs(eAngle - dashAngle);
+                    if (diff > Math.PI) diff = 2 * Math.PI - diff;
+                    if (diff < Math.PI / 2.5) e.takeDamage(GameSettings.rhythm.perfectDamage * this.getDamageMultiplier());
+                }
+            });
+        } else {
+            this.dashCooldownTimer = GameSettings.player.dashCooldown; 
+            playSFX('dash'); 
+        }
+        updateHUD();
+    }
+
+    update(dt) {
+        if (this.dashCooldownTimer > 0) this.dashCooldownTimer -= dt; if (this.dashTimer > 0) this.dashTimer -= dt; if (this.invincibleTimer > 0) this.invincibleTimer -= dt; if (this.animTimer > 0) this.animTimer -= dt;
+        if (this.hitTimer > 0) this.hitTimer -= dt;
+
+        let dx = 0; let dy = 0;
+        if(keys['w'] || keys['arrowup']) dy -= 1; if(keys['s'] || keys['arrowdown']) dy += 1;
+        if(keys['a'] || keys['arrowleft']) { dx -= 1; this.dirX = -1; } if(keys['d'] || keys['arrowright']) { dx += 1; this.dirX = 1; }
+        
+        if (joystick.active) { dx = joystick.dx; dy = joystick.dy; if (dx < 0) this.dirX = -1; else if (dx > 0) this.dirX = 1; }
+        
+        let moveMag = Math.hypot(dx, dy);
+        if(moveMag > 0) {
+            dx /= moveMag; dy /= moveMag;
+            this.aimX = dx; this.aimY = dy;
+        }
+
+        if (this.animTimer <= 0) { this.animState = (moveMag > 0) ? 'run' : 'idle'; }
+
+        if(keys['shift'] && this.dashCooldownTimer <= 0 && this.dashTimer <= 0) {
+            this.executeDash(dx, dy);
+            keys['shift'] = false; // 입력을 강제로 소모시켜 물리적 키 홀드(Hold)로 인한 프레임 단위 연타 방지
+        }
+
+        let currentSpeed = this.baseSpeed * this.stats.speedMult;
+        
+        if (this.dashTimer > 0) { dx = this.dashDir.x; dy = this.dashDir.y; currentSpeed *= GameSettings.player.dashSpeedMultiplier; if (Math.random() > 0.5) { particles.push(new Particle(this.x, this.y, '#00d2d3', true)); } }
+        this.x += dx * currentSpeed * dt; this.y += dy * currentSpeed * dt;
+        this.passiveTimer += dt;
+        let hasGym = this.weapons.find(w => w.id === 'gymClothes');
+        if(hasGym && this.passiveTimer >= GameSettings.weapons.gymClothes.healTick) { this.passiveTimer = 0; this.hp = Math.min(this.maxHp, this.hp + GameSettings.weapons.gymClothes.healAmount * hasGym.level); updateHUD(); }
+
+        this.weapons.forEach(w => { if(w.update) w.update(dt); });
+        if (this.dashCooldownTimer > 0) updateHUD();
+    }
+    draw(ctx) {
+        ctx.save(); 
+        ctx.translate((this.x - camera.x) | 0, (this.y - camera.y) | 0);
+        
+        if (this.hitTimer > 0) { ctx.filter = 'brightness(50%) sepia(1) hue-rotate(-50deg) saturate(500%)'; }
+        if (this.invincibleTimer > 0) { ctx.globalAlpha = 0.5 + Math.sin(performance.now() * 0.02) * 0.3; }
+        
+        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer); 
+        
+        ctx.filter = 'none';
+        ctx.restore();
+        
+        this.weapons.forEach(w => { if(w.id === 'textbook' || w.id === 'smartPhone' || w.id === 'studentID') { w.draw(ctx); } });
+    }
+    takeDamage(amount) {
+        if(this.invincibleTimer > 0) return; 
+        
+        this.hp -= amount; 
+        this.invincibleTimer = 0.5; 
+        this.hitTimer = 0.2; 
+        hitStopTimer = 0.05; 
+        screenShake = 15; 
+        
+        updateHUD(); 
+        playSFX('hit'); 
+        
+        damageTexts.push(new DamageText(this.x, this.y - 30, amount, true));
+        
+        if(particles.length < 50) { 
+            for(let i=0; i<5; i++) particles.push(new Particle(this.x, this.y, '#ff4757')); 
+        }
+        
+        if(this.hp <= 0) { 
+            gameState = 'gameover'; 
+            let goUi = document.getElementById('gameOverUI'); 
+            if (goUi) goUi.classList.remove('hidden'); 
+            let btn = document.getElementById('mobileDashBtn'); 
+            if (btn) btn.classList.add('hidden'); 
+        }
+    }
+    gainExp(amount) {
+        this.exp += amount; playSFX('exp');
+        if(this.exp >= this.maxExp) { this.exp -= this.maxExp; this.level++; this.maxExp = Math.floor(this.maxExp * 1.5); triggerLevelUp(); }
+        updateHUD();
+    }
+    checkSynergies() {
+        let owned = this.weapons.map(w => w.id);
+        let updated = false;
+        for (const [key, syn] of Object.entries(GameSettings.synergies)) { 
+            if(!this.activeSynergies[key] && syn.req.every(r => owned.includes(r))) { 
+                this.activeSynergies[key] = true; 
+                updated = true;
+                showSystemNotice(`🔥 ${syn.name} 발동!`);
+            } 
+        }
+        if (updated) {
+            updateInventoryUI();
+        }
+    }
+}
+
+class Enemy {
+    constructor(x, y, type) {
+        this.x = x; this.y = y; this.type = type; this.radius = type === 'boss' ? 40 : (type === 'midboss' ? 25 : 12);
+        const hpMul = Math.pow(GameSettings.stage.enemyHpScale, currentStage - 1); const dmgMul = Math.pow(GameSettings.stage.enemyDmgScale, currentStage - 1);
+        if(type === 'mob' || type === 'shooter' || type === 'trapper') {
+            let data = GameSettings.enemyTypes[type];
+            this.subType = data.subType; this.hp = data.hpBase * hpMul; this.speed = data.speed + Math.random() * 20; this.damage = data.damage * dmgMul; this.color = data.color; this.exp = data.exp; this.range = data.range || 0; this.cooldown = data.cooldown || 0; this.attackTimer = Math.random() * this.cooldown; 
+        } else {
+            this.subType = 'melee'; this.hp = (type==='midboss'?500:3000) * hpMul; this.speed = type==='midboss'?110:70; this.damage = (type==='midboss'?15:30) * dmgMul; this.color = type==='midboss'?'#e1b12c':'#c23616'; this.exp = type==='midboss'?20:100;
+        }
+        this.maxHp = this.hp; this.hitTimer = 0;
+    }
+    update(dt) {
+        let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy; 
+        if (this.subType === 'melee') { if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } } 
+        else if (this.subType === 'ranged') {
+            if(distSq > this.range*this.range) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
+            else { this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; let dist = Math.sqrt(distSq); enemyProjectiles.push(new EnemyProjectile(this.x, this.y, (dx/dist)*200, (dy/dist)*200, this.damage, this.color)); playSFX('shoot'); } }
+        } else if (this.subType === 'trap') {
+            if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; }
+            this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; groundTraps.push(new EnemyTrap(this.x, this.y, 60, this.damage, this.color)); }
+        }
+        let rSum = this.radius + player.radius;
+        if(distSq < rSum*rSum && this.hitTimer <= 0) { player.takeDamage(this.damage); this.hitTimer = 0.5; }
+        if(this.hitTimer > 0) this.hitTimer -= dt;
+    }
+    draw(ctx) {
         if(isOffScreen(this.x, this.y, this.radius*2)) return;
         ctx.save(); ctx.translate((this.x - camera.x) | 0, (this.y - camera.y) | 0);
-        ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, this.radius, this.radius, this.radius/2, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
         
         let img = this.type === 'boss' ? loadedImages.boss : loadedImages.mob;
         if (img && img.complete && img.naturalWidth > 0) {
@@ -2204,6 +2845,10 @@ Object.assign(window, {
 if (typeof gameLoopId !== 'undefined' && gameLoopId) cancelAnimationFrame(gameLoopId);
 startStory();
 gameLoopId = requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>ame(gameLoop);
 
 </script>
 </body>
