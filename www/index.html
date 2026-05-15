@@ -438,12 +438,23 @@
 // [1-A] 외부 에셋 데이터 슬롯 (URL, 파일명, Base64 모두 지원)
 // ==========================================
 const GAME_ASSETS = {
-    player: "character_idle.webp", 
-    player_run: "character_front_walk_walk_down.webp",
+    player_idle: "character_idle.webp", 
+    player_down: "character_front_walk_walk_down.webp",
+    player_up: "character_back_walk_walk_up.webp",
+    player_right: "character_right_walk_walk_right.webp",
+    player_left: "character_left_walk_walk_left.webp",
     player_hurt: "character_hurt.webp",
     player_attack: "character_attack.webp",
     player_death: "character_death.webp",
-    mob: "", boss: ""    
+    player_dash: "character_dash.png",
+    mob_juror: "mobs/mob_juror.png",
+    mob_gavel: "mobs/mob_gavel.png",
+    mob_spectre: "mobs/mob_spectre.png",
+    mob_evidence: "mobs/mob_evidence.png",
+    boss_mid: "bosses/midboss.png",
+    boss_10: "bosses/boss_10.png",
+    boss_20: "bosses/boss_20.png",
+    boss_30: "bosses/boss_30.png"
 };
 const loadedImages = {};
 
@@ -1177,120 +1188,41 @@ function drawMinimap() {
     mCtx.fillRect(center - 2, center - 2, 4, 4);
 }
 
-function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0) {
-    if (loadedImages.player && loadedImages.player.complete && loadedImages.player.naturalWidth > 0) {
-        ctx.save();
-        ctx.scale(dirX * scale, scale);
-        let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
-        let w = 48; let h = 48; 
-        ctx.drawImage(loadedImages.player, -w/2, -h + 10 + bobY, w, h);
-        ctx.restore();
-        return; 
+function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
+    let imgKey = 'player_idle';
+    if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
+    else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
+    else if (animState === 'dash') imgKey = 'player_dash';
+    else if (animState === 'run') {
+        if (animDir === 'up') imgKey = 'player_up';
+        else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
+        else imgKey = 'player_down';
     }
-
-    ctx.save(); 
-    ctx.scale(scale * dirX, scale); 
-
-    // [2.5D R&D] 캐릭터 발밑 동적 그림자 (Depth 효과)
+    const targetImg = loadedImages[imgKey] || loadedImages['player_idle'];
+    
+    // 발밑 그림자
     ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.beginPath();
-    ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10 * scale, 5 * scale, 0, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
-    // [2.5D R&D] 피격 또는 이동 시 미세한 외곽 광원 효과 (Rim-light)
-    if (animState === 'run' || animState === 'dash') {
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+    if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
+        ctx.save();
+        let flipX = 1;
+        if (imgKey === 'player_left') flipX = -1;
+        if (imgKey === 'player_dash' && dirX === -1) flipX = -1;
+        ctx.scale(scale * flipX, scale);
+        let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
+        let w = 64; let h = 64; 
+        ctx.drawImage(targetImg, -w/2, -h + 10 + bobY, w, h);
+        ctx.restore();
+        return;
     }
     
+    // 에셋 로드 실패 시 폴백
+    ctx.save(); ctx.scale(scale * dirX, scale); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
     let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
-    const { cSkin, cHair, cHairShadow, cDress, cDressDark, cEye } = outfit.colors;
-    let bobY = 0, armAngle = 0, legSwing = 0;
-    
-    if (animState === 'idle') { 
-        bobY = Math.sin(performance.now() * 0.005) * 1.5; 
-    } else if (animState === 'run') { 
-        bobY = Math.abs(Math.sin(performance.now() * 0.01)) * -3; 
-        legSwing = Math.sin(performance.now() * 0.015) * 6; 
-        armAngle = Math.sin(performance.now() * 0.015) * 0.5; 
-    } else if (animState === 'throw') { 
-        armAngle = -Math.PI / 2 + (animTimer * 2); 
-    } else if (animState === 'swing') { 
-        armAngle = -Math.PI + (animTimer * 5); 
-    } else if (animState === 'cast') { 
-        armAngle = -Math.PI / 1.5; 
-        bobY = -2; 
-    }
-
-    ctx.translate(0, bobY);
-    
-    ctx.save(); 
-    ctx.translate(2, -8); 
-    ctx.rotate(animState === 'cast' ? armAngle : -armAngle); 
-    ctx.fillStyle = cSkin; 
-    ctx.fillRect(-2, 0, 4, 10); 
-    ctx.fillStyle = cDressDark; 
-    ctx.fillRect(-2.5, -2, 5, 6); 
+    ctx.fillStyle = outfit.colors.cSkin; ctx.fillRect(-2, -3, 4, 4); ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-8, -26, 16, 14, 4); else ctx.rect(-8, -26, 16, 14); ctx.fill();
     ctx.restore();
-    
-    ctx.fillStyle = cSkin; 
-    ctx.fillRect(1 - legSwing*0.5, 0, 4, 14); 
-    ctx.fillRect(-3 + legSwing*0.5, 0, 4, 15);
-    
-    ctx.fillStyle = cDress; 
-    ctx.fillRect(-6, -14, 12, 10); 
-    ctx.beginPath(); 
-    ctx.moveTo(-6, -4); ctx.lineTo(6, -4); ctx.lineTo(8, 6); ctx.lineTo(3, 6); ctx.lineTo(0, -2); ctx.lineTo(-4, 8); ctx.lineTo(-7, 4); 
-    ctx.fill();
-    
-    ctx.fillStyle = cDressDark; 
-    ctx.fillRect(4, -4, 2, 8); 
-    ctx.fillRect(-6, -4, 2, 10);
-    
-    ctx.translate(0, -14); 
-    ctx.fillStyle = cSkin; 
-    ctx.fillRect(-2, -3, 4, 4); 
-    ctx.beginPath(); 
-    if (ctx.roundRect) ctx.roundRect(-8, -12, 16, 14, 4); 
-    else ctx.rect(-8, -12, 16, 14);
-    ctx.fill(); 
-    
-    ctx.fillStyle = cEye; 
-    ctx.fillRect(1, -5, 3, 2); 
-    ctx.fillStyle = '#fff'; 
-    ctx.fillRect(1.5, -5, 1, 1);
-    
-    ctx.fillStyle = '#2d3436'; 
-    ctx.fillRect(0, -6, 5, 1); 
-    ctx.fillStyle = 'rgba(255, 100, 100, 0.3)'; 
-    ctx.fillRect(2, -2, 3, 2);
-    
-    ctx.fillStyle = cHair; 
-    ctx.beginPath(); 
-    if (ctx.roundRect) ctx.roundRect(-10, -14, 20, 12, 5); 
-    else ctx.rect(-10, -14, 20, 12);
-    ctx.fill(); 
-    ctx.fillRect(-9, -14, 12, 6); 
-    ctx.fillRect(1, -14, 6, 8);
-    
-    ctx.fillStyle = cHairShadow; 
-    ctx.fillRect(-10, -4, 4, 8); 
-    ctx.fillRect(6, -4, 3, 6);
-    
-    ctx.restore(); 
-    
-    ctx.save(); 
-    ctx.translate(0, bobY - 12); 
-    ctx.rotate(armAngle); 
-    ctx.fillStyle = cSkin; 
-    ctx.fillRect(-2, 0, 4, 12); 
-    ctx.fillStyle = cDress; 
-    ctx.fillRect(-2.5, -2, 5, 6); 
-    ctx.restore();
-    
-    ctx.restore(); 
 }
 
 // ==========================================
