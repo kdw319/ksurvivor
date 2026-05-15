@@ -438,9 +438,12 @@
 // [1-A] 외부 에셋 데이터 슬롯 (URL, 파일명, Base64 모두 지원)
 // ==========================================
 const GAME_ASSETS = {
-    player: "", // 예: "https://.../player.png" 또는 Base64 문자열
-    mob: "",    // 예: "mob.png"
-    boss: ""    // 예: "boss.png"
+    player: "character_idle.webp", 
+    player_run: "character_front_walk_walk_down.webp",
+    player_hurt: "character_hurt.webp",
+    player_attack: "character_attack.webp",
+    player_death: "character_death.webp",
+    mob: "", boss: ""    
 };
 const loadedImages = {};
 
