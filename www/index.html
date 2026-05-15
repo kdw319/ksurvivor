@@ -428,6 +428,7 @@
             <div id="storyText" class="typewriter-text"></div>
             <button id="storyNextBtn" class="btn primary hidden" onclick="window.nextStoryStep()">다음</button>
         </div>
+        <button id="storyLangBtn" class="btn" style="position: absolute; top: 20px; left: 20px; font-size: 14px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #555;" onclick="window.toggleLanguage()">🌐 KO</button>
         <button id="storySkipBtn" class="btn skip-btn" onclick="window.skipStory()">Skip</button>
     </div>
 
@@ -564,7 +565,12 @@ const I18N = {
         btnAchieveLobby: "도전과제", achieveTitle: "도전과제 (Achievements)", achieveDesc: "특정 조건을 만족하여 칭호를 획득하세요.",
         outfitEquipped: "착용 중", outfitEquipBtn: "착용하기", outfitReq: "해금: STAGE",
         speech: ["빨리 시작하자!", "가챠 돌릴 시간이야!", "대역전의 종소리가 울린다!", "지각하겠어!"],
-        storyLines: [ "수학여행의 들뜬 기분도 잠시...", "눈을 떠보니 기이한 재판소 한가운데였다.", "사방에서 조여오는 기계 인형들.", "살아남으려면... 가진 것을 무기로 삼아야 해!" ],
+        storyLines: [ 
+            "수학여행의 들뜬 기분도 잠시, 나는 차가운 법정 바닥에서 깨어났다.", 
+            "내 이름은 '윤이솔'. 모든 것이 격리된 채(Isolated) 살아남아야 하는 실험체.",
+            "조작된 기억 너머, 이 기이한 재판소의 진실이 나를 기다리고 있다.",
+            "나를 가둔 이들에게 복수하기 위해, 나는 기꺼이 최후의 소녀(Last Girl)가 되겠다!" 
+        ],
         storyNext: "다음 (Click)", storySkip: "Skip",
         w_chalk: { name: "분필", desc: "가장 가까운 적에게 투사체를 던집니다.", stat: "공격력" },
         w_textbook: { name: "교과서", desc: "주변을 맴도는 마법의 교과서.", stat: "쿨타임" },
@@ -606,7 +612,12 @@ const I18N = {
         btnAchieveLobby: "Achievements", achieveTitle: "Achievements", achieveDesc: "Meet specific conditions to earn titles.",
         outfitEquipped: "Equipped", outfitEquipBtn: "Equip", outfitReq: "Req: STAGE",
         speech: ["Let's go!", "Gacha time!", "The bell tolls!", "I'm late!"],
-        storyLines: [ "The excitement of the school trip was fleeting...", "I woke up in the middle of a bizarre courthouse.", "Mechanical dolls closing in from all sides.", "To survive... I must use whatever I have as a weapon!" ],
+        storyLines: [ 
+            "The thrill of the trip faded as I woke up on a cold courthouse floor.", 
+            "My name is 'Yoon Isul'. An experiment born to be isolated and survive.",
+            "Beyond manipulated memories, the truth of this bizarre trial awaits.",
+            "To take revenge on those who caged me, I will gladly become the Last Girl!" 
+        ],
         storyNext: "Next (Click)", storySkip: "Skip",
         w_chalk: { name: "Chalk", desc: "Throws chalk at the nearest enemy.", stat: "ATK" },
         w_textbook: { name: "Textbook", desc: "A magic textbook orbiting you.", stat: "Cooldown" },
@@ -1247,6 +1258,17 @@ function toggleLanguage() {
     
     const setTxt = (id, text) => { let e = document.getElementById(id); if(e) e.innerText = text; };
     const setHtml = (id, html) => { let e = document.getElementById(id); if(e) e.innerHTML = html; };
+    
+    setTxt('storyLangBtn', lang.langBtn);
+    setTxt('storySkipBtn', lang.storySkip);
+    setTxt('storyNextBtn', lang.storyNext);
+
+    if (gameState === 'story') {
+        const textEl = document.getElementById('storyText');
+        if (textEl && !isTyping) {
+            textEl.innerHTML = lang.storyLines[storyStep];
+        }
+    }
 
     setTxt('langBtn', lang.langBtn); 
     setHtml('lobbyTitleText', `${lang.title}<br><span id="lobbySubtitle" style="font-size:1.2rem; color:#ccc;">${lang.subtitle}</span>`);
