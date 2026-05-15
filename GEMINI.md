@@ -30,6 +30,14 @@
 - **Offline Config:** `androidScheme: "http"`, `cleartext: true` in `capacitor.config.json`.
 - **Signing:** Use `LASTGIRL_KEY.jks` on Desktop (Pass: pass1234, Alias: lastgirl).
 
+## Game Mechanics
+- **Verdict Orbs (Marble System):**
+    - Drops every 50 kills (Max 6 per stage).
+    - Colors: Red (ATK), Yellow (Max HP), Green (SPD).
+    - Pocket: Holds 3 orbs (FIFO). Field orbs expire in 30s.
+    - Synergy: 3 same = 25% bonus, 2 same = 15% bonus, 3 different = 10% all-round bonus.
+    - Narrative: Manifestations of the "Trial's Progress" in the courthouse.
+
 ---
 
 # AI Persona & Role Context
