@@ -1206,7 +1206,6 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
         else imgKey = 'player_down';
     }
     else if (['throw', 'swing', 'cast'].includes(animState)) {
-        // Combat state follows movement direction
         if (animDir === 'up') imgKey = 'player_up';
         else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
         else imgKey = 'player_idle';
@@ -1217,15 +1216,15 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
     if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
         ctx.save();
         
-        // [Flipping Logic] 
-        // If it's a side view and it's the right-side asset but moving left, we flip it.
-        // However, if we have a dedicated left asset, we don't flip unless it's missing.
-        let actualScaleX = scale;
-        // Optimization: If player_left is missing or is just a copy of right, we could flip here.
-        // But the user provided walk_left, so we assume it's correct.
-        // If the user says left walk looks like right walk, it might be the orientation in the file.
+        // [Flipping Fix]
+        // If it's player_left and dirX is -1, we assume the asset might need flipping 
+        // to face the intended direction if the original frames face right.
+        // Also apply flipping for player_dash based on movement direction.
+        let flipX = 1;
+        if (imgKey === 'player_left') flipX = -1; // Force flip for left asset if it's facing right
+        if (imgKey === 'player_dash' && dirX === -1) flipX = -1;
         
-        ctx.scale(actualScaleX, scale);
+        ctx.scale(scale * flipX, scale);
         
         let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
         let w = 64; let h = 64; 
@@ -2210,13 +2209,15 @@ class Player {
         this.stats.cooldownMult = Math.max(0.2, this.stats.cooldownMult); updateHUD(); 
     }
     
-    executeDash(dx, dy) {
+        executeDash(dx, dy) {
         let beatTime = stageTime % GameSettings.rhythm.beatInterval;
         let timeToBeat = Math.min(beatTime, GameSettings.rhythm.beatInterval - beatTime);
         let isPerfect = timeToBeat <= GameSettings.rhythm.perfectWindow;
 
         this.dashTimer = GameSettings.player.dashDuration; 
         this.invincibleTimer = GameSettings.player.dashDuration;
+        this.animState = 'dash';
+        this.animTimer = GameSettings.player.dashDuration;
         
         this.dashDir.x = (dx === 0 && dy === 0) ? this.dirX : dx; 
         this.dashDir.y = (dx === 0 && dy === 0) ? 0 : dy;
