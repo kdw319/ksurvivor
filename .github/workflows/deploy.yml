@@ -18,14 +18,38 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Current Branch
         uses: actions/checkout@v4
+        with:
+          path: current
+
+      - name: Checkout Main Branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main_ref
+
+      - name: Checkout Sandbox Branch
+        uses: actions/checkout@v4
+        with:
+          ref: sandbox
+          path: sandbox_ref
+
+      - name: Prepare Deployment Directory
+        run: |
+          mkdir -p deploy_out
+          # 1. Main branch contents to root
+          cp -r main_ref/www/* deploy_out/
+          # 2. Sandbox branch contents to /sandbox folder
+          mkdir -p deploy_out/sandbox
+          cp -r sandbox_ref/www/* deploy_out/sandbox/
+          
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'www/'
+          path: 'deploy_out/'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
