@@ -1127,7 +1127,7 @@ function generateMapPattern(theme) {
         cx.fillStyle = 'rgba(255, 159, 243, 0.2)'; cx.beginPath(); cx.arc(180, 50, 15, 0, Math.PI*2); cx.fill(); 
         cx.fillStyle = 'rgba(0, 210, 211, 0.2)'; cx.beginPath(); cx.arc(20, 150, 20, 0, Math.PI*2); cx.fill(); 
     }
-    return ctx.createPattern(c, 'repeat');
+    return canvas.getContext('2d').createPattern(c, 'repeat');
 }
 
 // ==========================================
