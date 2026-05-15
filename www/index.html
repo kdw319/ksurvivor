@@ -426,6 +426,2304 @@
             <div id="storyText" class="typewriter-text"></div>
             <button id="storyNextBtn" class="btn primary hidden" onclick="window.nextStoryStep()">다음</button>
         </div>
+        <button id="storyLangBtn" class="btn" style="position: absolute; top: 20px; left: 20px; font-size: 14px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #555; pointer-events: auto; z-index: 60;" onclick="event.stopPropagation(); window.toggleLanguage()">🌐 KO</button>
+        <button id="storySkipBtn" class="btn skip-btn" onclick="window.skipStory()">Skip</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+</div>
+
+<script type="module">
+// ==========================================
+// [1-A] 외부 에셋 데이터 슬롯 (URL, 파일명, Base64 모두 지원)
+// ==========================================
+const GAME_ASSETS = {
+    player: "character_idle.webp", 
+    player_run: "character_front_walk_walk_down.webp",
+    player_hurt: "character_hurt.webp",
+    player_attack: "character_attack.webp",
+    player_death: "character_death.webp",
+    mob: "", boss: ""    
+};
+const loadedImages = {};
+
+function loadAssets() {
+    for (const [key, srcData] of Object.entries(GAME_ASSETS)) {
+        if (srcData && srcData.trim() !== "") {
+            const img = new Image();
+            img.src = srcData.startsWith('data:') || srcData.startsWith('http') ? srcData : './assets/' + srcData;
+            loadedImages[key] = img;
+        }
+    }
+}
+loadAssets();
+
+// ==========================================
+// 1. Data Definitions & Meta Progression
+// ==========================================
+let playerBadges = 0; 
+let unlockedWeapons = []; 
+let permanentStats = { damage: 0, cooldown: 0, speed: 0, maxHp: 0 };
+let saveSlots = [null, null, null, null, null]; 
+let currentLang = 'ko';
+
+let maxStageReached = 1;
+let currentOutfitId = 'default1';
+
+let beatScale = 1.0;
+let lastBeatCount = 0;
+
+let statsTracking = { totalKills: 0, totalBadges: 0 };
+let achievements = { kills: false, stage5: false, rich: false };
+
+const ACHIEVEMENTS_DATA = [
+    { id: 'kills', name: "첫 피의 세례", enName: "First Blood", desc: "적 100마리 처치", enDesc: "Kill 100 enemies", reqKills: 100, icon: "⚔️" },
+    { id: 'stage5', name: "생존 전문가", enName: "Survivor", desc: "스테이지 5 도달", enDesc: "Reach Stage 5", reqStage: 5, icon: "🛡️" },
+    { id: 'rich', name: "매점 VIP", enName: "Rich Student", desc: "누적 뱃지 1,000개 획득", enDesc: "Collect 1,000 badges total", reqBadges: 1000, icon: "💰" }
+];
+
+const OUTFITS = [
+    { id: 'default1', name: "기본 교복 (레드)", enName: "Default Uniform", reqStage: 0, colors: { cSkin: '#ffeaa7', cHair: '#f5f6fa', cHairShadow: '#dcdde1', cDress: '#c23616', cDressDark: '#8c220c', cEye: '#b33939' } },
+    { id: 'default2', name: "하복 (블루)", enName: "Summer (Blue)", reqStage: 0, colors: { cSkin: '#ffeaa7', cHair: '#1e272e', cHairShadow: '#000', cDress: '#0984e3', cDressDark: '#075c9e', cEye: '#1e272e' } },
+    { id: 'default3', name: "춘추복 (그린)", enName: "Spring (Green)", reqStage: 0, colors: { cSkin: '#ffeaa7', cHair: '#ff9f43', cHairShadow: '#e17055', cDress: '#10ac84', cDressDark: '#01a3a4', cEye: '#ff9f43' } },
+    { id: 'default4', name: "체육복 (네이비)", enName: "Gym (Navy)", reqStage: 0, colors: { cSkin: '#ffda79', cHair: '#8395a7', cHairShadow: '#576574', cDress: '#222f3e', cDressDark: '#10171e', cEye: '#222f3e' } },
+    { id: 'default5', name: "사복 (핑크)", enName: "Casual (Pink)", reqStage: 0, colors: { cSkin: '#ffeaa7', cHair: '#2d3436', cHairShadow: '#000', cDress: '#fd79a8', cDressDark: '#e84393', cEye: '#2d3436' } },
+    { id: 'stage10', name: "재판소 망령", enName: "Ghost", reqStage: 10, colors: { cSkin: '#d1d8e0', cHair: '#4b6584', cHairShadow: '#2b3a4a', cDress: '#4b4b4b', cDressDark: '#2c2c2c', cEye: '#fc5c65' } },
+    { id: 'stage20', name: "보건실 간호사", enName: "Nurse", reqStage: 20, colors: { cSkin: '#ffeaa7', cHair: '#eb3b5a', cHairShadow: '#b71540', cDress: '#f5f6fa', cDressDark: '#dcdde1', cEye: '#eb3b5a' } },
+    { id: 'stage30', name: "체육관 에이스", enName: "Gym Ace", reqStage: 30, colors: { cSkin: '#ffda79', cHair: '#f7b731', cHairShadow: '#fa8231', cDress: '#20bf6b', cDressDark: '#0fb9b1', cEye: '#2d98da' } },
+    { id: 'stage40', name: "선혈의 운동장", enName: "Bloody", reqStage: 40, colors: { cSkin: '#ffda79', cHair: '#111', cHairShadow: '#000', cDress: '#eb3b5a', cDressDark: '#b71540', cEye: '#f7b731' } },
+    { id: 'stage50', name: "네온 시티 러너", enName: "Neon", reqStage: 50, colors: { cSkin: '#ffeaa7', cHair: '#00d2d3', cHairShadow: '#01a3a4', cDress: '#5f27cd', cDressDark: '#341f97', cEye: '#00d2d3' } },
+    { id: 'stage60', name: "황금의 전사", enName: "Golden", reqStage: 60, colors: { cSkin: '#ffeaa7', cHair: '#feca57', cHairShadow: '#ff9f43', cDress: '#f368e0', cDressDark: '#ff9ff3', cEye: '#feca57' } },
+    { id: 'stage70', name: "다크 나이트", enName: "Dark Knight", reqStage: 70, colors: { cSkin: '#a4b0be', cHair: '#2f3542', cHairShadow: '#111', cDress: '#2f3542', cDressDark: '#111', cEye: '#ff4757' } },
+    { id: 'stage80', name: "백은의 천사", enName: "Silver Angel", reqStage: 80, colors: { cSkin: '#ffeaa7', cHair: '#f1f2f6', cHairShadow: '#ced6e0', cDress: '#ffffff', cDressDark: '#dfe4ea', cEye: '#7bed9f' } },
+    { id: 'stage90', name: "우주 방랑자", enName: "Wanderer", reqStage: 90, colors: { cSkin: '#ffeaa7', cHair: '#a29bfe', cHairShadow: '#6c5ce7', cDress: '#0984e3', cDressDark: '#00cec9', cEye: '#dfe6e9' } },
+    { id: 'stage100', name: "대역전의 전설", enName: "Legend", reqStage: 100, colors: { cSkin: '#ffeaa7', cHair: '#ff4757', cHairShadow: '#ff6b81', cDress: '#eccc68', cDressDark: '#ffa502', cEye: '#2ed573' } }
+];
+
+const GameSettings = {
+    player: { baseSpeed: 180, baseHp: 100, pickupRange: 80, dashSpeedMultiplier: 3.5, dashDuration: 0.25, dashCooldown: 2.0, baseDmgFactor: 10, baseCoolFactor: 1.0 },
+    stage: { maxTime: 90, midBossTime: 45, finalBossTime: 90, enemyHpScale: 1.25, enemyDmgScale: 1.1 },
+    enemyTypes: {
+        mob: { subType: 'melee', hpBase: 20, speed: 80, damage: 5, color: '#7f8fa6', exp: 1 },
+        shooter: { subType: 'ranged', hpBase: 15, speed: 60, damage: 8, color: '#00cec9', exp: 2, range: 250, cooldown: 2.0 },
+        trapper: { subType: 'trap', hpBase: 25, speed: 50, damage: 10, color: '#6c5ce7', exp: 3, cooldown: 3.0 }
+    },
+    economy: { clearRewardBase: 5, clearRewardBoss: 10, gachaCost: 10 },
+    minimap: { size: 150, scale: 0.04 },
+    rhythm: { beatInterval: 1.5, perfectWindow: 0.15, perfectDamage: 300 },
+    spotlight: { spawnInterval: 40.0, reqTime: 10.0, penalty: 0.5, startRadius: 600, endRadius: 180 },
+    maps: [
+        { id: 'map1', bg: '#1a110c', line: '#0d0805', type: 'grid', lineWidth: 2 },
+        { id: 'map2', bg: '#242b33', line: '#1a1f24', type: 'tile', decor: 'blood', lineWidth: 1 },
+        { id: 'map3', bg: '#5d4d33', line: '#3d3221', type: 'court', lineWidth: 4 },
+        { id: 'map4', bg: '#4d1616', line: '#2d0d0d', type: 'dirt', lineWidth: 2 },
+        { id: 'map5', bg: '#1e272e', line: '#0a0d0f', type: 'street', lineWidth: 5 }
+    ],
+    weapons: {
+        chalk: { name: "분필", icon: "✏️", desc: "가장 가까운 적에게 투사체를 던집니다.", damage: 20, cooldown: 1.0, speed: 400, color: '#fff', statBonus: { type: 'damageMult', value: 0.05, label: '공격력' } },
+        textbook: { name: "교과서", icon: "📘", desc: "주변을 맴도는 마법의 교과서.", damage: 8, cooldown: 0.1, radius: 90, color: '#8b4513', statBonus: { type: 'cooldownMult', value: -0.05, label: '쿨타임' } },
+        recorder: { name: "리코더", icon: "🎵", desc: "전방을 향해 넓게 휘두릅니다.", damage: 35, cooldown: 1.2, range: 120, color: '#d4af37', statBonus: { type: 'damageMult', value: 0.10, label: '공격력' } },
+        compass: { name: "컴퍼스", icon: "📐", desc: "적을 관통하는 컴퍼스를 투척합니다.", damage: 25, cooldown: 2.0, speed: 250, color: '#a0a0a0', statBonus: { type: 'speedMult', value: 0.05, label: '이동속도' } },
+        gymClothes: { name: "체육복", icon: "👕", desc: "최대 체력이 증가하고 서서히 회복합니다.", maxHpBonus: 20, healTick: 5.0, healAmount: 2, statBonus: { type: 'none', value: 0, label: '' } }
+    },
+    specialWeapons: {
+        magicMic: { name: "마이크", icon: "🎤", desc: "강력한 음파로 적들을 관통합니다.", damage: 45, cooldown: 1.5, speed: 350, color: '#ff9ff3', statBonus: { type: 'damageMult', value: 0.1, label: '공격력' } },
+        smartPhone: { name: "스마트폰", icon: "📱", desc: "주변에 플래시 폭발을 일으킵니다.", damage: 60, cooldown: 3.0, radius: 150, color: '#feca57', statBonus: { type: 'cooldownMult', value: -0.1, label: '쿨타임' } },
+        laserPointer: { name: "레이저 포인터", icon: "🔦", desc: "빛의 속도로 적을 관통합니다.", damage: 30, cooldown: 0.8, speed: 800, color: '#ff7979', statBonus: { type: 'damageMult', value: 0.05, label: '공격력' } },
+        energyDrink: { name: "에너지 드링크", icon: "🥫", desc: "주변에 강력한 에너지를 분출합니다.", damage: 80, cooldown: 4.0, radius: 180, color: '#badc58', statBonus: { type: 'speedMult', value: 0.1, label: '이동속도' } },
+        studentID: { name: "학생증", icon: "🪪", desc: "플레이어 주변을 넓게 방어합니다.", damage: 15, cooldown: 0.1, radius: 130, color: '#c7ecee', statBonus: { type: 'none', value: 0, label: '' } },
+        backpack: { name: "책가방", icon: "🎒", desc: "거대한 가방을 던져 압살합니다.", damage: 150, cooldown: 3.5, speed: 150, color: '#ffbe76', statBonus: { type: 'damageMult', value: 0.15, label: '공격력' } },
+        tablet: { name: "태블릿", icon: "📱", desc: "넓은 반경을 데이터 파동으로 타격합니다.", damage: 40, cooldown: 1.5, range: 160, color: '#e056fd', statBonus: { type: 'cooldownMult', value: -0.05, label: '쿨타임' } }
+    },
+    synergies: {
+        studyManiac: { id: 'studyManiac', name: "🔥 학구열 (분필+교과서)", icon: "🔥", req: ['chalk', 'textbook'], desc: "분필이 적에게 적중 시 폭발합니다." },
+        musicMath: { id: 'musicMath', name: "🎶 음악과 수학 (리코더+컴퍼스)", icon: "🎶", req: ['recorder', 'compass'], desc: "리코더 휘두를 때 미니 컴퍼스를 발사합니다." },
+        cyberWarrior: { id: 'cyberWarrior', name: "⚡ 사이버 전사 (스마트폰+레이저)", icon: "⚡", req: ['smartPhone', 'laserPointer'], desc: "스마트폰 폭발 시 4방향으로 레이저 발사." },
+        caffeineAddict: { id: 'caffeineAddict', name: "☕ 카페인 중독 (책가방+드링크)", icon: "☕", req: ['backpack', 'energyDrink'], desc: "책가방 적중 시 에너지 폭발." },
+        idolStage: { id: 'idolStage', name: "✨ 아이돌 무대 (마이크+체육복)", icon: "✨", req: ['magicMic', 'gymClothes'], desc: "마이크 타격 시 일정 확률로 체력 회복 또는 이속 버프." },
+        digitalDefense: { id: 'digitalDefense', name: "🛡️ 디지털 방어 (태블릿+학생증)", icon: "🛡️", req: ['tablet', 'studentID'], desc: "학생증 반경 증가 및 타격 시 쿨감 버프." }
+    }
+};
+
+const I18N = {
+    ko: {
+        langBtn: "🌐 KO", title: "Last Girl Survivor", subtitle: "대역전의 종소리",
+        btnStart: "출격하기", btnGacha: "픽업 가챠", btnData: "데이터 센터", btnUpgrade: "능력치 강화",        btnClosetLobby: "옷장 (스킨)", closetTitle: "옷장 (Closet)", closetDesc: "스테이지를 클리어하고 새로운 의상을 해금하세요.",
+        btnAchieveLobby: "도전과제", achieveTitle: "도전과제 (Achievements)", achieveDesc: "특정 조건을 만족하여 칭호를 획득하세요.",
+        outfitEquipped: "착용 중", outfitEquipBtn: "착용하기", outfitReq: "해금: STAGE",
+        speech: ["빨리 시작하자!", "가챠 돌릴 시간이야!", "대역전의 종소리가 울린다!", "지각하겠어!"],
+        storyLines: [ 
+            "수학여행 중 끔찍한 교통사고를 당했다. 분명 그게 마지막 기억이었는데...", 
+            "눈을 떠보니 차가운 법정 바닥이었다. 내 이름은 '윤이솔'. 어째서인지 이곳에 갇혀버렸다.",
+            "사고는 조작된 기억일 뿐인가? 이 기이한 재판소의 진실이 나를 기다리고 있다.",
+            "기억의 조각을 되찾고 나를 가둔 이들에게 복수하기 위해, 나는 최후의 소녀가 되겠다!" 
+        ],
+        storyNext: "다음 (Click)", storySkip: "Skip",
+        w_chalk: { name: "분필", desc: "가장 가까운 적에게 투사체를 던집니다.", stat: "공격력" },
+        w_textbook: { name: "교과서", desc: "주변을 맴도는 마법의 교과서.", stat: "쿨타임" },
+        w_recorder: { name: "리코더", desc: "전방을 향해 넓게 휘두릅니다.", stat: "공격력" },
+        w_compass: { name: "컴퍼스", desc: "적을 관통하는 컴퍼스를 투척합니다.", stat: "이동속도" },
+        w_gymClothes: { name: "체육복", desc: "최대 체력이 증가하고 서서히 회복합니다.", stat: "" },
+        w_magicMic: { name: "마이크", desc: "강력한 음파로 적들을 관통합니다.", stat: "공격력" },
+        w_smartPhone: { name: "스마트폰", desc: "주변에 플래시 폭발을 일으킵니다.", stat: "쿨타임" },
+        w_laserPointer: { name: "레이저 포인터", desc: "빛의 속도로 적을 관통합니다.", stat: "공격력" },
+        w_energyDrink: { name: "에너지 드링크", desc: "주변에 강력한 에너지를 분출합니다.", stat: "이동속도" },
+        w_studentID: { name: "학생증", desc: "플레이어 주변을 넓게 방어합니다.", stat: "" },
+        w_backpack: { name: "책가방", desc: "거대한 가방을 던져 압살합니다.", stat: "공격력" },
+        w_tablet: { name: "태블릿", desc: "넓은 반경을 데이터 파동으로 타격합니다.", stat: "쿨타임" },
+        syn_study: { name: "🔥 학구열 (분필+교과서)", desc: "분필이 적에게 적중 시 폭발합니다." },
+        syn_music: { name: "🎶 음악과 수학 (리코더+컴퍼스)", desc: "리코더 휘두를 때 미니 컴퍼스를 발사합니다." },
+        syn_cyber: { name: "⚡ 사이버 전사 (스마트폰+레이저)", desc: "스마트폰 폭발 시 4방향으로 레이저 발사." },
+        syn_caffeine: { name: "☕ 카페인 중독 (책가방+드링크)", desc: "책가방 적중 시 에너지 폭발." },
+        syn_idol: { name: "✨ 아이돌 무대 (마이크+체육복)", desc: "마이크 타격 시 일정 확률로 체력 회복 또는 이속 버프." },
+        syn_digital: { name: "🛡️ 디지털 방어 (태블릿+학생증)", desc: "학생증 반경 증가 및 타격 시 쿨감 버프." },
+        statDmg: "공격력", statCool: "쿨타임", statSpd: "이동속도", progress: "진행도",
+        gachaTitle: "특수 무기 픽업", gachaOwnedText: "보유 뱃지: ", gachaUnitText: "개", gachaDesc: "다양한 특수 무기를 해금하여<br>레벨업 풀에 추가합니다. (해금 무기는 등장 확률 1.5배!)", gachaRollBtn: "1회 뽑기 (10 뱃지)", gachaCloseBtn: "닫기", gachaResCloseBtn: "확인", gachaNoBadge: "뱃지가 부족합니다!",
+        gachaResTitleNew: "🎉 신규 무기 해금! 🎉", gachaResMsgNew: "이제 인게임 레벨업 시 등장합니다.", gachaResTitleDup: "중복 무기 획득", gachaResMsgDup: "중복 보상으로 뱃지 5개가 환급되었습니다.",
+        saveTitle: "데이터 센터", saveDesc: "메타 프로그레션(재화, 해금 무기, 영구 스탯)을 보존합니다.", saveCloseBtn: "닫기", saveEmpty: "빈 데이터 슬롯", saveBadges: "보유 뱃지: ", saveWeapons: "해금 무기: ", saveBtn: "저장", loadBtn: "로드", saveUnit: "개", saveType: "종",
+        upgradeTitle: "능력치 강화 (영구)", upgradeDesc: "획득한 뱃지로 기본 능력치를 영구적으로 강화합니다.", upg_dmg: "기본 공격력 증폭", upg_cool: "기본 쿨타임 감소", upg_spd: "기본 이동속도 증가", upg_hp: "기본 최대 체력 증가", btnMax: "최대치",
+        pauseVolLbl: "사운드 음량 🔊",
+        statsTitle: "능력치", btnPause: "일시정지 (ESC)", pauseTitle: "일시정지", pauseResume: "게임 재개", pauseExit: "로비로 나가기", levelUpTitle: "레벨 업!",
+        map1: "낡은 재판소", map2: "피 묻은 보건실", map3: "폐쇄된 체육관", map4: "붉은 운동장", map5: "밤의 신주쿠 거리",
+        tut_title: "튜토리얼", tut_close: "닫기", tut_prev: "이전", tut_next: "다음",
+        tut_p1_t: "조작법", tut_p1_d: "WASD / 방향키 : 이동<br>SHIFT : 대쉬 (박자에 맞춰!)",
+        tut_p2_t: "성장 시스템", tut_p2_d: "스테이지에서 획득한 뱃지로 '능력치 강화' 메뉴에서 영구적인 스탯 업이 가능합니다.",
+        tut_p3_t: "가챠 및 무기", tut_p3_d: "가챠를 통해 특수 무기를 해금하세요. 해금된 무기는 게임 중 레벨업 풀에 1.5배 확률로 등장합니다!",
+        orb_get: "⚖️ 심판의 구슬 획득!", orb_fury: "분노의 심판 (공격력)", orb_life: "생명의 심판 (체력)", orb_wind: "신속의 심판 (이동속도)",
+        syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)"
+    },
+    en: {
+        langBtn: "🌐 EN", title: "Last Girl Survivor", subtitle: "Bell of Turnabout",
+        btnStart: "Sortie", btnGacha: "Pickup Gacha", btnData: "Data Center", btnUpgrade: "Upgrade",
+        btnClosetLobby: "Closet (Skins)", closetTitle: "Closet", closetDesc: "Unlock new outfits as you clear stages.",
+        btnAchieveLobby: "Achievements", achieveTitle: "Achievements", achieveDesc: "Meet specific conditions to earn titles.",
+        outfitEquipped: "Equipped", outfitEquipBtn: "Equip", outfitReq: "Req: STAGE",
+        speech: ["Let's go!", "Gacha time!", "The bell tolls!", "I'm late!"],
+        storyLines: [ "The excitement of the school trip was fleeting...", "I woke up in the middle of a bizarre courthouse.", "Mechanical dolls closing in from all sides.", "To survive... I must use whatever I have as a weapon!" ],
+        storyNext: "Next (Click)", storySkip: "Skip",
+        w_chalk: { name: "Chalk", desc: "Throws chalk at the nearest enemy.", stat: "ATK" },
+        w_textbook: { name: "Textbook", desc: "A magic textbook orbiting you.", stat: "Cooldown" },
+        w_recorder: { name: "Recorder", desc: "Swings a recorder forward.", stat: "ATK" },
+        w_compass: { name: "Compass", desc: "Throws a piercing compass.", stat: "SPD" },
+        w_gymClothes: { name: "Gym Clothes", desc: "Increases Max HP and regens over time.", stat: "" },
+        w_magicMic: { name: "Mic", desc: "Pierces enemies with soundwaves.", stat: "ATK" },
+        w_smartPhone: { name: "Smartphone", desc: "Causes flash explosions around you.", stat: "Cooldown" },
+        w_laserPointer: { name: "Laser Pointer", desc: "Pierces enemies at the speed of light.", stat: "ATK" },
+        w_energyDrink: { name: "Energy Drink", desc: "Erupts powerful energy explosions around you.", stat: "SPD" },
+        w_studentID: { name: "Student ID", desc: "Defends a wide area around the player.", stat: "" },
+        w_backpack: { name: "Backpack", desc: "Throws a massive, heavy backpack.", stat: "ATK" },
+        w_tablet: { name: "Tablet", desc: "Strikes a wide radius with data waves.", stat: "Cooldown" },
+        syn_study: { name: "🔥 Study Maniac", desc: "Chalk explodes on hit." },
+        syn_music: { name: "🎶 Math & Music", desc: "Fire mini-compasses when swinging." },
+        syn_cyber: { name: "⚡ Cyber Warrior", desc: "Smartphone explosion fires lasers in 4 directions." },
+        syn_caffeine: { name: "☕ Caffeine Addict", desc: "Backpack explosion on hit." },
+        syn_idol: { name: "✨ Idol Stage", desc: "Mic heals or buffs speed on hit." },
+        syn_digital: { name: "🛡️ Digital Defense", desc: "Increased ID radius and cooldown buff on hit." },
+        statDmg: "ATK", statCool: "Cooldown", statSpd: "SPD", progress: "Progress",
+        gachaTitle: "Special Weapon Pickup", gachaOwnedText: "Owned Badges: ", gachaUnitText: "", gachaDesc: "Unlock special weapons and add them to the level-up pool. (Unlocked weapons have 1.5x appearance rate!)", gachaRollBtn: "1 Roll (10 Badges)", gachaCloseBtn: "Close", gachaResCloseBtn: "Confirm", gachaNoBadge: "Not enough badges!",
+        gachaResTitleNew: "🎉 New Weapon Unlocked! 🎉", gachaResMsgNew: "Will now appear in the level-up pool.", gachaResTitleDup: "Duplicate Weapon", gachaResMsgDup: "5 badges have been refunded for duplicate.",
+        saveTitle: "Data Center", saveDesc: "Safely preserve meta-progression (currency, weapons, stats).", saveCloseBtn: "Close", saveEmpty: "Empty Data Slot", saveBadges: "Badges: ", saveWeapons: "Unlocked Weapons: ", saveBtn: "Save", loadBtn: "Load", saveUnit: "", saveType: "",
+        upgradeTitle: "Permanent Upgrades", upgradeDesc: "Permanently boost your base stats with acquired badges.", upg_dmg: "Base ATK Boost", upg_cool: "Base Cooldown Reduction", upg_spd: "Base Speed Boost", upg_hp: "Base Max HP Boost", btnMax: "MAX",
+        pauseVolLbl: "Volume 🔊",
+        statsTitle: "Stats", btnPause: "Pause (ESC)", pauseTitle: "Paused", pauseResume: "Resume Game", pauseExit: "Return to Lobby", levelUpTitle: "Level UP!",
+        map1: "Old Courthouse", map2: "Bloody Infirmary", map3: "Abandoned Gym", map4: "Red Playground", map5: "Night Shinjuku",
+        tut_title: "Tutorial", tut_close: "Close", tut_prev: "Prev", tut_next: "Next",
+        tut_p1_t: "Controls", tut_p1_d: "WASD / Arrows : Move<br>SHIFT : Dash (Timed to beat!)",
+        tut_p2_t: "Growth", tut_p2_d: "Badges from stages can be used in the 'Upgrade' menu for permanent stat boosts.",
+        tut_p3_t: "Gacha", tut_p3_d: "Unlock special weapons via Gacha. Unlocked weapons appear in the level-up pool with 1.5x weight!",
+        orb_get: "⚖️ Verdict Orb Acquired!", orb_fury: "Verdict of Fury (ATK)", orb_life: "Verdict of Life (HP)", orb_wind: "Verdict of Wind (SPD)",
+        syn_triple: "Transcendent Synergy (25%)", syn_double: "Resonance Synergy (15%)", syn_mix: "Harmonious Verdict (10%)"
+    }
+};
+
+const TUTORIAL_DATA = [
+    { icon: "⌨️", titleKey: "tut_p1_t", descKey: "tut_p1_d" },
+    { icon: "📈", titleKey: "tut_p2_t", descKey: "tut_p2_d" },
+    { icon: "🎁", titleKey: "tut_p3_t", descKey: "tut_p3_d" }
+];
+let currentTutPage = 0;
+
+let stageKills = 0;
+let stageMarblesDropped = 0;
+let verdictOrbs = []; // Current orbs on field
+const MAX_MARBLES_PER_STAGE = 6;
+const MARBLE_TYPES = [
+    { type: 'red', color: '#ff4757', glow: 'rgba(255, 71, 87, 0.5)', icon: '🔴' },
+    { type: 'yellow', color: '#f1c40f', glow: 'rgba(241, 196, 15, 0.5)', icon: '🟡' },
+    { type: 'green', color: '#2ed573', glow: 'rgba(46, 213, 115, 0.5)', icon: '🟢' }
+];
+
+let gameState = 'story'; 
+let isPaused = false; 
+let currentStage = 1; 
+let stageTime = 0; 
+let gameSpeedMultiplier = 1.0; 
+let lastTime = 0; 
+let keys = {}; 
+let camera = { x: 0, y: 0 }; 
+let hitStopTimer = 0; 
+let lastTimerString = ""; 
+let frameCount = 0;
+let screenShake = 0;
+
+let hasSpawnedMidBoss = false;
+let hasSpawnedFinalBoss = false;
+let isStageCleared = false;
+
+let player = null; 
+let enemies = []; 
+let projectiles = []; 
+let enemyProjectiles = []; 
+let groundTraps = []; 
+let expGems = []; 
+let damageTexts = []; 
+let particles = []; 
+let items = []; 
+let spotlight = null;
+let spotlightSpawnTimer = 0;
+
+let storyStep = 0; 
+let isTyping = false;
+let lobbyCharY = 0; 
+let lobbyCharVy = 0; 
+let lobbyInteractTimer = 0; 
+let lobbyParticles = [];
+
+let joystick = { active: false, cx: 0, cy: 0, tx: 0, ty: 0, dx: 0, dy: 0, radius: 50 };
+let gameWidth = 0;
+let gameHeight = 0;
+let globalScale = 1;
+
+let audioCtx = null;
+let bgmInterval = null;
+let masterGainNode = null;
+let masterVolume = 0.5;
+
+let bgPattern = null;
+let lobbyPattern = null;
+let currentBgPattern = null;
+let gameLoopId = null;
+
+// ==========================================
+// 2. Audio System
+// ==========================================
+function initAudio() {
+    if(!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGainNode = audioCtx.createGain();
+        masterGainNode.gain.value = masterVolume;
+        masterGainNode.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function startBGM() {
+    if(!audioCtx) return; 
+    if(bgmInterval) clearInterval(bgmInterval);
+    const notes = [146.83, 164.81, 174.61, 220.00, 174.61, 164.81]; 
+    let noteIdx = 0;
+    
+    bgmInterval = setInterval(() => {
+        if(gameState !== 'playing' || isPaused || masterVolume <= 0) return;
+        const osc = audioCtx.createOscillator(); 
+        const gain = audioCtx.createGain();
+        osc.connect(gain); 
+        gain.connect(masterGainNode);
+        osc.type = 'triangle'; 
+        osc.frequency.setValueAtTime(notes[noteIdx], audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime); 
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.start(audioCtx.currentTime); 
+        osc.stop(audioCtx.currentTime + 0.3);
+        noteIdx = (noteIdx + 1) % notes.length;
+    }, 400);
+}
+
+function stopBGM() { 
+    if(bgmInterval) clearInterval(bgmInterval); 
+}
+
+function changeVolume(val) {
+    masterVolume = parseFloat(val);
+    if(masterGainNode) masterGainNode.gain.value = masterVolume;
+    const lVol = document.getElementById('lobbyVol'); if(lVol && lVol.value !== val) lVol.value = val;
+    const pVol = document.getElementById('pauseVol'); if(pVol && pVol.value !== val) pVol.value = val;
+}
+
+function playSFX(type) {
+    if(!audioCtx || isPaused || masterVolume <= 0) return;
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(masterGainNode);
+    const now = audioCtx.currentTime;
+    
+    const pitch = 0.9 + Math.random() * 0.2;
+
+    if(type === 'hit') { 
+        osc.type = 'square'; osc.frequency.setValueAtTime(150 * pitch, now); osc.frequency.exponentialRampToValueAtTime(40 * pitch, now + 0.1); 
+        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); 
+    } 
+    else if(type === 'shoot') { 
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(600 * pitch, now); osc.frequency.exponentialRampToValueAtTime(200 * pitch, now + 0.1); 
+        gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); 
+    } 
+    else if(type === 'levelup') { 
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(659.25, now + 0.1); osc.frequency.setValueAtTime(783.99, now + 0.2); osc.frequency.setValueAtTime(1046.50, now + 0.3); 
+        gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8); osc.start(now); osc.stop(now + 0.8); 
+    } 
+    else if(type === 'clear') { 
+        osc.type = 'sine'; osc.frequency.setValueAtTime(440.00, now); osc.frequency.setValueAtTime(554.37, now + 0.2); osc.frequency.setValueAtTime(659.25, now + 0.4); osc.frequency.setValueAtTime(880.00, now + 0.6); 
+        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 2.5); osc.start(now); osc.stop(now + 2.5); 
+    }
+    else if(type === 'exp') { 
+        osc.type = 'sine'; osc.frequency.setValueAtTime((800 + Math.random()*200) * pitch, now); 
+        gain.gain.setValueAtTime(0.02, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05); osc.start(now); osc.stop(now + 0.05); 
+    } 
+    else if(type === 'explosion') { 
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100 * pitch, now); osc.frequency.exponentialRampToValueAtTime(20 * pitch, now + 0.2); 
+        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2); 
+    } 
+    else if(type === 'dash') { 
+        osc.type = 'sine'; osc.frequency.setValueAtTime(200, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.15); 
+        gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15); 
+    } 
+    else if(type === 'gacha') { 
+        osc.type = 'square'; osc.frequency.setValueAtTime(300, now); osc.frequency.setValueAtTime(600, now + 0.1); osc.frequency.setValueAtTime(1200, now + 0.3); 
+        gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.6); osc.start(now); osc.stop(now + 0.6); 
+    }
+    else if(type === 'bossKill') { 
+        osc.type = 'square'; osc.frequency.setValueAtTime(150 * pitch, now); osc.frequency.exponentialRampToValueAtTime(10 * pitch, now + 0.15); 
+        gain.gain.setValueAtTime(0.5, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15); 
+    }
+    else if(type === 'beatTick') {
+        osc.type = 'triangle'; 
+        osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.05);
+        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05); osc.start(now); osc.stop(now + 0.05);
+    }
+    else if(type === 'perfectDash') {
+        // 경쾌한 타격음 (Sine Sweep + High Triangle Burst)
+        osc.type = 'sine'; 
+        osc.frequency.setValueAtTime(800, now); 
+        osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+        gain.gain.setValueAtTime(0.4, now); 
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); 
+        osc.start(now); osc.stop(now + 0.15);
+
+        const osc2 = audioCtx.createOscillator(); 
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2); gain2.connect(masterGainNode);
+        osc2.type = 'triangle'; 
+        osc2.frequency.setValueAtTime(1200, now); 
+        osc2.frequency.exponentialRampToValueAtTime(1600, now + 0.05);
+        gain2.gain.setValueAtTime(0.15, now); 
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.1); 
+        osc2.start(now); osc2.stop(now + 0.1);
+    }
+}
+
+// ==========================================
+// 3. System Initialization
+// ==========================================
+const canvas = document.getElementById('gameCanvas'); 
+const ctx = canvas.getContext('2d');
+const mCtx = document.getElementById('minimapCanvas').getContext('2d');
+
+function resize() { 
+    // 기기 해상도 비율 동적 계산 (레터박스 최소화)
+    const vw = window.innerWidth || 1080;
+    const vh = window.innerHeight || 1920;
+    const isPortrait = vh > vw;
+    
+    // 기준 픽셀(1080) 대비 유동적인 비율 적용
+    const baseSize = 1080;
+    let logicalWidth, logicalHeight;
+    
+    if (isPortrait) {
+        logicalWidth = baseSize;
+        logicalHeight = baseSize * (vh / vw);
+    } else {
+        logicalHeight = baseSize;
+        logicalWidth = baseSize * (vw / vh);
+    }
+    
+    // 유효성 검사 (Infinity/NaN 방지)
+    if (!isFinite(logicalWidth)) logicalWidth = baseSize;
+    if (!isFinite(logicalHeight)) logicalHeight = baseSize * 1.77;
+
+    const container = document.getElementById('gameContainer');
+    if (container) {
+        container.style.width = logicalWidth + 'px';
+        container.style.height = logicalHeight + 'px';
+
+        globalScale = Math.min(vw / logicalWidth, vh / logicalHeight);
+        container.style.transform = `translate(-50%, -50%) scale(${globalScale})`;
+    }
+
+    gameWidth = logicalWidth; 
+    gameHeight = logicalHeight; 
+    canvas.width = logicalWidth; 
+    canvas.height = logicalHeight; 
+}
+window.addEventListener('resize', resize); 
+resize();
+
+const bgCanvas = document.createElement('canvas'); 
+bgCanvas.width = 100; bgCanvas.height = 100;
+const bgCtx = bgCanvas.getContext('2d', { alpha: false });
+bgCtx.fillStyle = '#2c1e16'; bgCtx.fillRect(0,0,100,100); 
+bgCtx.strokeStyle = '#1a110c'; bgCtx.lineWidth = 2; bgCtx.strokeRect(0,0,100,100);
+
+const lobbyCanvas = document.createElement('canvas'); 
+lobbyCanvas.width = 100; lobbyCanvas.height = 100;
+const lCtx = lobbyCanvas.getContext('2d', { alpha: false });
+lCtx.fillStyle = '#1c1c24'; lCtx.fillRect(0,0,100,100); 
+lCtx.strokeStyle = '#2a2a35'; lCtx.lineWidth = 2; lCtx.strokeRect(0,0,100,100);
+
+function loadSlotsFromLocal() {
+    try {
+        let rawData = localStorage.getItem('op_save_slot_0');
+        if(rawData) {
+            let data = JSON.parse(rawData);
+            playerBadges = data.playerBadges || 0;
+            unlockedWeapons = data.unlockedWeapons || [];
+            permanentStats = data.permanentStats || {damage:0, cooldown:0, speed:0, maxHp:0};
+            currentStage = data.currentStage || 1;
+            maxStageReached = data.maxStageReached || 1;
+            currentOutfitId = data.currentOutfitId || 'default1';
+            statsTracking = data.statsTracking || { totalKills: 0, totalBadges: 0 };
+            achievements = data.achievements || { kills: false, stage5: false, rich: false };
+        }
+    } catch (e) {
+        console.error("Save Load Error:", e);
+    }
+    loadAssets();
+}
+
+loadSlotsFromLocal();
+
+
+// ==========================================
+// 4. Utility Functions
+// ==========================================
+function getPointerPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    let clientX = e.clientX; 
+    let clientY = e.clientY;
+    
+    if (e.changedTouches && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+    }
+    
+    return {
+        x: (clientX - rect.left) / globalScale,
+        y: (clientY - rect.top) / globalScale
+    };
+}
+
+function isOffScreen(x, y, padding = 150) {
+    let sx = x - camera.x; let sy = y - camera.y;
+    return (sx < -padding || sx > gameWidth + padding || sy < -padding || sy > gameHeight + padding);
+}
+
+function findNearestEnemy() { 
+    let nearest = null; let minDistSq = Infinity; 
+    enemies.forEach(e => { 
+        let dx = e.x - player.x; 
+        let dy = e.y - player.y; 
+        let distSq = dx*dx + dy*dy; 
+        if(distSq < minDistSq) { minDistSq = distSq; nearest = e; } 
+    }); 
+    return nearest; 
+}
+
+function getSpawnType() { 
+    let pMob = Math.max(0.4, 0.8 - ((currentStage - 1) * 0.05)); 
+    let pShooter = (1.0 - pMob) * 0.6; 
+    let r = Math.random(); 
+    if (r < pMob) return 'mob'; 
+    if (r < pMob + pShooter) return 'shooter'; 
+    return 'trapper'; 
+}
+
+function spawnEnemy(forcedType = null) { 
+    if(enemies.length > 250) return; 
+    let angle = Math.random() * Math.PI * 2; 
+    let dist = Math.max(gameWidth, gameHeight) / 2 + 50; 
+    let ex = player.x + Math.cos(angle) * dist;
+    let ey = player.y + Math.sin(angle) * dist;
+    enemies.push(new Enemy(ex, ey, forcedType || getSpawnType())); 
+}
+
+function getWeaponSettings(id) { 
+    return GameSettings.weapons[id] || GameSettings.specialWeapons[id] || null; 
+}
+
+function giveWeapon(id) {
+    let existing = player.weapons.find(w => w.id === id);
+    if(existing) {
+        existing.level++;
+    } else {
+        if(['chalk', 'compass', 'magicMic', 'laserPointer', 'backpack'].includes(id)) {
+            player.weapons.push(new ProjectileWeapon(id));
+        }
+        else if(['recorder', 'tablet'].includes(id)) {
+            player.weapons.push(new RecorderWeapon(id));
+        }
+        else if(['textbook', 'studentID'].includes(id)) {
+            player.weapons.push(new OrbitWeapon(id));
+        }
+        else if(['smartPhone', 'energyDrink'].includes(id)) {
+            player.weapons.push(new SmartPhoneWeapon(id));
+        }
+        else {
+            player.weapons.push(new Weapon(id)); 
+        }
+        
+        if(id === 'gymClothes') { 
+            player.maxHp += GameSettings.weapons.gymClothes.maxHpBonus; 
+            player.hp += GameSettings.weapons.gymClothes.maxHpBonus; 
+        }
+    }
+    
+    if (player) { 
+        player.recalculateStats(); 
+        player.checkSynergies(); 
+    }
+    updateInventoryUI();
+}
+
+function updateHUD() {
+    if (!player) return; 
+    
+    let hpEl = document.getElementById('hpDisp');
+    if (hpEl) hpEl.innerText = `${Math.floor(player.hp)}/${player.maxHp}`;
+    
+    let lvlEl = document.getElementById('levelDisp');
+    if (lvlEl) lvlEl.innerText = player.level;
+    
+    let stageEl = document.getElementById('stageDisp');
+    if (stageEl) stageEl.innerText = currentStage;
+    
+    let expBarEl = document.getElementById('expBar');
+    if (expBarEl) expBarEl.style.width = `${(player.exp / player.maxExp) * 100}%`;
+    
+    let progEl = document.getElementById('progressDisp');
+    if (progEl) progEl.innerText = Math.min(100, Math.floor((stageTime / GameSettings.stage.maxTime) * 100));
+
+    let dashEl = document.getElementById('dashDisp');
+    let mDashBtn = document.getElementById('mobileDashBtn');
+    
+    if (player.dashCooldownTimer <= 0) { 
+        if (dashEl) { dashEl.innerText = 'READY'; dashEl.style.color = '#00d2d3'; }
+        if (mDashBtn) { mDashBtn.style.background = 'rgba(0, 210, 211, 0.4)'; mDashBtn.innerText = 'DASH'; }
+    } else { 
+        if (dashEl) { dashEl.innerText = player.dashCooldownTimer.toFixed(1) + 's'; dashEl.style.color = '#ccc'; }
+        if (mDashBtn) { mDashBtn.style.background = 'rgba(255, 107, 107, 0.4)'; mDashBtn.innerText = player.dashCooldownTimer.toFixed(1); }
+    }
+
+    let s = GameSettings.player; 
+    let dDmg = (player.stats.damageMult - 1.0) * s.baseDmgFactor; 
+    let dCool = (1.0 - player.stats.cooldownMult) * s.baseCoolFactor; 
+    let dSpd = (player.stats.speedMult - 1.0) * s.baseSpeed;
+    
+    const setHtml = (id, base, add, unit="", inverseGood = false) => { 
+        let el = document.getElementById(id); if(!el) return; 
+        let isGood = inverseGood ? add < 0 : add > 0; let sign = add > 0 ? '+' : ''; let color = isGood ? 'negative' : ''; 
+        if(add === 0) { el.innerHTML = `${base.toFixed(1)}${unit}`; } 
+        else { el.innerHTML = `${base.toFixed(1)}${unit} <span class="stat-bonus ${color}">(${sign}${add.toFixed(1)}${unit})</span>`; }
+    };
+    
+    setHtml('statDmg', s.baseDmgFactor, dDmg); 
+    setHtml('statCool', s.baseCoolFactor, -dCool, 's', true); 
+    setHtml('statSpd', s.baseSpeed, dSpd);
+}
+
+function updateInventoryUI() {
+    if (!player) return;
+    const inv = document.getElementById('inventory'); if (!inv) return;
+    inv.innerHTML = '';
+    
+    player.weapons.forEach(w => { 
+        let div = document.createElement('div'); div.className = 'inv-item'; 
+        div.innerHTML = `<span class="inv-icon">${w.settings.icon}</span> <span style="flex:1;">Lv.${w.level}</span>`; 
+        inv.appendChild(div); 
+    });
+
+    let activeSyns = Object.keys(player.activeSynergies);
+    if(activeSyns.length > 0) {
+        let synHeader = document.createElement('div');
+        synHeader.style.cssText = "font-size: 10px; color: #feca57; margin-top: 8px; margin-bottom: 4px; text-align: center; border-bottom: 1px dashed #555; padding-bottom: 4px;";
+        synHeader.innerText = "SYNERGY";
+        inv.appendChild(synHeader);
+
+        activeSyns.forEach(synKey => {
+            let synData = GameSettings.synergies[synKey];
+            let reqIcons = synData.req.map(reqId => {
+                let wData = GameSettings.weapons[reqId] || GameSettings.specialWeapons[reqId];
+                return wData ? wData.icon : '?';
+            }).join(' + ');
+            
+            let div = document.createElement('div'); 
+            div.className = 'inv-item';
+            div.style.cssText = "background: rgba(241, 196, 15, 0.15); border-color: #f1c40f; justify-content: center; padding: 5px;";
+            div.innerHTML = `<span style="font-size:14px; letter-spacing: 2px;">${reqIcons} ➡️ ${synData.icon}</span>`;
+            inv.appendChild(div);
+        });
+    }
+}
+
+function showSystemNotice(text) { 
+    const list = document.getElementById('systemNoticeList'); if (!list) return;
+    list.classList.remove('hidden'); let item = document.createElement('div'); 
+    item.className = 'system-notice-item'; item.innerText = text; list.appendChild(item); 
+    
+    setTimeout(() => {
+        item.style.transition = 'all 0.5s ease';
+        item.style.opacity = '0';
+        item.style.transform = 'scale(0.8)';
+        setTimeout(() => item.remove(), 500);
+    }, 3000);
+}
+
+function checkAchievements() {
+    const lang = I18N[currentLang];
+    ACHIEVEMENTS_DATA.forEach(ach => {
+        if (!achievements[ach.id]) {
+            let unlocked = false;
+            if (ach.reqKills && statsTracking.totalKills >= ach.reqKills) unlocked = true;
+            if (ach.reqStage && maxStageReached >= ach.reqStage) unlocked = true;
+            if (ach.reqBadges && statsTracking.totalBadges >= ach.reqBadges) unlocked = true;
+            
+            if (unlocked) {
+                achievements[ach.id] = true;
+                showSystemNotice(`🏆 ${currentLang === 'ko' ? '업적 달성' : 'Achievement'}: ${currentLang === 'ko' ? ach.name : ach.enName}`);
+                playSFX('clear');
+            }
+        }
+    });
+}
+
+function formatTime(sec) { 
+    return `${Math.floor(sec / 60).toString().padStart(2, '0')}:${Math.floor(sec % 60).toString().padStart(2, '0')}`; 
+}
+
+function updateLobbyCurrency() { 
+    ['lobbyBadgeDisp', 'gachaBadgeDisp', 'upgBadgeDisp'].forEach(id => { 
+        let e = document.getElementById(id); if(e) e.innerText = playerBadges; 
+    }); 
+}
+
+function generateMapPattern(theme) {
+    const c = document.createElement('canvas'); c.width = 200; c.height = 200; const cx = c.getContext('2d', { alpha: false });
+    cx.fillStyle = theme.bg; cx.fillRect(0, 0, 200, 200); cx.strokeStyle = theme.line; cx.lineWidth = theme.lineWidth || 2;
+    
+    if (theme.type === 'grid') { cx.strokeRect(0, 0, 200, 200); } 
+    else if (theme.type === 'tile') { 
+        cx.strokeRect(0, 0, 100, 100); cx.strokeRect(100, 100, 100, 100); 
+        if(theme.decor === 'blood') { 
+            cx.fillStyle = 'rgba(255, 71, 87, 0.4)'; cx.beginPath(); cx.arc(30, 30, 10, 0, Math.PI*2); cx.fill(); 
+            cx.beginPath(); cx.arc(150, 120, 5, 0, Math.PI*2); cx.fill(); 
+        } 
+    } 
+    else if (theme.type === 'court') { cx.strokeRect(0, 0, 200, 200); cx.beginPath(); cx.moveTo(100, 0); cx.lineTo(100, 200); cx.stroke(); } 
+    else if (theme.type === 'dirt') { cx.fillStyle = theme.line; for(let i=0; i<30; i++) { cx.fillRect(Math.random()*200, Math.random()*200, 3, 3); } } 
+    else if (theme.type === 'street') { 
+        cx.setLineDash([20, 20]); cx.beginPath(); cx.moveTo(100, 0); cx.lineTo(100, 200); cx.stroke(); cx.setLineDash([]); 
+        cx.fillStyle = 'rgba(255, 159, 243, 0.2)'; cx.beginPath(); cx.arc(180, 50, 15, 0, Math.PI*2); cx.fill(); 
+        cx.fillStyle = 'rgba(0, 210, 211, 0.2)'; cx.beginPath(); cx.arc(20, 150, 20, 0, Math.PI*2); cx.fill(); 
+    }
+    return canvas.getContext('2d').createPattern(c, 'repeat');
+}
+
+// ==========================================
+// 4.5 Rendering Functions
+// ==========================================
+function drawBackground(ctx, inLobby) {
+    if(!bgPattern) bgPattern = ctx.createPattern(bgCanvas, 'repeat');
+    if(!lobbyPattern) lobbyPattern = ctx.createPattern(lobbyCanvas, 'repeat');
+    
+    ctx.save(); 
+    let offsetX = -(camera.x % 200) | 0; 
+    let offsetY = -(camera.y % 200) | 0;
+    ctx.translate(offsetX, offsetY); 
+    
+    ctx.fillStyle = inLobby ? lobbyPattern : (currentBgPattern || bgPattern); 
+    ctx.fillRect(-200, -200, gameWidth + 400, gameHeight + 400); 
+    ctx.restore();
+}
+
+function drawMinimap() {
+    if (!mCtx) return;
+    mCtx.clearRect(0, 0, GameSettings.minimap.size, GameSettings.minimap.size);
+    let scale = GameSettings.minimap.scale; 
+    let center = GameSettings.minimap.size / 2; 
+    let centerSq = center * center;
+    
+    expGems.forEach(g => { 
+        let dx = (g.x - player.x) * scale; 
+        let dy = (g.y - player.y) * scale; 
+        if (dx*dx+dy*dy < centerSq) { 
+            mCtx.fillStyle = g.color; 
+            mCtx.fillRect((center + dx)|0, (center + dy)|0, 1.5, 1.5); 
+        } 
+    });
+    
+    enemies.forEach(e => { 
+        let dx = (e.x - player.x) * scale; 
+        let dy = (e.y - player.y) * scale; 
+        if (dx*dx+dy*dy < centerSq) { 
+            mCtx.fillStyle = e.type === 'boss' ? '#c23616' : (e.type === 'midboss' ? '#e1b12c' : '#ff4757'); 
+            let size = e.type === 'boss' ? 6 : (e.type === 'midboss' ? 4 : 2); 
+            mCtx.fillRect((center + dx - size/2)|0, (center + dy - size/2)|0, size, size); 
+        } 
+    });
+    
+    mCtx.fillStyle = '#fff'; 
+    mCtx.fillRect(center - 2, center - 2, 4, 4);
+}
+
+function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0) {
+    if (loadedImages.player && loadedImages.player.complete && loadedImages.player.naturalWidth > 0) {
+        ctx.save();
+        ctx.scale(dirX * scale, scale);
+        let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
+        let w = 48; let h = 48; 
+        ctx.drawImage(loadedImages.player, -w/2, -h + 10 + bobY, w, h);
+        ctx.restore();
+        return; 
+    }
+
+    ctx.save(); 
+    ctx.scale(scale * dirX, scale); 
+
+    // [2.5D R&D] 캐릭터 발밑 동적 그림자 (Depth 효과)
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // [2.5D R&D] 피격 또는 이동 시 미세한 외곽 광원 효과 (Rim-light)
+    if (animState === 'run' || animState === 'dash') {
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+    }
+    
+    let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
+    const { cSkin, cHair, cHairShadow, cDress, cDressDark, cEye } = outfit.colors;
+    let bobY = 0, armAngle = 0, legSwing = 0;
+    
+    if (animState === 'idle') { 
+        bobY = Math.sin(performance.now() * 0.005) * 1.5; 
+    } else if (animState === 'run') { 
+        bobY = Math.abs(Math.sin(performance.now() * 0.01)) * -3; 
+        legSwing = Math.sin(performance.now() * 0.015) * 6; 
+        armAngle = Math.sin(performance.now() * 0.015) * 0.5; 
+    } else if (animState === 'throw') { 
+        armAngle = -Math.PI / 2 + (animTimer * 2); 
+    } else if (animState === 'swing') { 
+        armAngle = -Math.PI + (animTimer * 5); 
+    } else if (animState === 'cast') { 
+        armAngle = -Math.PI / 1.5; 
+        bobY = -2; 
+    }
+
+    ctx.translate(0, bobY);
+    
+    ctx.save(); 
+    ctx.translate(2, -8); 
+    ctx.rotate(animState === 'cast' ? armAngle : -armAngle); 
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(-2, 0, 4, 10); 
+    ctx.fillStyle = cDressDark; 
+    ctx.fillRect(-2.5, -2, 5, 6); 
+    ctx.restore();
+    
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(1 - legSwing*0.5, 0, 4, 14); 
+    ctx.fillRect(-3 + legSwing*0.5, 0, 4, 15);
+    
+    ctx.fillStyle = cDress; 
+    ctx.fillRect(-6, -14, 12, 10); 
+    ctx.beginPath(); 
+    ctx.moveTo(-6, -4); ctx.lineTo(6, -4); ctx.lineTo(8, 6); ctx.lineTo(3, 6); ctx.lineTo(0, -2); ctx.lineTo(-4, 8); ctx.lineTo(-7, 4); 
+    ctx.fill();
+    
+    ctx.fillStyle = cDressDark; 
+    ctx.fillRect(4, -4, 2, 8); 
+    ctx.fillRect(-6, -4, 2, 10);
+    
+    ctx.translate(0, -14); 
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(-2, -3, 4, 4); 
+    ctx.beginPath(); 
+    if (ctx.roundRect) ctx.roundRect(-8, -12, 16, 14, 4); 
+    else ctx.rect(-8, -12, 16, 14);
+    ctx.fill(); 
+    
+    ctx.fillStyle = cEye; 
+    ctx.fillRect(1, -5, 3, 2); 
+    ctx.fillStyle = '#fff'; 
+    ctx.fillRect(1.5, -5, 1, 1);
+    
+    ctx.fillStyle = '#2d3436'; 
+    ctx.fillRect(0, -6, 5, 1); 
+    ctx.fillStyle = 'rgba(255, 100, 100, 0.3)'; 
+    ctx.fillRect(2, -2, 3, 2);
+    
+    ctx.fillStyle = cHair; 
+    ctx.beginPath(); 
+    if (ctx.roundRect) ctx.roundRect(-10, -14, 20, 12, 5); 
+    else ctx.rect(-10, -14, 20, 12);
+    ctx.fill(); 
+    ctx.fillRect(-9, -14, 12, 6); 
+    ctx.fillRect(1, -14, 6, 8);
+    
+    ctx.fillStyle = cHairShadow; 
+    ctx.fillRect(-10, -4, 4, 8); 
+    ctx.fillRect(6, -4, 3, 6);
+    
+    ctx.restore(); 
+    
+    ctx.save(); 
+    ctx.translate(0, bobY - 12); 
+    ctx.rotate(armAngle); 
+    ctx.fillStyle = cSkin; 
+    ctx.fillRect(-2, 0, 4, 12); 
+    ctx.fillStyle = cDress; 
+    ctx.fillRect(-2.5, -2, 5, 6); 
+    ctx.restore();
+    
+    ctx.restore(); 
+}
+
+// ==========================================
+// 8. Main UI Action Functions
+// ==========================================
+function toggleLanguage() {
+    currentLang = currentLang === 'ko' ? 'en' : 'ko';
+    const lang = I18N[currentLang];
+    
+    const setTxt = (id, text) => { let e = document.getElementById(id); if(e) e.innerText = text; };
+    const setHtml = (id, html) => { let e = document.getElementById(id); if(e) e.innerHTML = html; };
+    
+    setTxt("storyLangBtn", lang.langBtn);
+    setTxt("storySkipBtn", lang.storySkip);
+    setTxt("storyNextBtn", lang.storyNext);
+
+    if (gameState === "story") {
+        const textEl = document.getElementById("storyText");
+        if (textEl && !isTyping) {
+            textEl.innerHTML = lang.storyLines[storyStep];
+        }
+    }
+
+    setTxt('langBtn', lang.langBtn); 
+    setHtml('lobbyTitleText', `${lang.title}<br><span id="lobbySubtitle" style="font-size:1.2rem; color:#ccc;">${lang.subtitle}</span>`);
+    setTxt('btnStartLobby', lang.btnStart); 
+    setTxt('btnGachaLobby', lang.btnGacha); 
+    setTxt('btnDataLobby', lang.btnData); 
+    setTxt('btnUpgradeLobby', lang.btnUpgrade);
+    setTxt('btnClosetLobby', lang.btnClosetLobby);
+    setTxt('btnAchieveLobby', lang.btnAchieveLobby);
+    
+    setTxt('closetUITitle', lang.closetTitle);
+    setHtml('closetUIDesc', lang.closetDesc);
+
+    setTxt('achieveUITitle', lang.achieveTitle);
+    setHtml('achieveUIDesc', lang.achieveDesc);
+
+    setTxt('gachaUITitle', lang.gachaTitle); 
+    setTxt('gachaUIOwnedText', lang.gachaOwnedText); 
+    setTxt('gachaUIUnitText', lang.gachaUnitText);
+    setHtml('gachaUIDesc', lang.gachaDesc); 
+    setTxt('gachaUIRollBtn', lang.gachaRollBtn); 
+    setTxt('gachaUICloseBtn', lang.gachaCloseBtn); 
+    setTxt('gachaResultCloseBtn', lang.gachaResCloseBtn);
+    setTxt('saveUITitle', lang.saveTitle); 
+    setHtml('saveUIDesc', lang.saveDesc); 
+    setTxt('saveUICloseBtn', lang.saveCloseBtn);
+    setTxt('storyNextBtn', lang.storyNext); 
+    setTxt('storySkipBtn', lang.storySkip);
+    setTxt('upgradeUITitle', lang.upgradeTitle); 
+    setTxt('upgradeUIDesc', lang.upgradeDesc); 
+    setTxt('upgradeUICloseBtn', lang.saveCloseBtn); 
+    setTxt('upgUIOwnedText', lang.gachaOwnedText);
+    
+    // 이전에 누락되었던 텍스트 설정 복원
+    setTxt('lblPauseVol', lang.pauseVolLbl);
+    setTxt('statsTitle', lang.statsTitle);
+    setTxt('pauseBtn', lang.btnPause);
+    setTxt('pauseUITitle', lang.pauseTitle);
+    setTxt('pauseUIResumeBtn', lang.pauseResume);
+    setTxt('pauseUIExitBtn', lang.pauseExit);
+    setTxt('levelUpTitle', lang.levelUpTitle);
+
+    let hdCenter = document.getElementById('hudCenter');
+    if (hdCenter) {
+        hdCenter.innerHTML = `${lang.progress}: <span id="progressDisp">${document.getElementById('progressDisp')?.innerText || '0'}</span>%`;
+    }
+    setTxt('lblStatDmg', lang.statDmg); 
+    setTxt('lblStatCool', lang.statCool); 
+    setTxt('lblStatSpd', lang.statSpd);
+
+    let stageDispUI = document.getElementById('stageDispUI');
+    if (stageDispUI && gameState === 'playing') {
+        let themeIndex = (currentStage - 1) % GameSettings.maps.length;
+        let mapId = GameSettings.maps[themeIndex].id;
+        stageDispUI.innerText = `STAGE ${currentStage} : ${lang[mapId]}`;
+    }
+
+    ['chalk', 'textbook', 'recorder', 'compass', 'gymClothes'].forEach(id => { 
+        GameSettings.weapons[id].name = lang[`w_${id}`].name; 
+        GameSettings.weapons[id].desc = lang[`w_${id}`].desc; 
+        GameSettings.weapons[id].statBonus.label = lang[`w_${id}`].stat; 
+    });
+    
+    ['magicMic', 'smartPhone', 'laserPointer', 'energyDrink', 'studentID', 'backpack', 'tablet'].forEach(id => { 
+        GameSettings.specialWeapons[id].name = lang[`w_${id}`].name; 
+        GameSettings.specialWeapons[id].desc = lang[`w_${id}`].desc; 
+        GameSettings.specialWeapons[id].statBonus.label = lang[`w_${id}`].stat; 
+    });
+    
+    GameSettings.synergies.studyManiac.name = lang.syn_study.name; 
+    GameSettings.synergies.studyManiac.desc = lang.syn_study.desc;
+    GameSettings.synergies.musicMath.name = lang.syn_music.name; 
+    GameSettings.synergies.musicMath.desc = lang.syn_music.desc;
+    GameSettings.synergies.cyberWarrior.name = lang.syn_cyber.name;
+    GameSettings.synergies.cyberWarrior.desc = lang.syn_cyber.desc;
+    GameSettings.synergies.caffeineAddict.name = lang.syn_caffeine.name;
+    GameSettings.synergies.caffeineAddict.desc = lang.syn_caffeine.desc;
+    GameSettings.synergies.idolStage.name = lang.syn_idol.name;
+    GameSettings.synergies.idolStage.desc = lang.syn_idol.desc;
+    GameSettings.synergies.digitalDefense.name = lang.syn_digital.name;
+    GameSettings.synergies.digitalDefense.desc = lang.syn_digital.desc;
+    
+    if(player) updateInventoryUI();
+    if(document.getElementById('upgradeUI') && !document.getElementById('upgradeUI').classList.contains('hidden')) renderUpgradeList();
+    if(document.getElementById('closetUI') && !document.getElementById('closetUI').classList.contains('hidden')) renderClosetList();
+    if(document.getElementById('achieveUI') && !document.getElementById('achieveUI').classList.contains('hidden')) renderAchieveList();
+}
+
+function toggleGameSpeed() {
+    gameSpeedMultiplier = gameSpeedMultiplier === 1.0 ? 2.0 : 1.0;
+    let btn = document.getElementById('speedBtn');
+    if (btn) {
+        btn.innerText = gameSpeedMultiplier + 'X';
+        btn.style.color = gameSpeedMultiplier === 2.0 ? '#ff6b6b' : '#e0d0a0';
+    }
+}
+
+function startStory() {
+    gameState = 'story'; 
+    let ui = document.getElementById('storyUI');
+    if (ui) ui.classList.remove('hidden');
+    
+    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => { 
+        let el = document.getElementById(id); 
+        if (el) el.classList.add('hidden'); 
+    });
+    
+    storyStep = 0; 
+    playStoryStep();
+}
+
+function playStoryStep() {
+    const lang = I18N[currentLang];
+    if (storyStep >= lang.storyLines.length) { 
+        skipStory(); 
+        return; 
+    }
+    isTyping = true; 
+    let nextBtn = document.getElementById('storyNextBtn');
+    if (nextBtn) nextBtn.classList.add('hidden');
+    
+    const textEl = document.getElementById('storyText'); 
+    if (textEl) {
+        textEl.innerHTML = lang.storyLines[storyStep].split('').map(char => `<span style="opacity:0; display:inline-block;">${char === ' ' ? '&nbsp;' : char}</span>`).join('');
+        anime({ 
+            targets: '#storyText span', 
+            opacity: [0, 1], 
+            translateY: [-10, 0], 
+            easing: 'easeOutExpo', 
+            duration: 300, 
+            delay: anime.stagger(50), 
+            complete: () => { 
+                isTyping = false; 
+                if (nextBtn) nextBtn.classList.remove('hidden'); 
+            } 
+        });
+    }
+}
+
+function nextStoryStep() {
+    if(isTyping) { 
+        anime.remove('#storyText span'); 
+        document.querySelectorAll('#storyText span').forEach(span => { 
+            span.style.opacity = 1; 
+            span.style.transform = 'none'; 
+        }); 
+        isTyping = false; 
+        let nextBtn = document.getElementById('storyNextBtn');
+        if (nextBtn) nextBtn.classList.remove('hidden'); 
+    } 
+    else { 
+        storyStep++; 
+        playStoryStep(); 
+    }
+}
+
+function skipStory() { 
+    let ui = document.getElementById('storyUI');
+    if (ui) ui.classList.add('hidden'); 
+    returnToLobby(); 
+}
+
+function togglePause() {
+    if(gameState !== 'playing') return; isPaused = !isPaused;
+    if(isPaused) { document.getElementById('pauseUI').classList.remove('hidden'); } 
+    else { document.getElementById('pauseUI').classList.add('hidden'); lastTime = performance.now(); }
+}
+
+function returnToLobby() {
+    if (gameState === "gameover") currentStage = 1; else if (gameState === "clear") currentStage++; 
+    gameState = "lobby"; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
+    ["gameOverUI", "pauseUI", "stageClearUI", "hudLeft", "hudCenter", "hudRight", "statsPanel", "inventory", "minimapCanvas", "systemNoticeList", "pauseBtn", "mobileDashBtn", "orbPocketUI"].forEach(id => { 
+        let el = document.getElementById(id); if(el) el.classList.add("hidden"); 
+    });
+    if (player) {
+        let orbPocketUI = document.getElementById("orbPocketUI");
+        if (orbPocketUI) {
+            orbPocketUI.innerHTML = (player.marblePocket || []).map(t => {
+                const data = MARBLE_TYPES.find(m => t === m.type);
+                return "<span style='text-shadow: 0 0 10px " + data.glow + ";'>" + data.icon + "</span>";
+            }).join("");
+        }
+    }
+    let speedBtn = document.getElementById("speedBtn"); if (speedBtn) { speedBtn.innerText = "1X"; speedBtn.style.color = "#e0d0a0"; }
+    ["lobbyTopBar", "lobbyTitle", "lobbyBottomBar"].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove("hidden"); });
+    updateLobbyCurrency();
+}
+
+function startGame() {
+    initAudio(); 
+    let bubble = document.getElementById('speechBubble'); if(bubble) bubble.style.opacity = 0;
+    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
+    ['hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove('hidden'); });
+    let synList = document.getElementById('systemNoticeList'); if(synList) synList.innerHTML = ''; 
+    resetStage(true); 
+    lastTime = performance.now(); gameState = 'playing'; isPaused = false; startBGM(); 
+}
+
+function triggerStageClear() {
+    if(gameState === 'clear') return; gameState = 'clear'; 
+    let reward = (currentStage % 5 === 0) ? GameSettings.economy.clearRewardBoss : GameSettings.economy.clearRewardBase; playerBadges += reward;
+    
+    maxStageReached = Math.max(maxStageReached, currentStage + 1);
+    checkAchievements();
+    
+    let rewardDisp = document.getElementById('clearRewardDisp'); if (rewardDisp) rewardDisp.innerText = reward; 
+    let clearUI = document.getElementById('stageClearUI'); if (clearUI) clearUI.classList.remove('hidden');
+    playSFX('clear'); anime({ targets: '#stageClearUI .panel', scale: [0.5, 1], opacity: [0, 1], duration: 1200, easing: 'easeOutElastic(1, .5)' });
+}
+
+function nextStage() { 
+    currentStage++; let clearUI = document.getElementById('stageClearUI'); if (clearUI) clearUI.classList.add('hidden'); 
+    resetStage(true); lastTime = performance.now(); gameState = 'playing'; isPaused = false; 
+}
+
+function resetStage(fullReset = false) {
+    stageTime = 0; enemies = []; projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = [];
+    verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0;
+    isStageCleared = false;
+    hasSpawnedMidBoss = false;
+    hasSpawnedFinalBoss = false;
+    
+    spotlight = null;
+    spotlightSpawnTimer = 30.0;
+
+    if(fullReset) { player = new Player(); player.recalculateStats(); giveWeapon('chalk'); } 
+    else { if (player) { player.x = 0; player.y = 0; player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.3); } }
+    
+    let themeIndex = (currentStage - 1) % GameSettings.maps.length;
+    let theme = GameSettings.maps[themeIndex];
+    currentBgPattern = generateMapPattern(theme);
+    
+    let stageDispUI = document.getElementById('stageDispUI');
+    if(stageDispUI) { let lang = I18N[currentLang]; stageDispUI.innerText = `STAGE ${currentStage} : ${lang[theme.id]}`; }
+    updateHUD();
+}
+
+function triggerLevelUp() {
+    gameState = 'levelup'; playSFX('levelup');
+    anime({ targets: '#flashOverlay', opacity: [0.8, 0], duration: 800, easing: 'easeOutExpo' });
+    let choicesBox = document.getElementById('choicesBox'); if(!choicesBox) return; choicesBox.innerHTML = '';
+    
+    let pool = [];
+    Object.keys(GameSettings.weapons).forEach(k => pool.push({id: k, weight: 1.0}));
+    unlockedWeapons.forEach(k => pool.push({id: k, weight: 1.5}));
+    
+    let choices = []; 
+    while(choices.length < 3 && pool.length > 0) { 
+        let totalWeight = pool.reduce((sum, item) => sum + item.weight, 0); let r = Math.random() * totalWeight; let sum = 0;
+        for(let i=0; i<pool.length; i++) { sum += pool[i].weight; if(r <= sum) { choices.push(pool[i].id); pool.splice(i, 1); break; } }
+    }
+
+    choices.forEach(id => {
+        let wData = getWeaponSettings(id); let existing = player.weapons.find(w => w.id === id); let nextLv = existing ? existing.level + 1 : 1; let isPremium = GameSettings.specialWeapons[id] !== undefined;
+        let statTextHTML = '';
+        if(wData.statBonus && wData.statBonus.type !== 'none') {
+            let sign = wData.statBonus.value > 0 ? '+' : ''; let valPercent = Math.round(wData.statBonus.value * 100);
+            statTextHTML = `<div style="color:#2ed573; font-weight:bold; margin-top:10px; font-size:0.9rem;">[${wData.statBonus.label} ${sign}${valPercent}%]</div>`;
+        }
+        let card = document.createElement('div'); card.className = `choice-card ${isPremium ? 'premium' : ''}`;
+        card.innerHTML = `<div class="choice-icon">${wData.icon}</div><div class="choice-title" style="${isPremium ? 'color:#ff9ff3;' : ''}">${wData.name} <br><span style="color:#2ed573">Lv.${nextLv}</span></div><div class="choice-desc">${wData.desc}</div>${statTextHTML}`;
+        card.onclick = () => { giveWeapon(id); let ui = document.getElementById('levelUpUI'); if(ui) ui.classList.add('hidden'); lastTime = performance.now(); gameState = 'playing'; };
+        choicesBox.appendChild(card);
+    });
+    let ui = document.getElementById('levelUpUI'); if(ui) ui.classList.remove('hidden');
+}
+
+function openGacha() { updateLobbyCurrency(); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('gachaUI'); if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden'); }
+function closeGacha() { let ui = document.getElementById('gachaUI'); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); if (ui) ui.classList.add('hidden'); if (title) title.classList.remove('hidden'); if (bbar) bbar.classList.remove('hidden'); }
+
+function rollGacha() {
+    initAudio(); const lang = I18N[currentLang];
+    if(playerBadges < GameSettings.economy.gachaCost) { let disp = document.getElementById('gachaBadgeDisp'); if(disp) disp.innerText = lang.gachaNoBadge; setTimeout(updateLobbyCurrency, 1500); return; }
+    playerBadges -= GameSettings.economy.gachaCost; updateLobbyCurrency(); playSFX('gacha');
+    
+    let pool = Object.keys(GameSettings.specialWeapons); let resultId = pool[Math.floor(Math.random() * pool.length)]; let wData = GameSettings.specialWeapons[resultId];
+    let titleEl = document.getElementById('gachaResultTitle'); let msgEl = document.getElementById('gachaResultMsg');
+    
+    if(!unlockedWeapons.includes(resultId)) { unlockedWeapons.push(resultId); if(titleEl) titleEl.innerText = lang.gachaResTitleNew; if(msgEl) msgEl.innerText = lang.gachaResMsgNew; } 
+    else { playerBadges += 5; statsTracking.totalBadges += 5; updateLobbyCurrency(); if(titleEl) titleEl.innerText = lang.gachaResTitleDup; if(msgEl) msgEl.innerText = lang.gachaResMsgDup; }
+    
+    checkAchievements();
+    
+    let card = document.getElementById('gachaResultCard'); if(card) { card.innerHTML = `<div class="choice-icon" style="font-size: 60px;">${wData.icon}</div><div class="choice-title" style="color:#ff9ff3; font-size:1.5rem;">${wData.name}</div><div class="choice-desc">${wData.desc}</div>`; }
+    let ui = document.getElementById('gachaResultUI'); if(ui) ui.classList.remove('hidden');
+}
+
+function openUpgrade() { updateLobbyCurrency(); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('upgradeUI'); if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden'); renderUpgradeList(); }
+function closeUpgrade() { let ui = document.getElementById('upgradeUI'); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); if (ui) ui.classList.add('hidden'); if (title) title.classList.remove('hidden'); if (bbar) bbar.classList.remove('hidden'); }
+
+function doUpgrade(statKey) { let cost = 1; if(playerBadges >= cost && permanentStats[statKey] < 10) { initAudio(); playSFX('levelup'); playerBadges -= cost; permanentStats[statKey]++; updateLobbyCurrency(); renderUpgradeList(); } }
+
+function renderUpgradeList() {
+    const list = document.getElementById('upgradeList'); if(!list) return; list.innerHTML = ''; const lang = I18N[currentLang];
+    const statsInfo = [ { key:'damage', name:lang.upg_dmg, unit:'%' }, { key:'cooldown', name:lang.upg_cool, unit:'%' }, { key:'speed', name:lang.upg_spd, unit:'%' }, { key:'maxHp', name:lang.upg_hp, unit:'HP' } ];
+    statsInfo.forEach(s => { let lv = permanentStats[s.key]; let cost = 1; let isMax = lv >= 10; let btnHtml = isMax ? `<button class="btn" disabled>${lang.btnMax}</button>` : `<button class="btn primary" onclick="doUpgrade('${s.key}')">Lv.UP (${cost})</button>`; list.innerHTML += `<div class="slot-item"><div style="flex:1;"><strong>${s.name}</strong> <span style="color:#2ed573;">Lv.${lv}</span></div>${btnHtml}</div>`; });
+}
+
+function openSaveLoad() { updateLobbyCurrency(); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('saveLoadUI'); if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden'); renderSaveSlots(); }
+function closeSaveLoad() { let ui = document.getElementById('saveLoadUI'); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); if (ui) ui.classList.add('hidden'); if (title) title.classList.remove('hidden'); if (bbar) bbar.classList.remove('hidden'); }
+
+function renderSaveSlots() {
+    const slotList = document.getElementById('slotList'); if(!slotList) return; slotList.innerHTML = ''; const lang = I18N[currentLang];
+    for(let i=0; i<5; i++) { 
+        let rawData = localStorage.getItem('op_save_slot_' + i);
+        let data = rawData ? JSON.parse(rawData) : null;
+        let isEmpty = !data; 
+        let infoText = isEmpty ? lang.saveEmpty : `${lang.saveBadges}<span style="color:#ffb142;font-weight:bold">${data.playerBadges}${lang.saveUnit}</span> | ${lang.saveWeapons}${data.unlockedWeapons.length}${lang.saveType}<br><span style="font-size:12px;color:#888;">${new Date(data.timestamp).toLocaleString()}</span>`; 
+        slotList.innerHTML += `<div class="slot-item"><div style="font-weight:bold; color:#00d2d3; font-size:18px; width:70px;">SLOT ${i+1}</div><div class="slot-info" style="flex:1; padding:0 20px;">${infoText}</div><div class="slot-actions"><button class="btn" style="background:#0984e3; color:#fff;" onclick="saveToSlot(${i})">${lang.saveBtn}</button>${!isEmpty ? `<button class="btn primary" onclick="loadFromSlot(${i})">${lang.loadBtn}</button>` : ''}</div></div>`; 
+    }
+}
+
+function saveToSlot(i) {
+    initAudio(); playSFX('levelup'); 
+    let saveData = { 
+        playerBadges: playerBadges, 
+        unlockedWeapons: [...unlockedWeapons], 
+        permanentStats: {...permanentStats}, 
+        currentStage: currentStage, 
+        maxStageReached: maxStageReached,
+        currentOutfitId: currentOutfitId,
+        statsTracking: {...statsTracking},
+        achievements: {...achievements},
+        timestamp: new Date().toISOString() 
+    };
+    localStorage.setItem('op_save_slot_' + i, JSON.stringify(saveData));
+    renderSaveSlots();
+    showSystemNotice(`[로컬 저장소] 슬롯 ${i+1} 저장 완료`);
+}
+
+function loadFromSlot(i) {
+    initAudio(); playSFX('gacha');
+    let rawData = localStorage.getItem('op_save_slot_' + i);
+    if(rawData) { 
+        let data = JSON.parse(rawData);
+        playerBadges = data.playerBadges || 0; 
+        unlockedWeapons = data.unlockedWeapons || []; 
+        permanentStats = data.permanentStats || {damage:0, cooldown:0, speed:0, maxHp:0}; 
+        currentStage = data.currentStage || 1; 
+        maxStageReached = data.maxStageReached || 1;
+        currentOutfitId = data.currentOutfitId || 'default1';
+        statsTracking = data.statsTracking || { totalKills: 0, totalBadges: 0 };
+        achievements = data.achievements || { kills: false, stage5: false, rich: false };
+        
+        updateLobbyCurrency(); 
+        showSystemNotice(`데이터 센터: 슬롯 ${i+1} 로드 완료!`); 
+        closeSaveLoad(); 
+    }
+}
+
+function openCloset() {
+    let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('closetUI'); 
+    if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden'); 
+    renderClosetList();
+}
+
+function closeCloset() {
+    let ui = document.getElementById('closetUI'); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); 
+    if (ui) ui.classList.add('hidden'); if (title) title.classList.remove('hidden'); if (bbar) bbar.classList.remove('hidden'); 
+}
+
+function equipOutfit(id) {
+    currentOutfitId = id;
+    initAudio(); playSFX('levelup');
+    renderClosetList(); 
+}
+
+function renderClosetList() {
+    const list = document.getElementById('closetList');
+    if(!list) return;
+    list.innerHTML = '';
+    const lang = I18N[currentLang];
+    
+    OUTFITS.forEach(outfit => {
+        let isUnlocked = maxStageReached >= outfit.reqStage || outfit.reqStage === 0;
+        let isEquipped = currentOutfitId === outfit.id;
+        
+        let card = document.createElement('div');
+        card.className = `outfit-card ${isEquipped ? 'equipped' : ''} ${!isUnlocked ? 'locked' : ''}`;
+        
+        let nameObj = currentLang === 'ko' ? outfit.name : outfit.enName;
+        let statusText = isEquipped ? lang.outfitEquipped : (!isUnlocked ? `${lang.outfitReq} ${outfit.reqStage}` : lang.outfitEquipBtn);
+        
+        let canvasHtml = `<canvas id="preview_${outfit.id}" width="60" height="60" style="margin-bottom:10px;"></canvas>`;
+        
+        card.innerHTML = `
+            ${canvasHtml}
+            <div style="font-size:11px; font-weight:bold; color:#e0d0a0; margin-bottom:5px; height:28px; line-height: 1.2;">${nameObj}</div>
+            <div style="font-size:11px; color:${isEquipped ? '#ff9ff3' : (isUnlocked ? '#2ed573' : '#ff4757')};">${statusText}</div>
+        `;
+        
+        if (isUnlocked && !isEquipped) {
+            card.onclick = () => { equipOutfit(outfit.id); };
+        }
+        list.appendChild(card);
+        
+        setTimeout(() => {
+            let pCtx = document.getElementById(`preview_${outfit.id}`)?.getContext('2d');
+            if(pCtx) {
+                pCtx.translate(30, 45); 
+                let tempId = currentOutfitId;
+                currentOutfitId = outfit.id;
+                drawAdvancedCharacter(pCtx, 1, 1.5, 'idle', 0);
+                currentOutfitId = tempId;
+            }
+        }, 0);
+    });
+}
+
+function openAchieve() {
+    let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('achieveUI'); 
+    if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden'); 
+    renderAchieveList();
+}
+
+function closeAchieve() {
+    let ui = document.getElementById('achieveUI'); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); 
+    if (ui) ui.classList.add('hidden'); if (title) title.classList.remove('hidden'); if (bbar) bbar.classList.remove('hidden'); 
+}
+
+function renderAchieveList() {
+    const list = document.getElementById('achieveList');
+    if(!list) return;
+    list.innerHTML = '';
+    
+    ACHIEVEMENTS_DATA.forEach(ach => {
+        let isUnlocked = achievements[ach.id] === true;
+        let nameObj = currentLang === 'ko' ? ach.name : ach.enName;
+        let descObj = currentLang === 'ko' ? ach.desc : ach.enDesc;
+        
+        list.innerHTML += `
+            <div class="achieve-card ${isUnlocked ? 'unlocked' : ''}">
+                <div class="achieve-icon">${ach.icon}</div>
+                <div style="flex:1;">
+                    <div style="font-weight:bold; color:${isUnlocked ? '#f1c40f' : '#ccc'};">${nameObj}</div>
+                    <div style="font-size:12px; color:#888; margin-top:5px;">${descObj}</div>
+                </div>
+                ${isUnlocked ? '<div style="font-size:20px;">✔️</div>' : '<div style="font-size:20px; opacity:0.3;">🔒</div>'}
+            </div>
+        `;
+    });
+}
+
+// --- TUTORIAL LOGIC ---
+function openTutorial() {
+    initAudio(); playSFX('levelup');
+    let ui = document.getElementById('tutorialUI');
+    if (ui) ui.classList.remove('hidden');
+    currentTutPage = 0;
+    renderTutorialPage();
+}
+function closeTutorial() {
+    let ui = document.getElementById('tutorialUI');
+    if (ui) ui.classList.add('hidden');
+}
+function nextTutorialPage() {
+    if (currentTutPage < TUTORIAL_DATA.length - 1) {
+        currentTutPage++; renderTutorialPage(); playSFX('exp');
+    }
+}
+function prevTutorialPage() {
+    if (currentTutPage > 0) {
+        currentTutPage--; renderTutorialPage(); playSFX('exp');
+    }
+}
+function renderTutorialPage() {
+    const data = TUTORIAL_DATA[currentTutPage];
+    const lang = I18N[currentLang];
+    document.getElementById('tutIcon').innerText = data.icon;
+    document.getElementById('tutUITitle').innerText = lang.tut_title;
+    document.getElementById('tutDesc').innerHTML = lang[data.descKey];
+    document.getElementById('tutPageNum').innerText = `${currentTutPage + 1} / ${TUTORIAL_DATA.length}`;
+    
+    document.getElementById('btnTutPrev').style.opacity = currentTutPage === 0 ? '0.3' : '1';
+    document.getElementById('btnTutNext').style.opacity = currentTutPage === TUTORIAL_DATA.length - 1 ? '0.3' : '1';
+    
+    // I18N Update for Tutorial UI Buttons
+    document.getElementById('tutCloseBtn').innerText = lang.saveCloseBtn;
+}
+
+// ==========================================
+// 7. Classes & Entities
+// ==========================================
+class Spotlight {
+    constructor(x, y) {
+        this.x = x; this.y = y;
+        this.progress = 0;
+        this.settings = GameSettings.spotlight;
+        this.playerInside = true;
+    }
+    getCurrentRadius() {
+        return this.settings.startRadius - (this.settings.startRadius - this.settings.endRadius) * (this.progress / this.settings.reqTime);
+    }
+    update(dt) {
+        let dist = Math.hypot(player.x - this.x, player.y - this.y);
+        let curRad = this.getCurrentRadius();
+
+        if (dist <= curRad) {
+            this.progress += dt;
+            this.playerInside = true;
+        } else {
+            this.progress = Math.max(0, this.progress - dt * 0.5);
+            this.playerInside = false;
+        }
+
+        if (this.progress >= this.settings.reqTime) {
+            this.triggerClear();
+        }
+    }
+    triggerClear() {
+        playSFX('bossKill');
+        hitStopTimer = 0.5;
+        screenShake = 40;
+        showSystemNotice(currentLang === 'ko' ? "진실 규명!! (광역 소탕)" : "OBJECTION!!");
+
+        enemies.forEach(e => {
+            if (e.type === 'boss') e.takeDamage(5000 * player.getDamageMultiplier());
+            else e.takeDamage(99999);
+        });
+        
+        let flash = document.getElementById('flashOverlay');
+        if (flash) {
+            flash.style.opacity = 1;
+            anime({ targets: '#flashOverlay', opacity: [1, 0], duration: 1500, easing: 'easeOutExpo' });
+        }
+
+        spotlight = null;
+    }
+    draw(ctx) {
+        if (isOffScreen(this.x, this.y, this.settings.startRadius)) return;
+        ctx.save();
+        ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0);
+        
+        let curRad = this.getCurrentRadius();
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, this.settings.startRadius, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([10, 10]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.arc(0, 0, curRad, 0, Math.PI*2);
+        ctx.fillStyle = this.playerInside ? 'rgba(46, 204, 113, 0.25)' : 'rgba(241, 196, 15, 0.1)';
+        ctx.fill();
+        
+        ctx.strokeStyle = this.playerInside ? '#2ecc71' : '#f1c40f';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 16px "Noto Sans KR", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 4;
+        let safeText = currentLang === 'ko' ? '🌟 생존 시 광역 소탕!' : '🌟 SURVIVE FOR CLEAR!';
+        ctx.fillText(safeText, 0, -curRad - 35);
+        
+        ctx.font = 'bold 16px "Press Start 2P"';
+        ctx.fillStyle = '#f1c40f';
+        ctx.fillText((this.settings.reqTime - this.progress).toFixed(1) + 's', 0, -curRad - 10);
+
+        ctx.restore();
+    }
+}
+
+class DamageText {
+    constructor(x, y, amount, isPlayer = false) { 
+        this.x = x; 
+        this.y = y; 
+        this.amount = Math.floor(amount); 
+        this.life = 0.5; 
+        this.maxLife = 0.5; 
+        this.isPlayer = isPlayer;
+        this.scaleBonus = 0;
+    }
+    update(dt) { 
+        this.y -= 50 * dt; 
+        this.life -= dt; 
+    }
+    draw(ctx) { 
+        if(isOffScreen(this.x, this.y)) return; 
+        
+        let scale = 1 + (this.life / this.maxLife) * 0.5 + this.scaleBonus; 
+        ctx.save(); 
+        ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); 
+        ctx.scale(scale, scale); 
+        ctx.globalAlpha = this.life / this.maxLife; 
+        ctx.font = 'bold 16px sans-serif'; 
+        
+        ctx.fillStyle = this.isPlayer ? '#fff' : '#000'; 
+        ctx.fillText(this.amount, 1, 1); 
+        
+        ctx.fillStyle = this.isPlayer ? '#ff4757' : '#fff'; 
+        ctx.fillText(this.amount, 0, 0); 
+        ctx.restore(); 
+    }
+}
+
+class Particle {
+    constructor(x, y, color, isGhost = false) { 
+        this.x = x; 
+        this.y = y; 
+        this.color = color; 
+        this.isGhost = isGhost; 
+        if (isGhost) { 
+            this.vx = 0; 
+            this.vy = 0; 
+            this.life = 0.15; 
+        } else { 
+            this.vx = (Math.random() - 0.5) * 200; 
+            this.vy = (Math.random() - 0.5) * 200; 
+            this.life = 0.3; 
+        } 
+    }
+    update(dt) { 
+        this.x += this.vx * dt; 
+        this.y += this.vy * dt; 
+        this.life -= dt; 
+    }
+    draw(ctx) { 
+        if(isOffScreen(this.x, this.y)) return; 
+        
+        ctx.save(); 
+        ctx.fillStyle = this.color; 
+        ctx.globalAlpha = Math.max(0, this.life / (this.isGhost ? 0.15 : 0.3)); 
+        
+        let px = (this.x - camera.x)|0; 
+        let py = (this.y - camera.y)|0;
+        
+        if(this.isGhost) { 
+            ctx.fillRect(px - 5, py - 5, 10, 10); 
+        } else { 
+            ctx.beginPath(); 
+            ctx.arc(px, py, 3, 0, Math.PI*2); 
+            ctx.fill(); 
+        } 
+        ctx.restore(); 
+    }
+}
+
+class AreaExplosion {
+    constructor(x, y, radius, damage, color) { 
+        this.x = x; this.y = y; this.radius = radius; 
+        this.damage = damage; this.color = color; 
+        this.life = 0.3; this.maxLife = 0.3; this.hitComplete = false; 
+    }
+    update(dt) { 
+        this.life -= dt; 
+        if(!this.hitComplete) { 
+            enemies.forEach(e => { 
+                let dx = e.x - this.x; 
+                let dy = e.y - this.y; 
+                let rSum = this.radius + e.radius; 
+                if(dx*dx + dy*dy < rSum*rSum) {
+                    e.takeDamage(this.damage); 
+                }
+            }); 
+            this.hitComplete = true; 
+            playSFX('explosion'); 
+        } 
+    }
+    draw(ctx) { 
+        if(isOffScreen(this.x, this.y, this.radius*2)) return; 
+        
+        ctx.save(); 
+        ctx.globalAlpha = this.life / this.maxLife; 
+        
+        let cx = (this.x - camera.x)|0; 
+        let cy = (this.y - camera.y)|0; 
+        
+        ctx.fillStyle = this.color; 
+        ctx.beginPath(); 
+        ctx.arc(cx, cy, this.radius, 0, Math.PI*2); 
+        ctx.fill(); 
+        
+        ctx.strokeStyle = '#fff'; 
+        ctx.lineWidth = 5 * (this.life / this.maxLife); 
+        ctx.beginPath(); 
+        ctx.arc(cx, cy, this.radius * (1.5 - this.life / this.maxLife), 0, Math.PI*2); 
+        ctx.stroke(); 
+        ctx.restore(); 
+    }
+}
+
+class Projectile {
+    constructor(x, y, vx, vy, damage, type, color, piercing, level=1) { 
+        this.x = x; this.y = y; this.vx = vx; this.vy = vy; 
+        this.damage = damage; this.type = type; this.color = color; 
+        this.piercing = piercing; this.level = level; 
+        this.life = 3.0; this.hitEnemies = new Set(); 
+        this.sizeScale = 1 + (level * 0.2); 
+    }
+    update(dt) { 
+        this.x += this.vx * dt; 
+        this.y += this.vy * dt; 
+        this.life -= dt; 
+        
+        enemies.forEach(e => { 
+            if(!this.hitEnemies.has(e)) { 
+                let dx = e.x - this.x; 
+                let dy = e.y - this.y; 
+                let rSum = e.radius + (4 * this.sizeScale);
+                
+                if(dx*dx + dy*dy < rSum*rSum) { 
+                    e.takeDamage(this.damage); 
+                    
+                    if(this.type === 'chalk' && player.activeSynergies.studyManiac) { 
+                        projectiles.push(new AreaExplosion(this.x, this.y, 60, this.damage * 0.5, 'rgba(255, 100, 100, 0.5)')); 
+                    } 
+                    if(this.type === 'backpack' && player.activeSynergies.caffeineAddict) {
+                        projectiles.push(new AreaExplosion(this.x, this.y, 120, this.damage * 0.8, 'rgba(186, 220, 88, 0.6)'));
+                    }
+                    if(this.type === 'magicMic' && player.activeSynergies.idolStage) {
+                        if(Math.random() < 0.15) {
+                            player.hp = Math.min(player.maxHp, player.hp + 1); updateHUD();
+                            particles.push(new Particle(player.x, player.y - 20, '#ff9ff3'));
+                        }
+                    }
+                    
+                    if(this.piercing) { 
+                        this.hitEnemies.add(e); 
+                    } else { 
+                        this.life = 0; 
+                    } 
+                } 
+            } 
+        }); 
+    }
+    draw(ctx) { 
+        if(isOffScreen(this.x, this.y)) return; 
+        
+        ctx.save(); 
+        ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); 
+        ctx.fillStyle = this.color;
+        
+        if(this.type === 'compass' || this.type === 'backpack') { 
+            ctx.rotate(Math.atan2(this.vy, this.vx)); 
+            ctx.scale(this.sizeScale, this.sizeScale); 
+            ctx.beginPath(); 
+            ctx.moveTo(10, 0); 
+            ctx.lineTo(-5, -5); 
+            ctx.lineTo(-5, 5); 
+            ctx.fill(); 
+        } 
+        else if(this.type === 'magicMic') { 
+            ctx.rotate(Math.atan2(this.vy, this.vx)); 
+            ctx.scale(this.sizeScale, this.sizeScale); 
+            ctx.strokeStyle = this.color; 
+            ctx.lineWidth = 3; 
+            ctx.beginPath(); 
+            ctx.arc(0, 0, 10, -Math.PI/3, Math.PI/3); 
+            ctx.stroke(); 
+            ctx.beginPath(); 
+            ctx.arc(-5, 0, 15, -Math.PI/2.5, Math.PI/2.5); 
+            ctx.stroke(); 
+        } 
+        else if(this.type === 'laserPointer') { 
+            ctx.rotate(Math.atan2(this.vy, this.vx)); 
+            ctx.scale(this.sizeScale, this.sizeScale); 
+            ctx.fillRect(-10, -2, 20, 4); 
+        } 
+        else { 
+            ctx.beginPath(); 
+            ctx.arc(0, 0, 4 * this.sizeScale, 0, Math.PI*2); 
+            ctx.fill(); 
+            ctx.globalAlpha = 0.4; 
+            ctx.beginPath(); 
+            ctx.arc(0, 0, 8 * this.sizeScale, 0, Math.PI*2); 
+            ctx.fill(); 
+        } 
+        ctx.restore();
+    }
+}
+
+class MeleeEffect {
+    constructor(x, y, angle, range, color, level=1) { 
+        this.x = x; this.y = y; this.angle = angle; 
+        this.range = range; this.color = color; this.level = level; this.life = 0.2; this.maxLife = 0.2; 
+    }
+    update(dt) { this.life -= dt; this.x = player.x; this.y = player.y; }
+    draw(ctx) { 
+        if(isOffScreen(this.x, this.y, this.range*2)) return; 
+        ctx.save(); let alpha = this.life / this.maxLife; ctx.globalAlpha = alpha; 
+        let cx = (this.x - camera.x)|0; let cy = (this.y - camera.y)|0; 
+        ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(cx, cy, this.range, this.angle - Math.PI/3, this.angle + Math.PI/3); ctx.lineTo(cx, cy); ctx.fill(); 
+        if(this.level > 2) { ctx.lineWidth = 4; ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, this.range * 0.9, this.angle - Math.PI/3, this.angle + Math.PI/3); ctx.stroke(); } 
+        ctx.restore(); 
+    }
+}
+
+class Weapon { 
+    constructor(id) { this.id = id; this.level = 1; this.timer = 0; this.settings = getWeaponSettings(id); } 
+}
+
+class ProjectileWeapon extends Weapon {
+    update(dt) {
+        this.timer -= dt;
+        if(this.timer <= 0) {
+            this.timer = (this.settings.cooldown * (1 - this.level*0.1)) * player.stats.cooldownMult;
+            let target = findNearestEnemy();
+            if(target) {
+                player.playAnim('throw');
+                let dx = target.x - player.x; let dy = target.y - player.y; let dist = Math.sqrt(dx*dx + dy*dy);
+                let vx = (dx/dist) * this.settings.speed; let vy = (dy/dist) * this.settings.speed;
+                let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier();
+                let piercing = (this.id === 'compass' || this.id === 'magicMic' || this.id === 'laserPointer' || this.id === 'backpack'); 
+                let count = (this.id === 'magicMic' || this.id === 'backpack') ? 1 : Math.min(3, this.level);
+                for(let i=0; i<count; i++) { setTimeout(() => { projectiles.push(new Projectile(player.x, player.y, vx, vy, finalDamage, this.id, this.settings.color, piercing, this.level)); playSFX('shoot'); }, i * 100); }
+            }
+        }
+    }
+}
+
+class RecorderWeapon extends Weapon {
+    update(dt) {
+        this.timer -= dt;
+        if(this.timer <= 0) {
+            this.timer = (this.settings.cooldown * Math.max(0.4, (1 - this.level*0.1))) * player.stats.cooldownMult;
+            player.playAnim('swing');
+            let hitAny = false; let currentRange = this.settings.range * (1 + this.level*0.2); let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier();
+            
+            let aimAngle = Math.atan2(player.aimY, player.aimX);
+            
+            enemies.forEach(e => { 
+                let dx = e.x - player.x; let dy = e.y - player.y; let distSq = dx*dx + dy*dy; 
+                if(distSq < currentRange*currentRange) { 
+                    let eAngle = Math.atan2(dy, dx);
+                    let diff = Math.abs(eAngle - aimAngle);
+                    if (diff > Math.PI) diff = 2 * Math.PI - diff;
+                    if (diff < Math.PI / 2.5 || distSq < 400) { e.takeDamage(finalDamage); hitAny = true; }
+                } 
+            });
+            
+            if(hitAny) playSFX('hit');
+            projectiles.push(new MeleeEffect(player.x, player.y, aimAngle, currentRange, this.settings.color, this.level));
+            
+            if(player.activeSynergies.musicMath && this.id === 'recorder') { 
+                let angles = [aimAngle - 0.2, aimAngle, aimAngle + 0.2]; let cSpd = GameSettings.weapons.compass.speed; 
+                angles.forEach(ang => { projectiles.push(new Projectile(player.x, player.y, Math.cos(ang)*cSpd, Math.sin(ang)*cSpd, this.settings.damage * player.getDamageMultiplier(), 'compass', '#a0a0a0', true, 1)); }); 
+            }
+        }
+    }
+}
+
+class OrbitWeapon extends Weapon {
+    constructor(id) { super(id); this.angle = 0; }
+    update(dt) {
+        this.angle += dt * 3; this.timer -= dt;
+        if(this.timer <= 0) { 
+            this.timer = this.settings.cooldown; 
+            let rMultiplier = (this.id === 'studentID' && player.activeSynergies.digitalDefense) ? 1.5 : 1.0;
+            let radius = this.settings.radius * (1 + this.level*0.1) * rMultiplier; 
+            let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier(); 
+            enemies.forEach(e => { 
+                let dx=e.x-player.x; let dy=e.y-player.y; 
+                if(dx*dx+dy*dy < radius*radius) { 
+                    e.takeDamage(finalDamage); 
+                    if(this.id === 'studentID' && player.activeSynergies.digitalDefense) {
+                        player.stats.cooldownMult = Math.max(0.1, player.stats.cooldownMult - 0.01);
+                        setTimeout(() => { player.stats.cooldownMult += 0.01; updateHUD(); }, 1500);
+                        updateHUD();
+                    }
+                } 
+            }); 
+        }
+    }
+    draw(ctx) {
+        let rMultiplier = (this.id === 'studentID' && player.activeSynergies.digitalDefense) ? 1.5 : 1.0;
+        let radius = this.settings.radius * (1 + this.level*0.1) * rMultiplier; 
+        let count = Math.min(5, 1 + this.level);
+        if(isOffScreen(player.x, player.y, radius*2)) return;
+        if(this.level >= 3 || rMultiplier > 1.0) { ctx.save(); ctx.translate((player.x - camera.x)|0, (player.y - camera.y)|0); ctx.rotate(this.angle * 0.5); ctx.strokeStyle = rMultiplier > 1.0 ? 'rgba(0, 210, 211, 0.4)' : 'rgba(212, 175, 55, 0.3)'; ctx.lineWidth = rMultiplier > 1.0 ? 4 : 2; ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.stroke(); ctx.restore(); }
+        let bScale = (1 + (this.level * 0.1)) * (rMultiplier > 1.0 ? 1.2 : 1.0); 
+        for(let i=0; i<count; i++) { let a = this.angle + (Math.PI*2 / count) * i; let bx = player.x - camera.x + Math.cos(a) * radius; let by = player.y - camera.y + Math.sin(a) * radius; ctx.save(); ctx.translate(bx|0, by|0); ctx.rotate(a + Math.PI/2); ctx.scale(bScale, bScale); ctx.fillStyle = this.settings.color; ctx.fillRect(-8, -12, 16, 24); ctx.fillStyle = '#fff'; ctx.fillRect(-6, -10, 12, 20); ctx.restore(); }
+    }
+}
+
+class SmartPhoneWeapon extends Weapon {
+    update(dt) {
+        this.timer -= dt;
+        if(this.timer <= 0) {
+            this.timer = (this.settings.cooldown * Math.max(0.4, (1 - this.level*0.1))) * player.stats.cooldownMult;
+            player.playAnim('cast');
+            let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier(); let radius = this.settings.radius * (1 + this.level*0.2);
+            projectiles.push(new AreaExplosion(player.x, player.y, radius, finalDamage, this.settings.color));
+            
+            if(player.activeSynergies.cyberWarrior) {
+                let lSpd = GameSettings.specialWeapons.laserPointer.speed;
+                let lDmg = GameSettings.specialWeapons.laserPointer.damage * player.getDamageMultiplier();
+                [[1,0], [-1,0], [0,1], [0,-1]].forEach(dir => {
+                    projectiles.push(new Projectile(player.x, player.y, dir[0]*lSpd, dir[1]*lSpd, lDmg, 'laserPointer', '#ff7979', true, 1));
+                });
+            }
+        }
+    }
+}
+
+class Player {
+    constructor() {
+        this.x = 0; this.y = 0;
+        this.maxHp = GameSettings.player.baseHp + (permanentStats.maxHp * 10); this.hp = this.maxHp;
+        this.stats = { speedMult: 1.0, damageMult: 1.0, cooldownMult: 1.0 };
+        this.baseSpeed = GameSettings.player.baseSpeed; this.radius = 15; this.dirX = 1; this.level = 1; this.exp = 0; this.maxExp = 10;
+        this.weapons = []; this.activeSynergies = {}; this.passiveTimer = 0;
+        this.dashTimer = 0; this.dashCooldownTimer = 0; this.invincibleTimer = 0; this.dashDir = { x: 1, y: 0 };
+        this.animState = 'idle'; this.animTimer = 0;
+        this.aimX = 1; this.aimY = 0; 
+        this.hitTimer = 0;
+    }
+    
+    getDamageMultiplier() {
+        let mult = this.stats.damageMult;
+        if (spotlight) {
+            let dist = Math.hypot(this.x - spotlight.x, this.y - spotlight.y);
+            if (dist > spotlight.getCurrentRadius()) {
+                mult *= GameSettings.spotlight.penalty;
+            }
+        }
+        return mult;
+    }
+
+    playAnim(stateName) { this.animState = stateName; this.animTimer = 0.2; }
+    recalculateStats() {
+        this.stats.damageMult = 1.0 + (permanentStats.damage * 0.05); this.stats.cooldownMult = 1.0 - (permanentStats.cooldown * 0.02); this.stats.speedMult = 1.0 + (permanentStats.speed * 0.05);
+        this.weapons.forEach(w => { let bonus = w.settings.statBonus; if(bonus && bonus.type !== 'none') { this.stats[bonus.type] += (bonus.value * w.level); } });
+        this.stats.cooldownMult = Math.max(0.2, this.stats.cooldownMult); updateHUD(); 
+    }
+    
+    executeDash(dx, dy) {
+        let beatTime = stageTime % GameSettings.rhythm.beatInterval;
+        let timeToBeat = Math.min(beatTime, GameSettings.rhythm.beatInterval - beatTime);
+        let isPerfect = timeToBeat <= GameSettings.rhythm.perfectWindow;
+
+        this.dashTimer = GameSettings.player.dashDuration; 
+        this.invincibleTimer = GameSettings.player.dashDuration;
+        
+        this.dashDir.x = (dx === 0 && dy === 0) ? this.dirX : dx; 
+        this.dashDir.y = (dx === 0 && dy === 0) ? 0 : dy;
+        
+        if (isPerfect) {
+            this.dashCooldownTimer = 0; 
+            playSFX('perfectDash');
+            hitStopTimer = 0.1;
+            screenShake = 15;
+            showSystemNotice(currentLang === 'ko' ? "퍼펙트 대쉬!" : "PERFECT DASH!");
+            
+            let dashAngle = Math.atan2(this.dashDir.y, this.dashDir.x);
+            projectiles.push(new MeleeEffect(this.x, this.y, dashAngle, 250, '#f1c40f', 5));
+            
+            enemies.forEach(e => {
+                let edx = e.x - this.x; let edy = e.y - this.y;
+                let distSq = edx*edx + edy*edy;
+                if(distSq < 250*250) {
+                    let eAngle = Math.atan2(edy, edx);
+                    let diff = Math.abs(eAngle - dashAngle);
+                    if (diff > Math.PI) diff = 2 * Math.PI - diff;
+                    if (diff < Math.PI / 2.5) e.takeDamage(GameSettings.rhythm.perfectDamage * this.getDamageMultiplier());
+                }
+            });
+        } else {
+            this.dashCooldownTimer = GameSettings.player.dashCooldown; 
+            playSFX('dash'); 
+        }
+        updateHUD();
+    }
+
+    update(dt) {
+        if (this.dashCooldownTimer > 0) this.dashCooldownTimer -= dt; if (this.dashTimer > 0) this.dashTimer -= dt; if (this.invincibleTimer > 0) this.invincibleTimer -= dt; if (this.animTimer > 0) this.animTimer -= dt;
+        if (this.hitTimer > 0) this.hitTimer -= dt;
+
+        let dx = 0; let dy = 0;
+        if(keys['w'] || keys['arrowup']) dy -= 1; if(keys['s'] || keys['arrowdown']) dy += 1;
+        if(keys['a'] || keys['arrowleft']) { dx -= 1; this.dirX = -1; } if(keys['d'] || keys['arrowright']) { dx += 1; this.dirX = 1; }
+        
+        if (joystick.active) { dx = joystick.dx; dy = joystick.dy; if (dx < 0) this.dirX = -1; else if (dx > 0) this.dirX = 1; }
+        
+                let moveMag = Math.hypot(dx, dy);
+        if(moveMag > 0.05) {
+            dx /= moveMag; dy /= moveMag;
+            this.aimX = dx; this.aimY = dy;
+            if (Math.abs(dx) > 0.4) this.animDir = 'side';
+            else if (dy < -0.3) this.animDir = 'up';
+            else if (dy > 0.3) this.animDir = 'down';
+        }
+        if (this.animTimer <= 0) {
+            if (moveMag > 0.1) this.animState = "run";
+            else { this.animState = "idle"; if (moveMag < 0.05) this.animDir = "down"; }
+        }
+
+        #gameContainer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            background-color: #111;
+            overflow: hidden;
+            transform-origin: center center;
+            transform: translate(-50%, -50%);
+        }
+
+        /* 
+           [20년차 시니어 클라 가이드: Mobile UX & Dual-Layout Final Polishing]
+           1. Landscape: 사이드 여백을 80px(또는 10%)로 확장하여 기기별 제스처 및 베젤 간섭 완전 차단.
+           2. Portrait Lobby: 버튼을 2열 그리드로 배치하여 세로 공간 압축, 모든 기능 노출 보장.
+           3. Portrait HUD: 능력치 창(StatsPanel)을 상단 HUD 아래로 고정 배치하여 조작계와 겹침 방지.
+        */
+        :root {
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+            --safe-left: env(safe-area-inset-left);
+            --safe-right: env(safe-area-inset-right);
+            --m-buffer: 220px; /* [Ultra-Safety] 모서리 쏠림 방지를 위한 220px 마진 */
+        }
+
+        /* --- Landscape Mode (가로: 중앙 집중형 배치) --- */
+        @media screen and (orientation: landscape) {
+            #lobbyTopBar { 
+                top: 120px; /* 상단바 완전 회피 */
+                padding: 0 var(--m-buffer);
+            }
+            #hudLeft { 
+                top: 150px; 
+                left: var(--m-buffer); 
+            }
+            #hudRight { 
+                top: 150px; 
+                right: var(--m-buffer); 
+            }
+            #pauseBtn { 
+                bottom: 150px; 
+                right: var(--m-buffer); 
+            }
+            #mobileDashBtn { 
+                bottom: 300px; 
+                right: var(--m-buffer); 
+            }
+            #minimapCanvas { 
+                bottom: 150px; 
+                left: var(--m-buffer); 
+            }
+            #inventory { top: 320px; left: var(--m-buffer); }
+            #statsPanel { top: 300px; right: var(--m-buffer); }
+            #lobbyBottomBar { bottom: 220px; flex-direction: row; }
+            #systemNoticeList { top: 450px; right: var(--m-buffer); }
+            #btnSkip { bottom: 200px; right: var(--m-buffer); padding: 25px 50px; font-size: 1.5rem; }
+        }
+
+        /* --- Portrait Mode (세로: 좁은 화면 중앙 정렬) --- */
+        @media screen and (orientation: portrait) {
+            #lobbyTopBar { 
+                top: 180px; /* 노치 및 상태바 대폭 회피 */
+                padding: 0 60px;
+                justify-content: space-around;
+            }
+            #lobbyTitle { top: 300px; font-size: 1.6rem; }
+            
+            #hudLeft { top: 180px; left: 60px; }
+            #hudRight { top: 180px; right: 60px; }
+            
+            #inventory { top: 350px; left: 50%; transform: translateX(-50%); width: 90%; justify-content: center; }
+            #statsPanel { 
+                top: 480px; left: 50%; transform: translateX(-50%);
+                width: 70%; max-height: 150px; padding: 15px; font-size: 12px;
+                background: rgba(0,0,0,0.6); border-radius: 10px; border-left: 4px solid #b89947;
+            }
+
+            #lobbyBottomBar { 
+                bottom: 250px; /* 네비게이션 바 완전 회피 */
+                display: grid; grid-template-columns: 1fr 1fr; 
+                gap: 15px; padding: 0 60px;
+            }
+            #btnStartLobby { grid-column: span 2; padding: 30px !important; }
+
+            #mobileDashBtn { bottom: 500px; right: 80px; width: 100px; height: 100px; }
+            #pauseBtn { bottom: 620px; right: 80px; }
+            #minimapCanvas { bottom: 250px; left: 80px; width: 160px; height: 140px; }
+            #btnSkip { bottom: 300px; left: 50%; transform: translateX(-50%); padding: 25px 80px; font-size: 1.5rem; }
+        }
+
+        #gameCanvas { display: block; width: 100%; height: 100%; touch-action: none; transition: filter 0.1s; }
+
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(0, 0, 0, 0.8); color: white; z-index: 20; transition: opacity 0.3s;
+        }
+
+        .hidden { display: none !important; }
+
+        .panel {
+            background: #2a2a35; border: 4px solid #b89947; border-radius: 8px; padding: 30px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            max-width: 600px; width: 90%; position: relative;
+        }
+
+        h1, h2 { font-family: 'Press Start 2P', 'Noto Sans KR', cursive; color: #e0d0a0; text-shadow: 2px 2px 0 #000; margin-bottom: 20px; line-height: 1.5; }
+
+        .btn {
+            background: #b89947; color: #111; border: none; padding: 15px 30px;
+            font-size: 1.2rem; font-weight: bold; cursor: pointer; margin: 10px; border-radius: 4px;
+            font-family: 'Noto Sans KR', sans-serif; transition: transform 0.1s, background 0.2s;
+            pointer-events: auto; /* 명시적으로 활성화 */
+        }
+        .btn.primary { background: #ff6b6b; color: #fff; }
+        .btn.primary:hover { background: #ff4757; }
+        .btn:hover { background: #d4b86a; transform: scale(1.05); }
+        .btn:active { transform: scale(0.95); }
+        .btn:disabled { background: #555; color: #888; cursor: not-allowed; transform: none; border-color: #444; }
+
+        #lobbyTopBar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-start; z-index: 25; pointer-events: none; }
+        .currency-badge { background: rgba(0,0,0,0.6); border: 2px solid #ffb142; padding: 10px 20px; border-radius: 20px; font-size: 18px; color: white; font-weight: bold; display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+        #lobbyBottomBar { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
+        .lobby-title { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
+        #gameCanvas { display: block; width: 100%; height: 100%; touch-action: none; transition: filter 0.1s; }
+
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(0, 0, 0, 0.8); color: white; z-index: 20; transition: opacity 0.3s;
+        }
+
+        .hidden { display: none !important; }
+
+        .panel {
+            background: #2a2a35; border: 4px solid #b89947; border-radius: 8px; padding: 30px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            max-width: 600px; width: 90%; position: relative;
+        }
+
+        h1, h2 { font-family: 'Press Start 2P', 'Noto Sans KR', cursive; color: #e0d0a0; text-shadow: 2px 2px 0 #000; margin-bottom: 20px; line-height: 1.5; }
+
+        .btn {
+            background: #b89947; color: #111; border: none; padding: 15px 30px;
+            font-size: 1.2rem; font-weight: bold; cursor: pointer; margin: 10px; border-radius: 4px;
+            font-family: 'Noto Sans KR', sans-serif; transition: transform 0.1s, background 0.2s;
+        }
+        .btn.primary { background: #ff6b6b; color: #fff; }
+        .btn.primary:hover { background: #ff4757; }
+        .btn:hover { background: #d4b86a; transform: scale(1.05); }
+        .btn:active { transform: scale(0.95); }
+        .btn:disabled { background: #555; color: #888; cursor: not-allowed; transform: none; border-color: #444; }
+
+        #lobbyTopBar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-start; z-index: 25; pointer-events: none; }
+        .currency-badge { background: rgba(0,0,0,0.6); border: 2px solid #ffb142; padding: 10px 20px; border-radius: 20px; font-size: 18px; color: white; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+        #lobbyBottomBar { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
+        .lobby-title { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
+
+        #hudLeft { position: absolute; top: 20px; left: 20px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; }
+        #hudRight { position: absolute; top: 20px; right: 20px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+        #hudCenter { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); pointer-events: none; z-index: 5; color: #e0d0a0; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px black; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; border: 1px solid #b89947; }
+
+        .exp-bar-container { position: absolute; top: 0; left: 0; width: 100%; height: 15px; background: #222; z-index: 6; }
+        .exp-bar-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 0%; transition: width 0.2s; }
+
+        #inventory { position: absolute; top: 150px; left: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
+        .inv-item { background: rgba(0,0,0,0.7); border: 1px solid #b89947; padding: 8px 12px; color: white; font-size: 16px; border-radius: 6px; display: flex; align-items: center; gap: 10px; }
+        .inv-icon { font-size: 20px; }
+
+        #statsPanel { position: absolute; top: 120px; right: 20px; background: rgba(0,0,0,0.4); border-left: 3px solid #b89947; padding: 15px; color: white; font-size: 13px; z-index: 5; text-shadow: 1px 1px 1px black; min-width: 150px; }
+        .stat-line { display: flex; justify-content: space-between; margin-bottom: 5px; gap: 10px; }
+        .stat-val { color: #fff; font-weight: bold; }
+        .stat-bonus { color: #2ed573; font-size: 11px; margin-left: 5px; }
+        .stat-bonus.negative { color: #ff6b6b; }
+
+        #systemNoticeList { position: absolute; top: 280px; right: 20px; display: flex; flex-direction: column; gap: 5px; z-index: 5; text-align: right; }
+        .system-notice-item { color: #ffd700; font-weight: bold; text-shadow: 1px 1px 3px #000; animation: pop 0.5s ease-out; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 4px; }
+        @keyframes pop { 0% { transform: scale(1.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        #pauseBtn { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.6); border: 2px solid #fff; color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; z-index: 5; font-family: 'Noto Sans KR'; pointer-events: auto; }
+        #pauseBtn:hover { background: rgba(255,255,255,0.2); }
+
+        #minimapCanvas { position: absolute; bottom: 20px; left: 20px; width: 150px; height: 150px; background: rgba(0, 0, 0, 0.5); border: 2px solid rgba(184, 153, 71, 0.8); border-radius: 8px; z-index: 5; pointer-events: none; }
+
+        #mobileDashBtn {
+            position: absolute; bottom: 100px; right: 30px; width: 70px; height: 70px;
+            border-radius: 50%; background: rgba(0, 210, 211, 0.4); border: 3px solid #00d2d3;
+            color: white; font-weight: bold; font-family: 'Press Start 2P', monospace; font-size: 12px;
+            z-index: 10; touch-action: none; pointer-events: auto; 
+            display: flex; justify-content: center; align-items: center;
+            user-select: none; -webkit-user-select: none;
+        }
+        #mobileDashBtn:active { background: rgba(0, 210, 211, 0.8); transform: scale(0.95); }
+
+        .choice-container { display: flex; justify-content: space-around; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+        .choice-card { background: #333; border: 2px solid #555; padding: 20px; border-radius: 8px; cursor: pointer; width: 180px; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; }
+        .choice-card:hover { border-color: #b89947; background: #444; transform: translateY(-5px); }
+        .choice-card.premium { border-color: #ff9ff3; background: #4a2c4a; }
+        .choice-icon { font-size: 40px; margin-bottom: 10px; }
+        .choice-title { font-weight: bold; color: #e0d0a0; margin-bottom: 10px; font-size: 1.1rem; text-align: center; }
+        .choice-desc { font-size: 0.9rem; color: #ccc; text-align: center; line-height: 1.4; }
+
+        .speech-bubble { position: absolute; background: white; color: black; padding: 10px 15px; border-radius: 10px; font-weight: bold; font-size: 14px; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 30; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .speech-bubble::after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent; }
+
+        .slot-item { background: rgba(0,0,0,0.6); border: 1px solid #b89947; padding: 15px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; color: white; text-align: left; }
+        .slot-info { font-size: 14px; color: #ccc; }
+        .slot-actions button { padding: 8px 12px; font-size: 14px; margin-left: 5px; }
+
+        .outfit-card { background: #2f3640; border: 2px solid #555; border-radius: 8px; padding: 10px; width: 120px; cursor: pointer; transition: all 0.2s; display:flex; flex-direction:column; align-items:center; position: relative;}
+        .outfit-card:hover { transform: translateY(-3px); background: #353b48; border-color: #10ac84; }
+        .outfit-card.equipped { border-color: #ff9ff3; background: #4a2c4a; box-shadow: 0 0 10px #ff9ff3; }
+        .outfit-card.locked { opacity: 0.4; filter: grayscale(100%); cursor: not-allowed; }
+        .outfit-card.locked:hover { transform: none; border-color: #555; background: #2f3640; }
+        
+        .achieve-card { background: rgba(0,0,0,0.6); border: 1px solid #555; border-left: 4px solid #555; padding: 15px; border-radius: 4px; display: flex; align-items: center; gap: 15px; text-align: left; }
+        .achieve-card.unlocked { border-left-color: #f1c40f; background: rgba(241, 196, 15, 0.1); }
+        .achieve-icon { font-size: 24px; opacity: 0.3; }
+        .achieve-card.unlocked .achieve-icon { opacity: 1; text-shadow: 0 0 10px #f1c40f; }
+
+        #storyUI { background: #000; z-index: 50; }
+        .typewriter-text { font-size: 1.5rem; line-height: 2; color: #fff; min-height: 120px; text-align: center; }
+        .skip-btn { position: absolute; top: 20px; right: 20px; background: none; border: 1px solid #555; color: #aaa; cursor: pointer; padding: 10px; border-radius: 4px; }
+        .skip-btn:hover { background: #333; }
+
+        #flashOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 10000; }
+        
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #ffb142; cursor: pointer; margin-top: -6px; border: 2px solid #fff; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #555; border-radius: 3px; border: 1px solid #222; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+</head>
+<body>
+
+<div id="gameContainer">
+    <div id="flashOverlay"></div>
+    <div class="exp-bar-container"><div class="exp-bar-fill" id="expBar"></div></div>
+
+    <div id="hudLeft" class="hidden">
+        <div style="font-size: 24px; font-weight: bold; color: #ffb142;" id="stageDispUI">STAGE 1 : 낡은 재판소</div>
+        <div style="font-size: 18px; margin-top: 5px;">LV: <span id="levelDisp">1</span></div>
+        <div style="font-size: 18px; color: #ff6b6b; margin-top: 5px;">HP: <span id="hpDisp">100/100</span></div>
+        <div style="font-size: 18px; color: #00d2d3; margin-top: 5px; font-weight: bold;">DASH: <span id="dashDisp">READY</span></div>
+    </div>
+    <div id="hudCenter" class="hidden">진행도: <span id="progressDisp">0</span>%</div>
+    
+    <div id="hudRight" class="hidden">
+        <div style="font-size: 32px; font-family: 'Press Start 2P', monospace;" id="timerDisp">01:30</div>
+        <button id="speedBtn" onclick="window.toggleGameSpeed()" style="pointer-events: auto; margin-top: 10px; padding: 5px 15px; background: rgba(0,0,0,0.6); border: 2px solid #b89947; color: #e0d0a0; font-family: 'Press Start 2P'; cursor: pointer; border-radius: 4px;">1X</button>
+    </div>
+
+    <div id="mobileDashBtn" class="hidden">DASH</div>
+
+    <div id="statsPanel" class="hidden">
+        <div id="statsTitle" style="text-align: center; color: #e0d0a0; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #555; padding-bottom: 5px;">능력치</div>
+        <div class="stat-line"><span id="lblStatDmg">공격력</span><div class="stat-val" id="statDmg">0 (+0)</div></div>
+        <div class="stat-line"><span id="lblStatCool">쿨타임</span><div class="stat-val" id="statCool">0s (-0s)</div></div>
+        <div class="stat-line"><span id="lblStatSpd">이동속도</span><div class="stat-val" id="statSpd">0 (+0)</div></div>
+    </div>
+    <div id="inventory" class="hidden"></div>
+    <div id="systemNoticeList" class="hidden"></div>
+    <button id="pauseBtn" class="hidden" onclick="window.togglePause()">일시정지 (ESC)</button>
+    
+    <canvas id="minimapCanvas" class="hidden" width="150" height="150"></canvas>
+
+    <div id="lobbyTopBar" class="hidden">
+        <div class="currency-badge">🏅 <span id="lobbyBadgeDisp">0</span></div>
+        <div style="pointer-events: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 20px; border: 1px solid #555;">
+                    <span style="font-size:14px;">🔊</span>
+                    <input type="range" id="lobbyVol" min="0" max="1" step="0.05" value="0.5" onchange="window.changeVolume(this.value)" oninput="window.changeVolume(this.value)" style="width: 80px;">
+                </div>
+                <button id="langBtn" class="btn" style="padding: 10px 20px; font-size: 14px; margin: 0;" onclick="window.toggleLanguage()">🌐 KO</button>
+            </div>
+            <button id="tutBtn" class="btn" style="padding: 15px 30px; font-size: 24px; margin: 0; background: #2d3436; color: #fff; border: 2px solid #636e72; border-radius: 40px;" onclick="window.openTutorial()">❓ TUTORIAL</button>
+        </div>
+    </div>
+    <div id="lobbyTitle" class="lobby-title hidden">
+        <h1 id="lobbyTitleText">Last Girl Survivor<br><span id="lobbySubtitle" style="font-size:1.2rem; color:#ccc;">대역전의 종소리</span></h1>
+    </div>
+    <div id="lobbyBottomBar" class="hidden">
+        <button id="btnStartLobby" class="btn primary" style="font-size: 1.2rem; padding: 15px 30px;" onclick="window.startGame()">출격하기</button>
+        <button id="btnUpgradeLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #e1b12c;" onclick="window.openUpgrade()">능력치 강화</button>
+        <button id="btnClosetLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #10ac84; color: white;" onclick="window.openCloset()">옷장 (스킨)</button>
+        <button id="btnAchieveLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #f39c12; color: white;" onclick="window.openAchieve()">도전과제</button>
+        <button id="btnGachaLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px;" onclick="window.openGacha()">픽업 가챠</button>
+        <button id="btnDataLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #0984e3; color: white;" onclick="window.openSaveLoad()">데이터 센터</button>
+    </div>
+    <div id="speechBubble" class="speech-bubble" style="opacity: 0;">빨리 시작하자!</div>
+
+    <div id="tutorialUI" class="overlay hidden">
+        <div class="panel" style="max-width: 500px;">
+            <h2 id="tutUITitle" style="color: #00d2d3;">TUTORIAL</h2>
+            <div id="tutContent" style="min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; margin: 15px 0;">
+                <div id="tutIcon" style="font-size: 60px; margin-bottom: 20px;">⌨️</div>
+                <div id="tutDesc" style="line-height: 1.6; color: #fff; font-size: 1.1rem; text-align: center;"></div>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 10px; align-items: center;">
+                <button class="btn" onclick="window.prevTutorialPage()" id="btnTutPrev" style="padding: 10px 15px; font-size: 14px;">◀️</button>
+                <span id="tutPageNum" style="color: #ffb142; font-weight: bold; font-family: 'Press Start 2P'; font-size: 12px;">1 / 3</span>
+                <button class="btn" onclick="window.nextTutorialPage()" id="btnTutNext" style="padding: 10px 15px; font-size: 14px;">▶️</button>
+            </div>
+            <button id="tutCloseBtn" class="btn" onclick="window.closeTutorial()" style="margin-top: 20px; background: #555; color: #fff; width: 100%;">닫기</button>
+        </div>
+    </div>
+
+    <div id="achieveUI" class="overlay hidden">
+        <div class="panel" style="max-width: 600px;">
+            <h2 id="achieveUITitle" style="color: #f39c12;">도전과제 (Achievements)</h2>
+            <p id="achieveUIDesc" style="color: #ccc; margin-bottom: 20px;">특정 조건을 만족하여 칭호를 획득하세요.</p>
+            <div id="achieveList" style="display:flex; flex-direction:column; gap:10px; margin: 20px 0; max-height: 40vh; overflow-y: auto; padding-right: 10px;"></div>
+            <button id="achieveUICloseBtn" class="btn" onclick="window.closeAchieve()" style="margin-top: 20px;">닫기</button>
+        </div>
+    </div>
+
+    <div id="closetUI" class="overlay hidden">
+        <div class="panel" style="max-width: 800px;">
+            <h2 id="closetUITitle" style="color: #10ac84;">옷장 (Closet)</h2>
+            <p id="closetUIDesc" style="color: #ccc; margin-bottom: 20px;">스테이지를 클리어하고 새로운 의상을 해금하세요.</p>
+            <div id="closetList" style="display:flex; flex-wrap: wrap; gap:10px; justify-content:center; max-height: 50vh; overflow-y: auto; padding: 10px;"></div>
+            <button id="closetUICloseBtn" class="btn" onclick="window.closeCloset()" style="margin-top: 20px;">닫기</button>
+        </div>
+    </div>
+
+    <div id="upgradeUI" class="overlay hidden">
+        <div class="panel" style="max-width: 600px;">
+            <h2 id="upgradeUITitle" style="color: #e1b12c;">능력치 강화 (영구)</h2>
+            <p id="upgradeUIDesc" style="color: #ccc; margin-bottom: 20px;">획득한 뱃지로 기본 능력치를 영구적으로 강화합니다.</p>
+            <p><span id="upgUIOwnedText">보유 뱃지: </span><span id="upgBadgeDisp" style="color:#ffb142; font-weight:bold;">0</span></p>
+            <div id="upgradeList" style="display:flex; flex-direction:column; gap:10px; margin: 20px 0; text-align: left; max-height: 40vh; overflow-y: auto; padding-right: 10px;"></div>
+            <button id="upgradeUICloseBtn" class="btn" onclick="window.closeUpgrade()">닫기</button>
+        </div>
+    </div>
+
+    <div id="pauseUI" class="overlay hidden">
+        <div class="panel">
+            <h2 id="pauseUITitle">일시정지</h2>
+            <div style="margin: 20px 0; padding: 15px; background: rgba(0,0,0,0.5); border-radius: 8px;">
+                <label id="lblPauseVol" style="color: #e0d0a0; font-size: 14px; font-weight: bold;">사운드 음량 🔊</label><br>
+                <input type="range" id="pauseVol" min="0" max="1" step="0.05" value="0.5" onchange="window.changeVolume(this.value)" oninput="window.changeVolume(this.value)" style="width: 100%; margin-top: 15px;">
+            </div>
+            <button id="pauseUIResumeBtn" class="btn" onclick="window.togglePause()">게임 재개</button><br>
+            <button id="pauseUIExitBtn" class="btn" style="background:#555; color:#fff;" onclick="window.returnToLobby()">로비로 나가기</button>
+        </div>
+    </div>
+
+    <div id="levelUpUI" class="overlay hidden">
+        <div class="panel" style="max-width: 900px;">
+            <h2 id="levelUpTitle">레벨 업!</h2>
+            <div class="choice-container" id="choicesBox"></div>
+        </div>
+    </div>
+
+    <div id="gachaUI" class="overlay hidden">
+        <div class="panel" style="max-width: 800px;">
+            <h2 id="gachaUITitle" style="color: #ff9ff3;">특수 무기 픽업</h2>
+            <p><span id="gachaUIOwnedText">보유 뱃지: </span><span id="gachaBadgeDisp" style="color:#ffb142; font-weight:bold;">0</span><span id="gachaUIUnitText">개</span></p>
+            <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 40px; margin-bottom: 10px;">🎤 📱 🔦 🎒</div>
+                <p id="gachaUIDesc" style="color: #ccc;">다양한 특수 무기를 해금하여<br>레벨업 풀에 추가합니다. (해금 무기는 등장 확률 1.5배!)</p>
+            </div>
+            <button id="gachaUIRollBtn" class="btn primary" onclick="window.rollGacha()">1회 뽑기 (10 뱃지)</button>
+            <button id="gachaUICloseBtn" class="btn" onclick="window.closeGacha()">닫기</button>
+        </div>
+    </div>
+
+    <div id="gachaResultUI" class="overlay hidden">
+        <div class="panel" style="max-width: 500px;">
+            <h2 id="gachaResultTitle">무기 획득!</h2>
+            <div id="gachaResultCard" class="choice-card premium" style="margin: 20px auto; cursor: default;"></div>
+            <p id="gachaResultMsg" style="color: #2ed573; margin-bottom: 20px;"></p>
+            <button id="gachaResultCloseBtn" class="btn" onclick="document.getElementById('gachaResultUI').classList.add('hidden')">확인</button>
+        </div>
+    </div>
+
+    <div id="saveLoadUI" class="overlay hidden">
+        <div class="panel" style="max-width: 600px;">
+            <h2 id="saveUITitle" style="color: #00d2d3;">데이터 센터</h2>
+            <p id="saveUIDesc">메타 프로그레션(재화, 해금 무기)을 안전하게 보존합니다.</p>
+            <div id="slotList" style="display:flex; flex-direction:column; gap:10px; margin: 20px 0;"></div>
+            <button id="saveUICloseBtn" class="btn" onclick="window.closeSaveLoad()">닫기</button>
+        </div>
+    </div>
+
+    <div id="gameOverUI" class="overlay hidden">
+        <div class="panel">
+            <h1 style="color: #ff4757;">사망했습니다...</h1>
+            <button class="btn" onclick="window.returnToLobby()">로비로 돌아가기</button>
+        </div>
+    </div>
+
+    <div id="stageClearUI" class="overlay hidden">
+        <div class="panel">
+            <h1 style="color: #2ed573;">스테이지 클리어!</h1>
+            <p>다음 스테이지로 진입합니다. (현재 스테이지 무기 및 레벨은 초기화됩니다)</p>
+            <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <span style="font-size: 24px;">🏅</span>
+                <div style="font-size: 18px; color: #ffb142; margin-top: 10px;">획득한 뱃지: <span id="clearRewardDisp">0</span>개</div>
+            </div>
+            <button class="btn primary" onclick="window.nextStage()">다음 스테이지</button>
+            <button class="btn" onclick="window.returnToLobby()">로비로 귀환</button>
+        </div>
+    </div>
+
+    <div id="storyUI" class="overlay hidden">
+        <div class="panel" style="background: transparent; border: none; box-shadow: none; max-width: 800px;">
+            <div id="storyText" class="typewriter-text"></div>
+            <button id="storyNextBtn" class="btn primary hidden" onclick="window.nextStoryStep()">다음</button>
+        </div>
+        <button id="storyLangBtn" class="btn" style="position: absolute; top: 20px; left: 20px; font-size: 14px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #555; pointer-events: auto; z-index: 60;" onclick="event.stopPropagation(); window.toggleLanguage()">🌐 KO</button>
         <button id="storySkipBtn" class="btn skip-btn" onclick="window.skipStory()">Skip</button>
     </div>
 
@@ -1471,19 +3769,22 @@ function togglePause() {
 }
 
 function returnToLobby() {
-    if (gameState === 'gameover') currentStage = 1; else if (gameState === 'clear') currentStage++; 
-    gameState = 'lobby'; isPaused = false; stopBGM(); gameSpeedMultiplier = 1.0;
-    ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
-    let orbPocketUI = document.getElementById('orbPocketUI');
-    if (orbPocketUI) {
-        orbPocketUI.innerHTML = player.marblePocket.map(t => {
-            const data = MARBLE_TYPES.find(m => t === m.type);
-            return `<span style="text-shadow: 0 0 10px ${data.glow};">${data.icon}</span>`;
-        }).join('');
+    if (gameState === "gameover") currentStage = 1; else if (gameState === "clear") currentStage++; 
+    gameState = "lobby"; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
+    ["gameOverUI", "pauseUI", "stageClearUI", "hudLeft", "hudCenter", "hudRight", "statsPanel", "inventory", "minimapCanvas", "systemNoticeList", "pauseBtn", "mobileDashBtn", "orbPocketUI"].forEach(id => { 
+        let el = document.getElementById(id); if(el) el.classList.add("hidden"); 
+    });
+    if (player) {
+        let orbPocketUI = document.getElementById("orbPocketUI");
+        if (orbPocketUI) {
+            orbPocketUI.innerHTML = (player.marblePocket || []).map(t => {
+                const data = MARBLE_TYPES.find(m => t === m.type);
+                return "<span style='text-shadow: 0 0 10px " + data.glow + ";'>" + data.icon + "</span>";
+            }).join("");
+        }
     }
-
-    let speedBtn = document.getElementById('speedBtn'); if (speedBtn) { speedBtn.innerText = '1X'; speedBtn.style.color = '#e0d0a0'; }
-    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove('hidden'); });
+    let speedBtn = document.getElementById("speedBtn"); if (speedBtn) { speedBtn.innerText = "1X"; speedBtn.style.color = "#e0d0a0"; }
+    ["lobbyTopBar", "lobbyTitle", "lobbyBottomBar"].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove("hidden"); });
     updateLobbyCurrency();
 }
 
@@ -2311,7 +4612,7 @@ class Player {
         if (this.hitTimer > 0) { ctx.filter = 'brightness(50%) sepia(1) hue-rotate(-50deg) saturate(500%)'; }
         if (this.invincibleTimer > 0) { ctx.globalAlpha = 0.5 + Math.sin(performance.now() * 0.02) * 0.3; }
         
-        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer); 
+        drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer, this.animDir); 
         
         ctx.filter = 'none';
         ctx.restore();
