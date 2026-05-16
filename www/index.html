@@ -167,7 +167,7 @@
 
         #lobbyTopBar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-start; z-index: 25; pointer-events: none; }
         .currency-badge { background: rgba(0,0,0,0.6); border: 2px solid #ffb142; padding: 10px 20px; border-radius: 20px; font-size: 18px; color: white; font-weight: bold; display: flex; align-items: center; gap: 10px; }
-        #lobbyBottomBar { position: absolute; bottom: 20px !important; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
+        #lobbyBottomBar { position: absolute; bottom: 10px !important; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
         .lobby-title { position: absolute; top: 30px !important; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
 
         #hudLeft { position: absolute; top: 20px; left: 20px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; }
@@ -191,10 +191,10 @@
         .system-notice-item { color: #ffd700; font-weight: bold; text-shadow: 1px 1px 3px #000; animation: pop 0.5s ease-out; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 4px; }
         @keyframes pop { 0% { transform: scale(1.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-        #pauseBtn { position: absolute; bottom: 20px !important; right: 20px; background: rgba(0,0,0,0.6); border: 2px solid #fff; color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; z-index: 5; font-family: 'Noto Sans KR'; pointer-events: auto; }
+        #pauseBtn { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.6); border: 2px solid #fff; color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; z-index: 5; font-family: 'Noto Sans KR'; pointer-events: auto; }
         #pauseBtn:hover { background: rgba(255,255,255,0.2); }
 
-        #minimapCanvas { position: absolute; bottom: 20px !important; left: 20px; width: 150px; height: 150px; background: rgba(0, 0, 0, 0.5); border: 2px solid rgba(184, 153, 71, 0.8); border-radius: 8px; z-index: 5; pointer-events: none; }
+        #minimapCanvas { position: absolute; bottom: 20px; left: 20px; width: 150px; height: 150px; background: rgba(0, 0, 0, 0.5); border: 2px solid rgba(184, 153, 71, 0.8); border-radius: 8px; z-index: 5; pointer-events: none; }
 
         #mobileDashBtn {
             position: absolute; bottom: 100px; right: 30px; width: 70px; height: 70px;
@@ -249,7 +249,7 @@
     <script>
         (function() {
             const path = window.location.pathname.toLowerCase();
-            const isAosPath = path.indexOf('/aos') !== -1 || path.indexOf('/sandbox') !== -1 || window.location.search.includes('aos=1');
+            const isAosPath = window.location.search.includes('aos=1');
             const isNative = window.Capacitor && window.Capacitor.getPlatform() !== 'web';
             
             if (isAosPath || isNative) {
@@ -267,8 +267,8 @@
         .aos-build #hudLeft { top: 120px !important; left: 150px !important; }
         .aos-build #hudRight { top: 120px !important; right: 150px !important; }
         .aos-build #hudCenter { top: 150px !important; }
-        .aos-build #minimapCanvas { bottom: 20px !important; left: 150px !important; width: 160px !important; height: 160px !important; }
-        .aos-build #pauseBtn { bottom: 20px !important; right: 150px !important; }
+        .aos-build #minimapCanvas { bottom: 150px !important; left: 150px !important; width: 160px !important; height: 160px !important; }
+        .aos-build #pauseBtn { bottom: 150px !important; right: 150px !important; }
         .aos-build #mobileDashBtn { bottom: 280px !important; right: 150px !important; width: 100px !important; height: 100px !important; }
         .aos-build #inventory { top: 320px !important; left: 150px !important; }
         .aos-build #statsPanel { top: 300px !important; right: 150px !important; }
