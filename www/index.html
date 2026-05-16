@@ -3272,5 +3272,148 @@ window.updateVerdictUI = function() {
 setInterval(() => { if (window.updateVerdictUI) window.updateVerdictUI(); }, 100);
 </script>
 
+<script>
+window.verdictGauge = 0;
+window.verdictInventory = [];
+window.verdictBuffs = { red: 0, yellow: 0, green: 0 };
+window.MAX_GAUGE = 50;
+
+window.useVerdictRoulette = function() {
+    if (window.verdictGauge < window.MAX_GAUGE) {
+        window.showSystemNotice(window.currentLang === 'ko' ? "심판의 힘이 부족합니다!" : "Not enough power!");
+        return;
+    }
+    
+    window.verdictGauge -= window.MAX_GAUGE;
+    window.playSFX('gacha');
+    
+    const types = ['red', 'yellow', 'green'];
+    const result = types[Math.floor(Math.random() * types.length)];
+    const names = { red: 'ATK', yellow: 'HP', green: 'SPD' };
+    
+    // 1. STEP ONE: SHOW SPOTLIGHT NOTICE (The Announcement)
+    const noticeText = window.currentLang === 'ko' ? `[${names[result]} 구슬 획득!]` : `[${names[result]} ORB GAINED!]`;
+    window.showSystemNotice(noticeText); // This triggers the 'Spotlight' message
+    
+    // 2. STEP TWO: DELAYED FETCH & SLOT FILL (The Narrative Connection)
+    setTimeout(() => {
+        // FIFO History: Keep exactly 3
+        if (window.verdictInventory.length >= 3) {
+            window.verdictInventory.shift();
+        }
+        window.verdictInventory.push(result);
+        
+        // Apply Buffs
+        window.verdictBuffs[result] += 0.05;
+        if (window.player) window.player.recalculateStats();
+        
+        // Final UI Update
+        window.updateVerdictUI();
+        
+        // Check for Synergy if slots are full
+        if (window.verdictInventory.length === 3) {
+            setTimeout(() => window.checkRouletteSynergy(), 500);
+        }
+    }, 600); // 0.6s delay to let the notice 'sink in' before filling the slot
+    
+    window.updateVerdictUI();
+};
+
+window.checkRouletteSynergy = function() {
+    const inv = window.verdictInventory;
+    if (inv.length < 3) return;
+
+    const counts = { red: 0, yellow: 0, green: 0 };
+    inv.forEach(i => counts[i]++);
+    window.playSFX('levelup');
+    
+    if (counts.red === 3 || counts.yellow === 3 || counts.green === 3) {
+        const type = inv[0];
+        window.verdictBuffs[type] += 0.15; 
+        if (window.player) {
+            window.player.hp = Math.min(window.player.maxHp, window.player.hp + (window.player.maxHp * 0.5)); 
+            window.player.recalculateStats();
+        }
+        window.showSystemNotice('🎉 TRIPLE JACKPOT!');
+    } else if (counts.red === 2 || counts.yellow === 2 || counts.green === 2) {
+        const type = Object.keys(counts).find(k => counts[k] === 2);
+        window.verdictBuffs[type] += 0.05; 
+        if (window.player) window.player.recalculateStats();
+        if (window.enemies && window.player) {
+            window.enemies.forEach(e => {
+                let dx = e.x - window.player.x; let dy = e.y - window.player.y; let dist = Math.hypot(dx, dy);
+                if (dist > 0 && dist < 300) { e.x += (dx/dist)*150; e.y += (dy/dist)*150; }
+            });
+        }
+        window.showSystemNotice('✨ ONE PAIR!');
+    } else {
+        if (window.player) window.player.stats.cooldownMult *= 0.85; 
+        window.showSystemNotice('🃏 STRAIGHT!');
+    }
+    window.updateVerdictUI();
+};
+
+window.updateVerdictUI = function() {
+    let ui = document.getElementById('verdictUI');
+    if (!ui) {
+        ui = document.createElement('div');
+        ui.id = 'verdictUI';
+        ui.style.cssText = 'position:absolute; bottom:55px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; z-index:9999; pointer-events:none; opacity: 0.3;';
+        
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .orb-container { position: relative; width: 60px; height: 60px; border-radius: 50%; background: rgba(17,17,17,0.4); border: 3px solid #4a5568; box-shadow: 0 0 10px rgba(0,0,0,0.8); overflow: hidden; display: flex; justify-content: center; align-items: center; }
+            .orb-liquid { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, #9c88ff, #00a8ff); transition: height 0.3s ease; z-index: 1; }
+            .orb-glass { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 40%); z-index: 3; }
+            .orb-text { position: relative; z-index: 4; font-size: 14px; font-weight: bold; color: white; text-shadow: 1px 1px 2px black; font-family: 'Press Start 2P', cursive; }
+            .roulette-slots { display: flex; gap: 8px; margin-top: 8px; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 20px; border: 1px solid #555; }
+            .r-slot { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid #444; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        `;
+        document.head.appendChild(style);
+        
+        ui.innerHTML = `<div class="orb-container" id="vo-container"><div class="orb-liquid" id="vo-liquid"></div><div class="orb-glass"></div><div class="orb-text" id="vo-text">0</div></div><div class="roulette-slots"><div class="r-slot" id="vo-slot-0"></div><div class="r-slot" id="vo-slot-1"></div><div class="r-slot" id="vo-slot-2"></div></div>`;
+        document.body.appendChild(ui);
+    }
+    
+    const fillPercent = Math.min((window.verdictGauge / window.MAX_GAUGE) * 100, 100);
+    const isFull = window.verdictGauge >= window.MAX_GAUGE;
+    let liquid = document.getElementById('vo-liquid');
+    let text = document.getElementById('vo-text');
+    if (liquid && text) {
+        liquid.style.height = fillPercent + '%';
+        if (isFull) {
+            liquid.style.background = 'linear-gradient(to top, #f1c40f, #f39c12)';
+            text.innerText = 'MAX';
+        } else {
+            liquid.style.background = 'linear-gradient(to top, #9c88ff, #00a8ff)';
+            text.innerText = window.verdictGauge;
+        }
+    }
+    
+    const colors = { red: '#ff4757', yellow: '#f1c40f', green: '#2ecc71' };
+    for(let i=0; i<3; i++) {
+        let slot = document.getElementById('vo-slot-' + i);
+        if (slot) {
+            let type = window.verdictInventory[i];
+            if (type) {
+                slot.style.background = colors[type];
+                slot.style.borderColor = '#fff';
+                slot.style.boxShadow = '0 0 8px ' + colors[type];
+                slot.style.transform = 'scale(1.2)';
+            } else {
+                slot.style.background = 'rgba(255,255,255,0.1)';
+                slot.style.borderColor = '#444';
+                slot.style.boxShadow = 'none';
+                slot.style.transform = 'scale(1)';
+            }
+        }
+    }
+    
+    ui.style.display = (window.gameState === 'playing' || window.gameState === 'levelup') ? 'flex' : 'none';
+};
+
+setInterval(() => { if (window.updateVerdictUI) window.updateVerdictUI(); }, 100);
+</script>
+
 </body>
 </html>
