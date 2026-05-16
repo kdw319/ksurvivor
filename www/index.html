@@ -686,7 +686,13 @@ let hasSpawnedFinalBoss = false;
 let isStageCleared = false;
 
 let player = null; 
-let enemies = []; 
+let enemies = [];
+// Verdict Roulette System
+window.verdictGauge = 0;
+window.verdictInventory = [];
+window.verdictBuffs = { red: 0, yellow: 0, green: 0 };
+window.MAX_GAUGE = 50;
+ 
 let projectiles = []; 
 let enemyProjectiles = []; 
 let groundTraps = []; 
@@ -1309,7 +1315,10 @@ function toggleLanguage() {
 
     let stageDispUI = document.getElementById('stageDispUI');
     if (stageDispUI && gameState === 'playing') {
-        let themeIndex = (currentStage - 1) % GameSettings.maps.length;
+        
+    let vUi = document.getElementById('verdictUI');
+    if (vUi) vUi.remove();
+    let themeIndex = (currentStage - 1) % GameSettings.maps.length;
         let mapId = GameSettings.maps[themeIndex].id;
         stageDispUI.innerText = `STAGE ${currentStage} : ${lang[mapId]}`;
     }
@@ -1472,7 +1481,7 @@ function nextStage() {
 }
 
 function resetStage(fullReset = false) {
-    stageTime = 0; enemies = []; stageKills = 0; window.orbStacks = { red: 0, yellow: 0, green: 0 }; projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = [];
+    stageTime = 0; enemies = []; window.verdictGauge = 0; window.verdictInventory = []; window.verdictBuffs = { red: 0, yellow: 0, green: 0 }; if(window.updateVerdictUI) window.updateVerdictUI(); stageKills = 0; window.orbStacks = { red: 0, yellow: 0, green: 0 }; projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = [];
     verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0;
     isStageCleared = false;
     hasSpawnedMidBoss = false;
@@ -1490,7 +1499,7 @@ function resetStage(fullReset = false) {
     
     let stageDispUI = document.getElementById('stageDispUI');
     if(stageDispUI) { let lang = I18N[currentLang]; stageDispUI.innerText = `STAGE ${currentStage} : ${lang[theme.id]}`; }
-    updateHUD();
+    updateHUD(); if(window.updateVerdictUI) window.updateVerdictUI();
 }
 
 function triggerLevelUp() {
@@ -2191,6 +2200,12 @@ class Player {
             this.stats.maxHp += (window.orbStacks.yellow * 0.05 * this.baseMaxHp);
             this.stats.speedMult += (window.orbStacks.green * 0.05);
         }
+        
+        if (window.verdictBuffs) {
+            this.stats.damageMult += window.verdictBuffs.red;
+            this.stats.maxHp += (window.verdictBuffs.yellow * this.baseMaxHp);
+            this.stats.speedMult += window.verdictBuffs.green;
+        }
         this.weapons.forEach(w => { let bonus = w.settings.statBonus; if(bonus && bonus.type !== 'none') { this.stats[bonus.type] += (bonus.value * w.level); } });
         this.stats.cooldownMult = Math.max(0.2, this.stats.cooldownMult); updateHUD(); 
     }
@@ -2406,9 +2421,15 @@ class Enemy {
         if(particles.length < 50) { particles.push(new Particle(this.x, this.y, this.color)); }
         
         if(this.hp <= 0) { 
-            statsTracking.totalKills++;
-            checkAchievements(); 
             
+            statsTracking.totalKills++; checkAchievements();
+            if (window.verdictGauge < window.MAX_GAUGE) {
+                window.verdictGauge++;
+                if (window.verdictGauge >= window.MAX_GAUGE) {
+                    playSFX('exp'); // Ping sound when full
+                }
+                window.updateVerdictUI();
+            }
             expGems.push(new ExpGem(this.x, this.y, this.exp)); 
             
             if(this.type === 'boss' && !isStageCleared) { 
