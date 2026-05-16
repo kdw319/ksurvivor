@@ -247,7 +247,7 @@
     <script>
         (function() {
             const path = window.location.pathname.toLowerCase();
-            const isAosPath = path.indexOf('/aos') !== -1 || path.indexOf('/sandbox') !== -1 || window.location.search.includes('aos=1');
+            const isAosPath = path.indexOf('/aos') !== -1 || window.location.search.includes('aos=1');
             const isNative = window.Capacitor && window.Capacitor.getPlatform() !== 'web';
             if (isAosPath || isNative) {
                 document.documentElement.classList.add('aos-build');
@@ -729,7 +729,7 @@ const MARBLE_TYPES = [
     { type: 'green', color: '#2ed573', glow: 'rgba(46, 213, 115, 0.5)', icon: '🟢' }
 ];
 
-let gameState = 'story'; 
+window.gameState = 'story'; 
 let isPaused = false; 
 let currentStage = 1; 
 let stageTime = 0; 
@@ -804,7 +804,7 @@ function startBGM() {
     if(!audioCtx) initAudio();
     if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     stopBGM();
-    const bgmFile = (gameState === 'playing') ? 'battle_bgm.mp3' : 'lobby_bgm.mp3';
+    const bgmFile = (window.gameState === 'playing') ? 'battle_bgm.mp3' : 'lobby_bgm.mp3';
     currentBgmAudio = new Audio('./assets/bgm/' + bgmFile);
     currentBgmAudio.loop = true;
     currentBgmAudio.volume = masterVolume * 0.55;
@@ -1267,7 +1267,7 @@ function drawMinimap() {
 
 function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
     let imgKey = 'player_down';
-    if (typeof gameState !== 'undefined' && gameState === 'gameover') imgKey = 'player_death';
+    if (typeof window.gameState !== 'undefined' && window.gameState === 'gameover') imgKey = 'player_death';
     else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
     else if (animState === 'dash') imgKey = 'player_dash';
     else if (animState === 'run' || animState === 'idle') {
@@ -1320,7 +1320,7 @@ function toggleLanguage() {
     const setHtml = (id, html) => { let e = document.getElementById(id); if(e) e.innerHTML = html; };
 
     setTxt('storyLangBtn', lang.langBtn);
-    if (gameState === 'story') {
+    if (window.gameState === 'story') {
         const textEl = document.getElementById('storyText');
         if (textEl) textEl.innerHTML = lang.storyLines[storyStep];
     }
@@ -1375,7 +1375,7 @@ function toggleLanguage() {
     setTxt('lblStatSpd', lang.statSpd);
 
     let stageDispUI = document.getElementById('stageDispUI');
-    if (stageDispUI && gameState === 'playing') {
+    if (stageDispUI && window.gameState === 'playing') {
         
     let vUi = document.getElementById('verdictUI');
     if (vUi) vUi.remove();
@@ -1425,7 +1425,7 @@ function toggleGameSpeed() {
 }
 
 function startStory() {
-    gameState = 'story'; 
+    window.gameState = 'story'; 
     let ui = document.getElementById('storyUI');
     if (ui) ui.classList.remove('hidden');
     
@@ -1492,14 +1492,14 @@ function skipStory() {
 }
 
 function togglePause() {
-    if(gameState !== 'playing') return; isPaused = !isPaused;
+    if(window.gameState !== 'playing') return; isPaused = !isPaused;
     if(isPaused) { document.getElementById('pauseUI').classList.remove('hidden'); } 
     else { document.getElementById('pauseUI').classList.add('hidden'); lastTime = performance.now(); }
 }
 
 function returnToLobby() {
-    if (gameState === 'gameover') currentStage = 1; else if (gameState === 'clear') currentStage++; 
-    gameState = 'lobby'; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
+    if (window.gameState === 'gameover') currentStage = 1; else if (window.gameState === 'clear') currentStage++; 
+    window.gameState = 'lobby'; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
     ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
     let orbPocketUI = document.getElementById('orbPocketUI');
     if (orbPocketUI) {
@@ -1521,11 +1521,11 @@ function startGame() {
     ['hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove('hidden'); });
     let synList = document.getElementById('systemNoticeList'); if(synList) synList.innerHTML = ''; 
     resetStage(true); 
-    lastTime = performance.now(); gameState = 'playing'; isPaused = false; startBGM(); 
+    lastTime = performance.now(); window.gameState = 'playing'; isPaused = false; startBGM(); 
 }
 
 function triggerStageClear() {
-    if(gameState === 'clear') return; gameState = 'clear'; 
+    if(window.gameState === 'clear') return; window.gameState = 'clear'; 
     let reward = (currentStage % 5 === 0) ? GameSettings.economy.clearRewardBoss : GameSettings.economy.clearRewardBase; playerBadges += reward;
     
     maxStageReached = Math.max(maxStageReached, currentStage + 1);
@@ -1538,7 +1538,7 @@ function triggerStageClear() {
 
 function nextStage() { 
     currentStage++; let clearUI = document.getElementById('stageClearUI'); if (clearUI) clearUI.classList.add('hidden'); 
-    resetStage(true); lastTime = performance.now(); gameState = 'playing'; isPaused = false; 
+    resetStage(true); lastTime = performance.now(); window.gameState = 'playing'; isPaused = false; 
 }
 
 function resetStage(fullReset = false) {
@@ -1564,7 +1564,7 @@ function resetStage(fullReset = false) {
 }
 
 function triggerLevelUp() {
-    gameState = 'levelup'; playSFX('levelup');
+    window.gameState = 'levelup'; playSFX('levelup');
     anime({ targets: '#flashOverlay', opacity: [0.8, 0], duration: 800, easing: 'easeOutExpo' });
     let choicesBox = document.getElementById('choicesBox'); if(!choicesBox) return; choicesBox.innerHTML = '';
     
@@ -1587,7 +1587,7 @@ function triggerLevelUp() {
         }
         let card = document.createElement('div'); card.className = `choice-card ${isPremium ? 'premium' : ''}`;
         card.innerHTML = `<div class="choice-icon">${wData.icon}</div><div class="choice-title" style="${isPremium ? 'color:#ff9ff3;' : ''}">${wData.name} <br><span style="color:#2ed573">Lv.${nextLv}</span></div><div class="choice-desc">${wData.desc}</div>${statTextHTML}`;
-        card.onclick = () => { giveWeapon(id); let ui = document.getElementById('levelUpUI'); if(ui) ui.classList.add('hidden'); lastTime = performance.now(); gameState = 'playing'; };
+        card.onclick = () => { giveWeapon(id); let ui = document.getElementById('levelUpUI'); if(ui) ui.classList.add('hidden'); lastTime = performance.now(); window.gameState = 'playing'; };
         choicesBox.appendChild(card);
     });
     let ui = document.getElementById('levelUpUI'); if(ui) ui.classList.remove('hidden');
@@ -2384,7 +2384,7 @@ class Player {
         }
         
         if(this.hp <= 0) { 
-            gameState = 'gameover'; 
+            window.gameState = 'gameover'; 
             let goUi = document.getElementById('gameOverUI'); 
             if (goUi) goUi.classList.remove('hidden'); 
             let btn = document.getElementById('mobileDashBtn'); 
@@ -2563,10 +2563,10 @@ class FieldItem {
 // ==========================================
 window.addEventListener('keydown', e => {
     keys[e.key.toLowerCase()] = true;
-    if(e.key === ' ' && gameState === 'playing') {
+    if(e.key === ' ' && window.gameState === 'playing') {
         if(window.useVerdictRoulette) window.useVerdictRoulette();
     }
-    if(e.key === 'Escape' && gameState === 'playing') togglePause();
+    if(e.key === 'Escape' && window.gameState === 'playing') togglePause();
 });
 
 window.addEventListener('keyup', e => { 
@@ -2574,7 +2574,7 @@ window.addEventListener('keyup', e => {
 });
 
 window.addEventListener('pointerdown', e => {
-    if(gameState === 'story' && e.target.id !== 'storySkipBtn' && e.target.id !== 'storyLangBtn') { 
+    if(window.gameState === 'story' && e.target.id !== 'storySkipBtn' && e.target.id !== 'storyLangBtn') { 
         nextStoryStep(); 
         return; 
     }
@@ -2582,7 +2582,7 @@ window.addEventListener('pointerdown', e => {
     if(e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return; 
     
     const isOverlayOpen = document.querySelectorAll('.overlay:not(.hidden)').length > 0;
-    if (gameState === 'lobby' && !isOverlayOpen) {
+    if (window.gameState === 'lobby' && !isOverlayOpen) {
         initAudio();
         
         let pos = getPointerPos(e);
@@ -2607,14 +2607,14 @@ window.addEventListener('pointerdown', e => {
                 bubble.style.top = `${(cy - 180) | 0}px`; 
                 bubble.style.transform = 'translateX(-50%)'; 
                 bubble.style.opacity = 1;
-                setTimeout(() => { if(gameState === 'lobby') bubble.style.opacity = 0; }, 2000);
+                setTimeout(() => { if(window.gameState === 'lobby') bubble.style.opacity = 0; }, 2000);
             }
         }
     }
 });
 
 canvas.addEventListener('touchstart', e => {
-    if (gameState !== 'playing' || isPaused) return;
+    if (window.gameState !== 'playing' || isPaused) return;
     let pos = getPointerPos(e);
     
     joystick.active = true;
@@ -2627,7 +2627,7 @@ canvas.addEventListener('touchstart', e => {
 }, {passive: false});
 
 canvas.addEventListener('touchmove', e => {
-    if (!joystick.active || gameState !== 'playing') return;
+    if (!joystick.active || window.gameState !== 'playing') return;
     e.preventDefault(); 
     
     let pos = getPointerPos(e);
@@ -2663,7 +2663,7 @@ let dashBtnEl = document.getElementById('mobileDashBtn');
 if (dashBtnEl) {
     dashBtnEl.addEventListener('touchstart', e => {
         e.preventDefault();
-        if(gameState === 'playing' && player && player.dashCooldownTimer <= 0 && player.dashTimer <= 0) {
+        if(window.gameState === 'playing' && player && player.dashCooldownTimer <= 0 && player.dashTimer <= 0) {
             let dx = 0; let dy = 0;
             if (joystick.active) {
                 let mag = Math.hypot(joystick.dx, joystick.dy);
@@ -2693,11 +2693,11 @@ function gameLoop(timestamp) {
         
         frameCount++;
         
-        if(gameState === 'story') {
+        if(window.gameState === 'story') {
             ctx.fillStyle = '#1c1c24'; 
             ctx.fillRect(0, 0, gameWidth, gameHeight);
         }
-        else if(gameState === 'lobby') {
+        else if(window.gameState === 'lobby') {
             drawBackground(ctx, true);
             if(lobbyCharY < 0 || lobbyCharVy < 0) { 
                 lobbyCharVy += 1000 * rawDt; 
@@ -2714,7 +2714,7 @@ function gameLoop(timestamp) {
             lobbyParticles = lobbyParticles.filter(p => p.life > 0); 
             lobbyParticles.forEach(p => p.draw(ctx));
         }
-        else if(gameState === 'playing' && !isPaused) {
+        else if(window.gameState === 'playing' && !isPaused) {
             stageTime += dt; 
             let timeLeft = GameSettings.stage.maxTime - stageTime; 
             if(timeLeft <= 0) timeLeft = 0;
@@ -2796,7 +2796,7 @@ function gameLoop(timestamp) {
             if (window.updateVerdictUI) window.updateVerdictUI();
         }
 
-        if(gameState !== 'lobby' && gameState !== 'story') {
+        if(window.gameState !== 'lobby' && window.gameState !== 'story') {
             drawBackground(ctx, false);
             
             ctx.save();
@@ -2846,7 +2846,7 @@ function gameLoop(timestamp) {
                 ctx.restore();
             }
 
-            if (gameState === 'playing' && !isPaused) {
+            if (window.gameState === 'playing' && !isPaused) {
                 ctx.save();
                 let barWidth = 300;
                 let barHeight = 20;
