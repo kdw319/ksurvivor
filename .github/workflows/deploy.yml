@@ -30,11 +30,17 @@ jobs:
           mkdir -p deploy_out/sandbox
           mkdir -p deploy_out/aos
           mkdir -p deploy_out/aos-archive
-          
+
+          # Ensure all remote branches are available locally for export
+          git fetch origin main:main || true
+          git fetch origin sandbox:sandbox || true
+          git fetch origin aos-live:aos-live || true
+          git fetch origin aos-archive:aos-archive || true
+
           # 1. Export Main to root
           git checkout main
           cp -a www/. deploy_out/
-          
+
           # 2. Export Sandbox to /sandbox
           git checkout sandbox
           cp -a www/. deploy_out/sandbox/
@@ -46,7 +52,7 @@ jobs:
           # 4. Export AOS-Archive to /aos-archive
           git checkout aos-archive
           cp -a www/. deploy_out/aos-archive/
-          
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
