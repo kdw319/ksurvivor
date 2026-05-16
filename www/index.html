@@ -54,18 +54,12 @@
                 top: 150px; 
                 right: var(--m-buffer); 
             }
-            #pauseBtn { 
-                bottom: 150px; 
-                right: var(--m-buffer); 
-            }
+            
             #mobileDashBtn { 
                 bottom: 300px; 
                 right: var(--m-buffer); 
             }
-            #minimapCanvas { 
-                bottom: 150px; 
-                left: var(--m-buffer); 
-            }
+            
             #inventory { top: 320px; left: var(--m-buffer); }
             #statsPanel { top: 300px; right: var(--m-buffer); }
             #lobbyBottomBar { bottom: 100px !important; flex-direction: row; }
@@ -100,8 +94,8 @@
             #btnStartLobby { grid-column: span 2; padding: 30px !important; }
 
             #mobileDashBtn { bottom: 500px; right: 80px; width: 100px; height: 100px; }
-            #pauseBtn { bottom: 620px; right: 80px; }
-            #minimapCanvas { bottom: 250px; left: 80px; width: 160px; height: 140px; }
+            
+            
             #btnSkip { bottom: 300px; left: 50%; transform: translateX(-50%); padding: 25px 80px; font-size: 1.5rem; }
         }
 
@@ -173,8 +167,8 @@
         #lobbyBottomBar { position: absolute; bottom: 100px !important; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
         .lobby-title { position: absolute; top: 20px !important; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
 
-        #hudLeft { position: absolute; top: 20px; left: 110px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; }
-        #hudRight { position: absolute; top: 20px; right: 110px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+        #hudLeft { position: absolute; top: 40px; left: 110px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; }
+        #hudRight { position: absolute; top: 40px; right: 110px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
         #hudCenter { position: absolute; top: 85px !important; left: 50%; transform: translateX(-50%); pointer-events: none; z-index: 5; color: #e0d0a0; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px black; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; border: 1px solid #b89947; }
 
         .exp-bar-container { position: absolute; top: 0 !important; left: 0; width: 100%; height: 15px; background: #222; z-index: 6; }
@@ -194,10 +188,10 @@
         .system-notice-item { color: #ffd700; font-weight: bold; text-shadow: 1px 1px 3px #000; animation: pop 0.5s ease-out; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 4px; }
         @keyframes pop { 0% { transform: scale(1.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-        #pauseBtn { position: absolute; bottom: 20px; right: 110px; background: rgba(0,0,0,0.6); border: 2px solid #fff; color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; z-index: 5; font-family: 'Noto Sans KR'; pointer-events: auto; }
+        #pauseBtn { position: absolute; bottom: 40px; right: 110px; background: rgba(0,0,0,0.6); border: 2px solid #fff; color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; z-index: 5; font-family: 'Noto Sans KR'; pointer-events: auto; }
         #pauseBtn:hover { background: rgba(255,255,255,0.2); }
 
-        #minimapCanvas { position: absolute; bottom: 20px; left: 110px; width: 150px; height: 150px; background: rgba(0, 0, 0, 0.5); border: 2px solid rgba(184, 153, 71, 0.8); border-radius: 8px; z-index: 5; pointer-events: none; }
+        #minimapCanvas { position: absolute; bottom: 40px; left: 110px; width: 150px; height: 150px; background: rgba(0, 0, 0, 0.5); border: 2px solid rgba(184, 153, 71, 0.8); border-radius: 8px; z-index: 5; pointer-events: none; }
 
         #mobileDashBtn {
             position: absolute; bottom: 100px; right: 30px; width: 70px; height: 70px;
@@ -237,7 +231,7 @@
 
         #storyUI { background: #000; z-index: 50; }
         .typewriter-text { font-size: 1.5rem; line-height: 2; color: #fff; min-height: 120px; text-align: center; }
-        .skip-btn { position: absolute; top: 20px; right: 20px; background: none; border: 1px solid #555; color: #aaa; cursor: pointer; padding: 10px; border-radius: 4px; }
+        .skip-btn { position: absolute; top: 10px; right: 10px; background: none; border: 1px solid #555; color: #aaa; cursor: pointer; padding: 10px; border-radius: 4px; }
         .skip-btn:hover { background: #333; }
 
         #flashOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 10000; }
@@ -308,7 +302,7 @@
     </style>
 </head>
 <body>
-    <button id="fullscreenBtn" onclick="window.toggleFullscreen()" class="btn" style="position:fixed; top:10px; right:10px; padding:10px; font-size:20px; z-index:100; width:50px; height:50px; background:rgba(0,0,0,0.6); color:white; border:2px solid #b89947; border-radius:50%; pointer-events:auto; display:flex; justify-content:center; align-items:center;">⛶</button>
+    <button id="fullscreenBtn" onclick="window.toggleFullscreen()" class="btn" style="position:fixed; top:10px; right:80px; padding:10px; font-size:20px; z-index:100; width:50px; height:50px; background:rgba(0,0,0,0.6); color:white; border:2px solid #b89947; border-radius:50%; pointer-events:auto; display:flex; justify-content:center; align-items:center;">⛶</button>
     <div class="portrait-warning">PLEASE ROTATE TO LANDSCAPE</div>
 
 <div id="gameContainer">
