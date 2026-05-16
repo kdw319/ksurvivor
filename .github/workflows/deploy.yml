@@ -31,27 +31,31 @@ jobs:
           mkdir -p deploy_out/aos
           mkdir -p deploy_out/aos-archive
 
-          # Ensure all remote branches are available locally for export
-          git fetch origin main:main || true
-          git fetch origin sandbox:sandbox || true
-          git fetch origin aos-live:aos-live || true
-          git fetch origin aos-archive:aos-archive || true
+          # Ensure branches are available
+          git fetch origin main sandbox aos-live aos-archive || true
 
-          # 1. Export Main to root
-          git checkout main
+          # Helper function to copy www from branch
+          copy_branch() {
+            local branch=$1
+            local target=$2
+            echo "Processing branch $branch -> $target"
+            git checkout $branch -- www/ || echo "Branch $branch not found or failed"
+            cp -a www/. $target/
+            git checkout ${{ github.ref_name }} -- www/ || true # Restore current state
+          }
+
+          # 1. Export Main to root (Always use origin/main for safety)
+          git show origin/main:www/index.html > /dev/null && git checkout origin/main -- www/
           cp -a www/. deploy_out/
-
+          
           # 2. Export Sandbox to /sandbox
-          git checkout sandbox
-          cp -a www/. deploy_out/sandbox/
+          copy_branch origin/sandbox deploy_out/sandbox
 
           # 3. Export AOS-Live to /aos
-          git checkout aos-live
-          cp -a www/. deploy_out/aos/
+          copy_branch origin/aos-live deploy_out/aos
 
           # 4. Export AOS-Archive to /aos-archive
-          git checkout aos-archive
-          cp -a www/. deploy_out/aos-archive/
+          copy_branch origin/aos-archive deploy_out/aos-archive
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
