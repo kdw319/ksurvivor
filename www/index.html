@@ -2858,7 +2858,7 @@ window.MAX_GAUGE = 50;
 
 window.useVerdictRoulette = function() {
     if (window.verdictGauge < window.MAX_GAUGE) {
-        window.showSystemNotice("Not enough power!");
+        window.showSystemNotice(currentLang === 'ko' ? "심판의 힘이 부족합니다!" : "Not enough power!");
         return;
     }
     
@@ -2867,6 +2867,10 @@ window.useVerdictRoulette = function() {
     
     const types = ['red', 'yellow', 'green'];
     const result = types[Math.floor(Math.random() * types.length)];
+    
+    if (window.verdictInventory.length >= 3) {
+        window.verdictInventory.shift();
+    }
     window.verdictInventory.push(result);
     
     window.verdictBuffs[result] += 0.05;
@@ -2876,13 +2880,15 @@ window.useVerdictRoulette = function() {
     window.showSystemNotice('[' + names[result] + ' +5%]');
     
     if (window.verdictInventory.length === 3) {
-        setTimeout(() => window.checkRouletteSynergy(), 1000);
+        setTimeout(() => window.checkRouletteSynergy(), 500);
     }
     window.updateVerdictUI();
 };
 
 window.checkRouletteSynergy = function() {
     const inv = window.verdictInventory;
+    if (inv.length < 3) return;
+
     const counts = { red: 0, yellow: 0, green: 0 };
     inv.forEach(i => counts[i]++);
     
@@ -2893,7 +2899,7 @@ window.checkRouletteSynergy = function() {
         window.verdictBuffs[type] += 0.15; 
         window.player.hp = Math.min(window.player.maxHp, window.player.hp + (window.player.maxHp * 0.5)); 
         window.player.recalculateStats();
-        window.showSystemNotice('JACKPOT! ' + type.toUpperCase() + ' Boost + Heal!');
+        window.showSystemNotice('🎉 TRIPLE JACKPOT! ' + type.toUpperCase() + ' 폭발! 체력 회복!');
     } else if (counts.red === 2 || counts.yellow === 2 || counts.green === 2) {
         const type = Object.keys(counts).find(k => counts[k] === 2);
         window.verdictBuffs[type] += 0.05; 
@@ -2902,13 +2908,13 @@ window.checkRouletteSynergy = function() {
             let dx = e.x - window.player.x; let dy = e.y - window.player.y; let dist = Math.hypot(dx, dy);
             if (dist > 0 && dist < 300) { e.x += (dx/dist)*150; e.y += (dy/dist)*150; }
         });
-        window.showSystemNotice('PAIR! ' + type.toUpperCase() + ' Boost + Knockback!');
+        window.showSystemNotice('✨ ONE PAIR! ' + type.toUpperCase() + ' 추가 버프! 적 넉백!');
     } else {
         window.player.stats.cooldownMult *= 0.85; 
-        window.showSystemNotice('STRAIGHT! 15% CDR!');
+        window.showSystemNotice('🃏 STRAIGHT! 모든 스킬 쿨타임 15% 감소!');
     }
     
-    window.verdictInventory = [];
+    // We DO NOT clear the inventory anymore!
     window.updateVerdictUI();
 };
 
