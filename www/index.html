@@ -448,14 +448,14 @@ const GAME_ASSETS = {
     player_attack: "character_attack.webp",
     player_death: "character_death.webp",
     player_dash: "character_dash.png",
-    mob_juror: "mobs/mob_juror.png",
-    mob_gavel: "mobs/mob_gavel.png",
-    mob_spectre: "mobs/mob_spectre.png",
-    mob_evidence: "mobs/mob_evidence.png",
+    mob_juror: "mobs/1.png",
+    mob_gavel: "mobs/2.png",
+    mob_spectre: "mobs/4.png",
+    mob_evidence: "mobs/5.png",
     boss_mid: "bosses/midboss.png",
-    boss_10: "bosses/boss_10.png",
-    boss_20: "bosses/boss_20.png",
-    boss_30: "bosses/boss_30.png"
+    boss_10: "bosses/boss10.png",
+    boss_20: "bosses/boss20.png",
+    boss_30: "bosses/boss30.png"
 };
 const loadedImages = {};
 
@@ -678,7 +678,18 @@ let hasSpawnedFinalBoss = false;
 let isStageCleared = false;
 
 let player = null; 
-let enemies = []; 
+let enemies = [];
+let verdictOrbs = [];
+let stageKills = 0;
+let stageMarblesDropped = 0;
+const MAX_MARBLES_PER_STAGE = 6;
+let orbPocket = null;
+let orbStacks = { red: 0, yellow: 0, green: 0 };
+const MARBLE_TYPES = [
+    { type: 'red', icon: '🔴', glow: '#ff4757' },
+    { type: 'yellow', icon: '🟡', glow: '#e1b12c' },
+    { type: 'green', icon: '🟢', glow: '#2ecc71' }
+]; 
 let projectiles = []; 
 let enemyProjectiles = []; 
 let groundTraps = []; 
@@ -1464,7 +1475,7 @@ function nextStage() {
 }
 
 function resetStage(fullReset = false) {
-    stageTime = 0; enemies = []; projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = [];
+    stageTime = 0; enemies = []; verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0; orbStacks = { red: 0, yellow: 0, green: 0 }; orbPocket = null; updateOrbUI(); projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = [];
     verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0;
     isStageCleared = false;
     hasSpawnedMidBoss = false;
@@ -1482,7 +1493,7 @@ function resetStage(fullReset = false) {
     
     let stageDispUI = document.getElementById('stageDispUI');
     if(stageDispUI) { let lang = I18N[currentLang]; stageDispUI.innerText = `STAGE ${currentStage} : ${lang[theme.id]}`; }
-    updateHUD();
+    updateHUD(); updateOrbUI();
 }
 
 function triggerLevelUp() {
@@ -2177,6 +2188,12 @@ class Player {
     playAnim(stateName) { this.animState = stateName; this.animTimer = 0.2; }
     recalculateStats() {
         this.stats.damageMult = 1.0 + (permanentStats.damage * 0.05); this.stats.cooldownMult = 1.0 - (permanentStats.cooldown * 0.02); this.stats.speedMult = 1.0 + (permanentStats.speed * 0.05);
+        
+        if (orbStacks) {
+            this.stats.damageMult += (orbStacks.red * 0.05);
+            this.stats.maxHp += (orbStacks.yellow * 0.05 * this.baseMaxHp);
+            this.stats.speedMult += (orbStacks.green * 0.05);
+        }
         this.weapons.forEach(w => { let bonus = w.settings.statBonus; if(bonus && bonus.type !== 'none') { this.stats[bonus.type] += (bonus.value * w.level); } });
         this.stats.cooldownMult = Math.max(0.2, this.stats.cooldownMult); updateHUD(); 
     }
@@ -2328,17 +2345,30 @@ class Enemy {
         const hpMul = Math.pow(GameSettings.stage.enemyHpScale, currentStage - 1); const dmgMul = Math.pow(GameSettings.stage.enemyDmgScale, currentStage - 1);
         if(type === 'mob' || type === 'shooter' || type === 'trapper') {
             let data = GameSettings.enemyTypes[type];
-            this.subType = data.subType; this.hp = data.hpBase * hpMul; this.speed = data.speed + Math.random() * 20; this.damage = data.damage * dmgMul; this.color = data.color; this.exp = data.exp; this.range = data.range || 0; this.cooldown = data.cooldown || 0; this.attackTimer = Math.random() * this.cooldown; 
+            this.subType = data.subType; this.hp = data.hpBase * hpMul; this.speed = data.speed + Math.random() * 20; this.damage = data.damage * dmgMul; this.color = data.color; this.exp = data.exp; this.range = data.range || 0; this.cooldown = data.cooldown || 0; this.attackTimer = Math.random() * this.cooldown;
         } else {
             this.subType = 'melee'; this.hp = (type==='midboss'?500:3000) * hpMul; this.speed = type==='midboss'?110:70; this.damage = (type==='midboss'?15:30) * dmgMul; this.color = type==='midboss'?'#e1b12c':'#c23616'; this.exp = type==='midboss'?20:100;
         }
         this.maxHp = this.hp; this.hitTimer = 0;
+        this.imgKey = '';
+        if (this.type === 'boss') {
+            if (currentStage === 10) this.imgKey = 'boss_10';
+            else if (currentStage === 20) this.imgKey = 'boss_20';
+            else if (currentStage >= 30) this.imgKey = 'boss_30';
+            else this.imgKey = 'boss_mid';
+        } else if (this.type === 'midboss') {
+            this.imgKey = 'boss_mid';
+        } else {
+            if (this.subType === 'ranged') this.imgKey = 'mob_spectre';
+            else if (this.subType === 'trap') this.imgKey = 'mob_evidence';
+            else this.imgKey = (Math.random() < 0.5) ? 'mob_juror' : 'mob_gavel';
+        }
     }
     update(dt) {
-        let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy; 
-        if (this.subType === 'melee') { if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } } 
+        let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy;
+        if (this.subType === 'melee') { if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } }
         else if (this.subType === 'ranged') {
-            if(distSq > this.range*this.range) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
+            if(distSq > this.range*this.range) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; }
             else { this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; let dist = Math.sqrt(distSq); enemyProjectiles.push(new EnemyProjectile(this.x, this.y, (dx/dist)*200, (dy/dist)*200, this.damage, this.color)); playSFX('shoot'); } }
         } else if (this.subType === 'trap') {
             if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; }
@@ -2351,54 +2381,34 @@ class Enemy {
     draw(ctx) {
         if(isOffScreen(this.x, this.y, this.radius*2)) return;
         ctx.save(); ctx.translate((this.x - camera.x) | 0, (this.y - camera.y) | 0);
-        
-        let img = this.type === 'boss' ? loadedImages.boss : loadedImages.mob;
+        ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, this.radius, this.radius, this.radius/2, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
+        const img = loadedImages[this.imgKey];
         if (img && img.complete && img.naturalWidth > 0) {
-            let size = this.radius * 2.5; 
-            ctx.drawImage(img, -size/2, -size + this.radius/2, size, size);
+            let size = this.radius * 3.5; ctx.drawImage(img, -size/2, -size + this.radius, size, size);
         } else {
-            ctx.fillStyle = this.hitTimer > 0 ? '#fff' : 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, this.radius, this.radius, this.radius/2, 0, 0, Math.PI*2); ctx.fill();
-            if(this.type === 'boss') { ctx.fillStyle = this.hitTimer > 0 ? '#fff' : this.color; ctx.fillRect(-this.radius, -this.radius*1.5, this.radius*2, this.radius*2); ctx.fillStyle = '#000'; ctx.fillRect(-10, -this.radius, 20, 10); } 
-            else {
-                ctx.fillStyle = this.hitTimer > 0 ? '#fff' : this.color; ctx.beginPath(); ctx.arc(0, -this.radius/2, this.radius, 0, Math.PI*2); ctx.fill();
-                if (this.subType === 'ranged') { ctx.fillStyle = '#fff'; ctx.fillRect(-4, -this.radius, 8, 8); } 
-                else if (this.subType === 'trap') { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, -this.radius/1.5, 5, 0, Math.PI*2); ctx.stroke(); }
-                ctx.strokeStyle = '#353b48'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, -this.radius*1.5); ctx.lineTo(0, -this.radius/2); ctx.stroke();
-            }
+            ctx.fillStyle = this.hitTimer > 0 ? '#fff' : this.color; ctx.beginPath(); ctx.arc(0, -this.radius/2, this.radius, 0, Math.PI*2); ctx.fill();
         }
-        
-        if(this.type === 'boss' || this.type === 'midboss') { ctx.fillStyle = 'red'; ctx.fillRect(-this.radius, -this.radius*2, this.radius*2 * (this.hp/this.maxHp), 5); }
+        if(this.type === 'boss' || this.type === 'midboss') { 
+            ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(-this.radius, -this.radius*2.2, this.radius*2, 6);
+            ctx.fillStyle = '#ff4757'; ctx.fillRect(-this.radius, -this.radius*2.2, this.radius*2 * (this.hp/this.maxHp), 6); 
+        }
         ctx.restore();
     }
     takeDamage(amount) {
-        if(this.hp <= 0) return; this.hp -= amount; playSFX('hit'); 
-        
-        let existingText = damageTexts.find(d => !d.isPlayer && Math.abs(d.x - this.x) < 30 && Math.abs(d.y - (this.y - this.radius)) < 30 && d.life > 0.2);
-        if (existingText) {
-            existingText.amount += amount;
-            existingText.life = existingText.maxLife; 
-            existingText.scaleBonus = Math.min(1.5, (existingText.scaleBonus || 0) + 0.1);
-        } else {
-            damageTexts.push(new DamageText(this.x, this.y - this.radius, amount));
-        }
-
+        if(this.hp <= 0) return; this.hp -= amount; playSFX('hit');
         if(particles.length < 50) { particles.push(new Particle(this.x, this.y, this.color)); }
-        
-        if(this.hp <= 0) { 
-            statsTracking.totalKills++;
-            checkAchievements(); 
-            
-            expGems.push(new ExpGem(this.x, this.y, this.exp)); 
-            
-            if(this.type === 'boss' && !isStageCleared) { 
-                isStageCleared = true;
-                hitStopTimer = 0.3; 
-                screenShake = 30;
-                playSFX('bossKill');
-                setTimeout(() => triggerStageClear(), 1500); 
-            } else if (this.type === 'midboss') {
-                // [Logic Fix] 중간보스 사망 시 효과 제거
+        if(this.hp <= 0) {
+            statsTracking.totalKills++; stageKills++; 
+            if (stageKills >= 40 && stageMarblesDropped < MAX_MARBLES_PER_STAGE) {
+                stageKills = 0; stageMarblesDropped++;
+                let orbData = MARBLE_TYPES[Math.floor(Math.random() * MARBLE_TYPES.length)];
+                verdictOrbs.push(new VerdictOrb(this.x, this.y, orbData));
             }
+            expGems.push(new ExpGem(this.x, this.y, this.exp));
+            if(this.type === 'boss' && !isStageCleared) { isStageCleared = true; hitStopTimer = 0.3; screenShake = 30; playSFX('bossKill'); setTimeout(() => triggerStageClear(), 1500); }
+        }
+    }
+}
         }
     }
 }
@@ -2424,6 +2434,61 @@ class EnemyTrap {
         else { ctx.fillStyle = 'rgba(108, 92, 231, 0.4)'; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.stroke(); }
         ctx.restore();
     }
+}
+
+
+class VerdictOrb {
+    constructor(x, y, data) {
+        this.x = x; this.y = y; this.type = data.type; this.icon = data.icon; this.glow = data.glow;
+        this.radius = 20; this.life = 30.0; this.pulse = 0;
+    }
+    update(dt) {
+        if (!player) return;
+        this.life -= dt; this.pulse += dt * 5;
+        let dx = player.x - this.x; let dy = player.y - this.y; let dist = Math.hypot(dx, dy);
+        if (dist < 40) { this.collect(); this.life = 0; }
+        else if (dist < 150) { let s = 250 * dt; this.x += (dx/dist) * s; this.y += (dy/dist) * s; }
+    }
+    draw(ctx) {
+        if(isOffScreen(this.x, this.y)) return;
+        ctx.save(); ctx.translate(this.x - camera.x, this.y - camera.y);
+        let s = 1 + Math.sin(this.pulse) * 0.1;
+        ctx.shadowBlur = 15; ctx.shadowColor = this.glow;
+        ctx.fillStyle = this.glow; ctx.beginPath(); ctx.arc(0, 0, this.radius * s, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = '20px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(this.icon, 0, 0); ctx.restore();
+    }
+    collect() {
+        playSFX('exp');
+        if (orbPocket) { showSystemNotice(currentLang === 'ko' ? "포켓이 가득 찼습니다!" : "Pocket full!"); return; }
+        orbPocket = this.type;
+        showSystemNotice(currentLang === 'ko' ? "⚖️ 심판의 구슬 획득! (스페이스 사용)" : "⚖️ Verdict Orb Acquired! (Space)");
+        updateOrbUI();
+    }
+}
+function updateOrbUI() {
+    let ui = document.getElementById('orbPocketUI');
+    if (!ui) {
+        ui = document.createElement('div');
+        ui.id = 'orbPocketUI';
+        ui.style.position = 'fixed'; ui.style.bottom = '180px'; ui.style.left = '20px';
+        ui.style.display = 'flex'; ui.style.flexDirection = 'column'; ui.style.gap = '5px';
+        ui.style.fontSize = '20px'; ui.style.zIndex = '1000'; ui.style.color = 'white';
+        ui.style.background = 'rgba(0,0,0,0.5)'; ui.style.padding = '10px'; ui.style.borderRadius = '8px';
+        document.body.appendChild(ui);
+    }
+    const pocket = orbPocket ? MARBLE_TYPES.find(m => m.type === orbPocket).icon : 'None';
+    ui.innerHTML = `<div>Pocket: ${pocket}</div><div>Stacks: R:${orbStacks.red} Y:${orbStacks.yellow} G:${orbStacks.green}</div>`;
+}
+function useOrb() {
+    if (!orbPocket) return;
+    if (orbStacks[orbPocket] >= 3) { showSystemNotice("Max Stacks!"); return; }
+    orbStacks[orbPocket]++;
+    const used = orbPocket;
+    orbPocket = null;
+    player.recalculateStats();
+    showSystemNotice(used.toUpperCase() + " Buff Stacked!");
+    updateOrbUI();
 }
 
 class ExpGem {
@@ -2669,7 +2734,7 @@ function gameLoop(timestamp) {
             if(particles.length > 50) particles.splice(0, particles.length - 50);
             if(damageTexts.length > 15) damageTexts.splice(0, damageTexts.length - 15);
 
-            enemies.forEach(e => e.update(dt)); 
+            enemies.forEach(e => e.update(dt)); verdictOrbs.forEach(o => o.update(dt)); 
             projectiles.forEach(p => p.update(dt)); 
             enemyProjectiles.forEach(p => p.update(dt)); 
             groundTraps.forEach(t => t.update(dt)); 
@@ -2678,7 +2743,7 @@ function gameLoop(timestamp) {
             damageTexts.forEach(d => d.update(dt)); 
             particles.forEach(p => p.update(dt));
             
-            enemies = enemies.filter(e => e.hp > 0); 
+            enemies = enemies.filter(e => e.hp > 0); verdictOrbs = verdictOrbs.filter(o => o.life > 0); 
             projectiles = projectiles.filter(p => p.life > 0); 
             enemyProjectiles = enemyProjectiles.filter(p => p.life > 0); 
             groundTraps = groundTraps.filter(t => t.life > 0); 
