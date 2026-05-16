@@ -89,7 +89,7 @@
             #statsPanel { 
                 top: 480px; left: 50%; transform: translateX(-50%);
                 width: 70%; max-height: 150px; padding: 15px; font-size: 12px;
-                background: rgba(0,0,0,0.6); border-radius: 10px; border-left: 4px solid #b89947;
+                background: rgba(0,0,0,0.85); border-radius: 10px; border-left: 4px solid #b89947;
             }
 
             #lobbyBottomBar { 
@@ -658,7 +658,9 @@ const I18N = {
 const TUTORIAL_DATA = [
     { icon: "⌨️", titleKey: "tut_p1_t", descKey: "tut_p1_d" },
     { icon: "📈", titleKey: "tut_p2_t", descKey: "tut_p2_d" },
-    { icon: "🎁", titleKey: "tut_p3_t", descKey: "tut_p3_d" }
+    { icon: "🎁", titleKey: "tut_p3_t", descKey: "tut_p3_d" },
+    { icon: "🎵", titleKey: "tut_p4_t", descKey: "tut_p4_d" },
+    { icon: "⚖️", titleKey: "tut_p5_t", descKey: "tut_p5_d" }
 ];
 let currentTutPage = 0;
 
@@ -2929,7 +2931,7 @@ window.updateVerdictUI = function() {
         ui.id = 'verdictUI';
         // 6 o'clock position (above rhythm bar)
         ui.style.position = 'absolute'; 
-        ui.style.bottom = '80px'; 
+        ui.style.bottom = '65px'; 
         ui.style.left = '50%'; 
         ui.style.transform = 'translateX(-50%)';
         ui.style.display = 'flex';
@@ -2943,8 +2945,8 @@ window.updateVerdictUI = function() {
         style.innerHTML = `
             .orb-container {
                 position: relative;
-                width: 80px;
-                height: 80px;
+                width: 68px;
+                height: 68px;
                 border-radius: 50%;
                 background: #111;
                 border: 4px solid #4a5568;
