@@ -175,9 +175,9 @@
 
         #hudLeft { position: absolute; top: 20px; left: 20px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; }
         #hudRight { position: absolute; top: 20px; right: 20px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
-        #hudCenter { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); pointer-events: none; z-index: 5; color: #e0d0a0; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px black; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; border: 1px solid #b89947; }
+        #hudCenter { position: absolute; top: 70px !important; left: 50%; transform: translateX(-50%); pointer-events: none; z-index: 5; color: #e0d0a0; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px black; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; border: 1px solid #b89947; }
 
-        .exp-bar-container { position: absolute; top: 0; left: 0; width: 100%; height: 15px; background: #222; z-index: 6; }
+        .exp-bar-container { position: absolute; top: 50px !important; left: 0; width: 100%; height: 15px; background: #222; z-index: 6; }
         .exp-bar-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 0%; transition: width 0.2s; }
 
         #inventory { position: absolute; top: 150px; left: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
@@ -249,15 +249,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 
     
+    
     <script>
         (function() {
             const path = window.location.pathname.toLowerCase();
             const isAosPath = path.indexOf('/aos') !== -1 || path.indexOf('/sandbox') !== -1 || window.location.search.includes('aos=1');
             const isNative = window.Capacitor && window.Capacitor.getPlatform() !== 'web';
-            
             if (isAosPath || isNative) {
                 document.documentElement.classList.add('aos-build');
-                document.body.classList.add('aos-build');
                 console.log("AOS UI Optimization: ACTIVE");
             }
         })();
@@ -269,7 +268,7 @@
         /* Mobile UI Safety Box: 220px margin from corners for Landscape ergonomic comfort */
         .aos-build #hudLeft { top: 120px !important; left: 150px !important; }
         .aos-build #hudRight { top: 120px !important; right: 150px !important; }
-        .aos-build #hudCenter { top: 150px !important; }
+        .aos-build #hudCenter { top: 180px !important; }
         .aos-build #minimapCanvas { bottom: 150px !important; left: 150px !important; width: 160px !important; height: 160px !important; }
         .aos-build #pauseBtn { bottom: 150px !important; right: 150px !important; }
         .aos-build #mobileDashBtn { bottom: 280px !important; right: 150px !important; width: 100px !important; height: 100px !important; }
@@ -2858,7 +2857,7 @@ function gameLoop(timestamp) {
                 let barWidth = 300;
                 let barHeight = 20;
                 let bx = gameWidth / 2 - barWidth / 2;
-                let by = 80; 
+                let by = 100; 
 
                 ctx.fillStyle = 'rgba(0,0,0,0.6)';
                 ctx.strokeStyle = '#b89947';
