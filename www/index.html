@@ -68,7 +68,7 @@
             }
             #inventory { top: 320px; left: var(--m-buffer); }
             #statsPanel { top: 300px; right: var(--m-buffer); }
-            #lobbyBottomBar { bottom: 220px; flex-direction: row; }
+            #lobbyBottomBar { bottom: 150px; flex-direction: row; }
             #systemNoticeList { top: 450px; right: var(--m-buffer); }
             #btnSkip { bottom: 200px; right: var(--m-buffer); padding: 25px 50px; font-size: 1.5rem; }
         }
@@ -654,7 +654,7 @@ const I18N = {
         tut_p1_t: "조작법", tut_p1_d: "WASD / 방향키 : 이동<br>SHIFT : 대쉬 (박자에 맞춰!)",
         tut_p2_t: "성장 시스템", tut_p2_d: "스테이지에서 획득한 뱃지로 '능력치 강화' 메뉴에서 영구적인 스탯 업이 가능합니다.",
         tut_p3_t: "가챠 및 무기", tut_p3_d: "가챠를 통해 특수 무기를 해금하세요. 해금된 무기는 게임 중 레벨업 풀에 1.5배 확률로 등장합니다!",
-        tut_p4_t: "리듬 대쉬", tut_p4_d: "화면 하단의 리듬 바가 노란색 중앙에 올 때 대쉬(SHIFT)를 쓰면 쿨타임 없이 연속 대쉬가 가능합니다!",
+        tut_p4_t: "리듬 대쉬", tut_p4_d: "화면 상단의 리듬 바가 노란색 중앙에 올 때 대쉬(SHIFT)를 쓰면 일시적으로 추가 대미지가 발생합니다!",
         tut_p5_t: "심판의 룰렛", tut_p5_d: "몬스터 50마리를 처치하면 게이지가 찹니다. 스페이스바를 눌러 버프(+5%)를 획득하세요. 같은 종류 3개가 모이면 강력한 시너지(JACKPOT 등)가 발동합니다!",
         orb_get: "⚖️ 심판의 구슬 획득!", orb_fury: "분노의 심판 (공격력)", orb_life: "생명의 심판 (체력)", orb_wind: "신속의 심판 (이동속도)",
         syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)"
@@ -698,7 +698,7 @@ const I18N = {
         tut_p1_t: "Controls", tut_p1_d: "WASD / Arrows : Move<br>SHIFT : Dash (Timed to beat!)",
         tut_p2_t: "Growth", tut_p2_d: "Badges from stages can be used in the 'Upgrade' menu for permanent stat boosts.",
         tut_p3_t: "Gacha", tut_p3_d: "Unlock special weapons via Gacha. Unlocked weapons appear in the level-up pool with 1.5x weight!",
-        tut_p4_t: "Rhythm Dash", tut_p4_d: "Dash (SHIFT) when the rhythm bar reaches the yellow center to dash continuously without cooldown!",
+        tut_p4_t: "Rhythm Dash", tut_p4_d: "Dash (SHIFT) when the rhythm bar reaches the yellow center to deal extra damage temporarily!",
         tut_p5_t: "Verdict Roulette", tut_p5_d: "Defeat 50 monsters to fill the gauge. Press Space to gain a random buff (+5%). Get 3 of a kind for a massive synergy (JACKPOT)!",
         orb_get: "⚖️ Verdict Orb Acquired!", orb_fury: "Verdict of Fury (ATK)", orb_life: "Verdict of Life (HP)", orb_wind: "Verdict of Wind (SPD)",
         syn_triple: "Transcendent Synergy (25%)", syn_double: "Resonance Synergy (15%)", syn_mix: "Harmonious Verdict (10%)"
@@ -2988,7 +2988,7 @@ window.updateVerdictUI = function() {
         ui.style.flexDirection = 'column';
         ui.style.alignItems = 'center';
         ui.style.zIndex = '50'; 
-        ui.style.pointerEvents = 'none'; ui.style.opacity = '0.75'; ui.style.opacity = '0.75';
+        ui.style.pointerEvents = 'none'; ui.style.opacity = '0.5'; ui.style.opacity = '0.75';
         
         // CSS for the orb
         const style = document.createElement('style');
