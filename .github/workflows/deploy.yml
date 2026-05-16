@@ -31,7 +31,7 @@ jobs:
           mkdir -p deploy_out/aos
           mkdir -p deploy_out/aos-archive
 
-          # Ensure all remote branches are available locally
+          # Ensure all remote branches are available locally for export
           git fetch origin main:main || true
           git fetch origin sandbox:sandbox || true
           git fetch origin aos-live:aos-live || true
