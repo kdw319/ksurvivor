@@ -137,8 +137,8 @@
 
         #lobbyTopBar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-start; z-index: 25; pointer-events: none; }
         .currency-badge { background: rgba(0,0,0,0.6); border: 2px solid #ffb142; padding: 10px 20px; border-radius: 20px; font-size: 18px; color: white; font-weight: bold; display: flex; align-items: center; gap: 10px; pointer-events: auto; }
-        #lobbyBottomBar { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
-        .lobby-title { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
+        #lobbyBottomBar { position: absolute; bottom: 10px !important; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
+        .lobby-title { position: absolute; top: 30px !important; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
         #gameCanvas { display: block; width: 100%; height: 100%; touch-action: none; transition: filter 0.1s; }
 
         .overlay {
@@ -170,8 +170,8 @@
 
         #lobbyTopBar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-start; z-index: 25; pointer-events: none; }
         .currency-badge { background: rgba(0,0,0,0.6); border: 2px solid #ffb142; padding: 10px 20px; border-radius: 20px; font-size: 18px; color: white; font-weight: bold; display: flex; align-items: center; gap: 10px; }
-        #lobbyBottomBar { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
-        .lobby-title { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
+        #lobbyBottomBar { position: absolute; bottom: 10px !important; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
+        .lobby-title { position: absolute; top: 30px !important; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
 
         #hudLeft { position: absolute; top: 20px; left: 20px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; }
         #hudRight { position: absolute; top: 20px; right: 20px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
@@ -296,8 +296,30 @@
         }
     </style>
 
+
+    <style>
+        /* AOS Build Safety Zone (220px corner buffer) */
+        .aos-build #hudLeft { top: 120px !important; left: 150px !important; }
+        .aos-build #hudRight { top: 120px !important; right: 150px !important; }
+        .aos-build #hudCenter { top: 120px !important; }
+        .aos-build #minimapCanvas { bottom: 150px !important; left: 150px !important; }
+        .aos-build #pauseBtn { bottom: 150px !important; right: 150px !important; }
+        .aos-build #mobileDashBtn { bottom: 280px !important; right: 150px !important; }
+        .aos-build #inventory { top: 320px !important; left: 150px !important; }
+        .aos-build #statsPanel { top: 300px !important; right: 150px !important; }
+        .aos-build #verdictUI { bottom: 130px !important; opacity: 1 !important; }
+        
+        /* Lobby specific safety box */
+        .aos-build #lobbyTopBar { top: 120px !important; padding: 0 120px !important; }
+        .aos-build #lobbyBottomBar { bottom: 250px !important; gap: 30px !important; }
+        .aos-build .lobby-title { top: 220px !important; }
+
+        /* Hide Fullscreen on AOS */
+        .aos-build #fullscreenBtn { display: none !important; }
+    </style>
 </head>
 <body>
+    <button id="fullscreenBtn" onclick="window.toggleFullscreen()" class="btn" style="position:fixed; top:20px; right:20px; padding:10px; font-size:20px; z-index:10000; width:50px; height:50px; background:rgba(0,0,0,0.6); color:white; border:2px solid #b89947; border-radius:50%; pointer-events:auto; display:flex; justify-content:center; align-items:center;">⛶</button>
     <div class="portrait-warning">PLEASE ROTATE TO LANDSCAPE</div>
 
 <div id="gameContainer">
@@ -2889,7 +2911,16 @@ function gameLoop(timestamp) {
 // ==========================================
 // 10. 명시적 전역 API 내보내기
 // ==========================================
-Object.assign(window, { gameState, 
+
+window.toggleFullscreen = function() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => { console.error(err); });
+    } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+    }
+};
+
+Object.assign(window, { toggleFullscreen,  gameState, 
     toggleLanguage, changeVolume, toggleGameSpeed, startStory, playStoryStep,
     nextStoryStep, skipStory, togglePause, returnToLobby, startGame, triggerStageClear,
     nextStage, resetStage, triggerLevelUp, openGacha, closeGacha, rollGacha,
@@ -2981,7 +3012,7 @@ window.updateVerdictUI = function() {
         ui.id = 'verdictUI';
         // 6 o'clock position (above rhythm bar)
         ui.style.position = 'absolute'; 
-        ui.style.bottom = '15px'; 
+        ui.style.bottom = '55px'; 
         ui.style.left = '50%'; 
         ui.style.transform = 'translateX(-50%)';
         ui.style.display = 'flex';
@@ -2993,7 +3024,7 @@ window.updateVerdictUI = function() {
         // CSS for the orb
         const style = document.createElement('style');
         style.innerHTML = `
-            .orb-container {
+            .orb-container { opacity: 0.3 !important; 
                 position: relative;
                 width: 68px;
                 height: 68px;
@@ -3032,7 +3063,7 @@ window.updateVerdictUI = function() {
                 text-shadow: 1px 1px 2px black, -1px -1px 2px black;
                 font-family: 'Press Start 2P', cursive;
             }
-            .roulette-slots {
+            .roulette-slots { opacity: 0.3 !important; 
                 display: flex;
                 gap: 5px;
                 margin-top: 10px;
