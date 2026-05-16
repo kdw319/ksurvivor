@@ -248,16 +248,21 @@
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 
+    
     <script>
         (function() {
-            const isAosPath = window.location.pathname.includes('/aos/') || window.location.pathname.includes('/sandbox/');
+            const path = window.location.pathname.toLowerCase();
+            const isAosPath = path.indexOf('/aos') !== -1 || path.indexOf('/sandbox') !== -1 || window.location.search.includes('aos=1');
             const isNative = window.Capacitor && window.Capacitor.getPlatform() !== 'web';
+            
             if (isAosPath || isNative) {
                 document.documentElement.classList.add('aos-build');
+                document.body.classList.add('aos-build');
                 console.log("AOS UI Optimization: ACTIVE");
             }
         })();
     </script>
+
 
 
     <style>
@@ -2983,7 +2988,7 @@ window.updateVerdictUI = function() {
         ui.style.flexDirection = 'column';
         ui.style.alignItems = 'center';
         ui.style.zIndex = '50'; 
-        ui.style.pointerEvents = 'none'; ui.style.opacity = '0.75';
+        ui.style.pointerEvents = 'none'; ui.style.opacity = '0.75'; ui.style.opacity = '0.75';
         
         // CSS for the orb
         const style = document.createElement('style');
