@@ -1475,7 +1475,7 @@ function nextStage() {
 }
 
 function resetStage(fullReset = false) {
-    stageTime = 0; enemies = []; verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0; orbStacks = { red: 0, yellow: 0, green: 0 }; orbPocket = null; updateOrbUI(); projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = [];
+    stageTime = 0; enemies = []; verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0; orbStacks = { red: 0, yellow: 0, green: 0 }; orbPocket = null; if(typeof updateOrbUI !== "undefined") updateOrbUI(); projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = [];
     verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0;
     isStageCleared = false;
     hasSpawnedMidBoss = false;
@@ -2188,12 +2188,7 @@ class Player {
     playAnim(stateName) { this.animState = stateName; this.animTimer = 0.2; }
     recalculateStats() {
         this.stats.damageMult = 1.0 + (permanentStats.damage * 0.05); this.stats.cooldownMult = 1.0 - (permanentStats.cooldown * 0.02); this.stats.speedMult = 1.0 + (permanentStats.speed * 0.05);
-        
-        if (orbStacks) {
-            this.stats.damageMult += (orbStacks.red * 0.05);
-            this.stats.maxHp += (orbStacks.yellow * 0.05 * this.baseMaxHp);
-            this.stats.speedMult += (orbStacks.green * 0.05);
-        }
+        if(typeof orbStacks !== "undefined" && orbStacks) { this.stats.damageMult += (orbStacks.red * 0.05); this.stats.maxHp += (orbStacks.yellow * 0.05 * this.baseMaxHp); this.stats.speedMult += (orbStacks.green * 0.05); }
         this.weapons.forEach(w => { let bonus = w.settings.statBonus; if(bonus && bonus.type !== 'none') { this.stats[bonus.type] += (bonus.value * w.level); } });
         this.stats.cooldownMult = Math.max(0.2, this.stats.cooldownMult); updateHUD(); 
     }
@@ -2475,10 +2470,11 @@ function updateOrbUI() {
         ui.style.display = 'flex'; ui.style.flexDirection = 'column'; ui.style.gap = '5px';
         ui.style.fontSize = '20px'; ui.style.zIndex = '1000'; ui.style.color = 'white';
         ui.style.background = 'rgba(0,0,0,0.5)'; ui.style.padding = '10px'; ui.style.borderRadius = '8px';
+        ui.style.pointerEvents = 'none';
         document.body.appendChild(ui);
     }
     const pocket = orbPocket ? MARBLE_TYPES.find(m => m.type === orbPocket).icon : 'None';
-    ui.innerHTML = `<div>Pocket: ${pocket}</div><div>Stacks: R:${orbStacks.red} Y:${orbStacks.yellow} G:${orbStacks.green}</div>`;
+    ui.innerHTML = '<div>Pocket: ' + pocket + '</div><div>Stacks: R:' + orbStacks.red + ' Y:' + orbStacks.yellow + ' G:' + orbStacks.green + '</div>';
 }
 function useOrb() {
     if (!orbPocket) return;
