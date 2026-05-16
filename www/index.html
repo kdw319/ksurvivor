@@ -2927,7 +2927,7 @@ window.updateVerdictUI = function() {
     if (!ui) {
         ui = document.createElement('div');
         ui.id = 'verdictUI';
-        // 6 o'clock position
+        // 6 o'clock position (above rhythm bar)
         ui.style.position = 'absolute'; 
         ui.style.bottom = '80px'; 
         ui.style.left = '50%'; 
@@ -2953,6 +2953,7 @@ window.updateVerdictUI = function() {
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                transition: box-shadow 0.3s ease, border-color 0.3s ease;
             }
             .orb-liquid {
                 position: absolute;
@@ -2997,47 +2998,69 @@ window.updateVerdictUI = function() {
                 font-weight: bold;
                 box-shadow: inset 0 0 5px black;
                 font-family: 'Press Start 2P', cursive;
+                transition: all 0.3s ease;
             }
             .r-slot[data-type="red"] { background: radial-gradient(circle, #ff4757, #c0392b); border-color: #ff4757; color: white;}
             .r-slot[data-type="yellow"] { background: radial-gradient(circle, #f1c40f, #f39c12); border-color: #f1c40f; color: black; }
             .r-slot[data-type="green"] { background: radial-gradient(circle, #2ecc71, #27ae60); border-color: #2ecc71; color: white; }
         `;
         document.head.appendChild(style);
+        
+        // Initial HTML structure
+        ui.innerHTML = `
+            <div class="orb-container" id="vo-container">
+                <div class="orb-liquid" id="vo-liquid"></div>
+                <div class="orb-glass"></div>
+                <div class="orb-text" id="vo-text">0</div>
+            </div>
+            <div class="roulette-slots">
+                <div class="r-slot" id="vo-slot-0"></div>
+                <div class="r-slot" id="vo-slot-1"></div>
+                <div class="r-slot" id="vo-slot-2"></div>
+            </div>
+        `;
         document.body.appendChild(ui);
     }
     
-    const fillPercent = (window.verdictGauge / window.MAX_GAUGE) * 100;
+    // Update existing DOM elements instead of recreating them
+    const fillPercent = Math.min((window.verdictGauge / window.MAX_GAUGE) * 100, 100);
     const isFull = window.verdictGauge >= window.MAX_GAUGE;
     
-    let liquidColor = isFull ? 'linear-gradient(to top, #f1c40f, #f39c12)' : 'linear-gradient(to top, #9c88ff, #00a8ff)';
-    let orbText = isFull ? 'MAX' : `${window.verdictGauge}`;
-    let orbGlow = isFull ? '0 0 20px #f1c40f, inset 0 0 20px #f1c40f' : '0 0 15px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,0,0,0.8)';
-    let borderColor = isFull ? '#f1c40f' : '#4a5568';
+    let container = document.getElementById('vo-container');
+    let liquid = document.getElementById('vo-liquid');
+    let text = document.getElementById('vo-text');
     
-    let slotsHtml = '';
-    for(let i=0; i<3; i++) {
-        let type = window.verdictInventory[i];
-        if (type) {
-            let initial = type === 'red' ? 'A' : (type === 'yellow' ? 'H' : 'S'); // ATK, HP, SPD
-            slotsHtml += `<div class="r-slot" data-type="${type}">${initial}</div>`;
+    if (liquid && container && text) {
+        liquid.style.height = fillPercent + '%';
+        if (isFull) {
+            liquid.style.background = 'linear-gradient(to top, #f1c40f, #f39c12)';
+            container.style.boxShadow = '0 0 20px #f1c40f, inset 0 0 20px #f1c40f';
+            container.style.borderColor = '#f1c40f';
+            text.innerText = 'SPACE';
         } else {
-            slotsHtml += `<div class="r-slot"></div>`;
+            liquid.style.background = 'linear-gradient(to top, #9c88ff, #00a8ff)';
+            container.style.boxShadow = '0 0 15px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,0,0,0.8)';
+            container.style.borderColor = '#4a5568';
+            text.innerText = window.verdictGauge;
         }
     }
     
-    ui.innerHTML = `
-        <div class="orb-container" style="box-shadow: ${orbGlow}; border-color: ${borderColor};">
-            <div class="orb-liquid" style="height: ${fillPercent}%; background: ${liquidColor};"></div>
-            <div class="orb-glass"></div>
-            <div class="orb-text">${orbText}</div>
-        </div>
-        <div class="roulette-slots">
-            ${slotsHtml}
-        </div>
-    `;
+    for(let i=0; i<3; i++) {
+        let slot = document.getElementById('vo-slot-' + i);
+        if (slot) {
+            let type = window.verdictInventory[i];
+            if (type) {
+                slot.setAttribute('data-type', type);
+                slot.innerText = type === 'red' ? 'A' : (type === 'yellow' ? 'H' : 'S');
+            } else {
+                slot.removeAttribute('data-type');
+                slot.innerText = '';
+            }
+        }
+    }
+    
     ui.style.display = 'flex'; // Ensure it is visible
 };
-
 // Start update loop when UI exists
 setInterval(() => {
     if (window.gameState === 'playing' && window.updateVerdictUI) {
