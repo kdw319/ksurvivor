@@ -2502,9 +2502,12 @@ class FieldItem {
 // ==========================================
 // 8. Main Game Loop
 // ==========================================
-window.addEventListener('keydown', e => { 
-    keys[e.key.toLowerCase()] = true; 
-    if(e.key === 'Escape' && gameState === 'playing') togglePause(); 
+window.addEventListener('keydown', e => {
+    keys[e.key.toLowerCase()] = true;
+    if(e.key === ' ' && gameState === 'playing') {
+        if(window.useVerdictRoulette) window.useVerdictRoulette();
+    }
+    if(e.key === 'Escape' && gameState === 'playing') togglePause();
 });
 
 window.addEventListener('keyup', e => { 
@@ -2729,7 +2732,9 @@ function gameLoop(timestamp) {
             damageTexts = damageTexts.filter(d => d.life > 0); 
             particles = particles.filter(p => p.life > 0);
             
+            
             if (frameCount % 5 === 0) drawMinimap();
+            if (window.updateVerdictUI) window.updateVerdictUI();
         }
 
         if(gameState !== 'lobby' && gameState !== 'story') {
