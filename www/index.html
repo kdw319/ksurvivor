@@ -55,7 +55,7 @@
                 right: var(--m-buffer); 
             }
             #pauseBtn { 
-                bottom: 150px; 
+                bottom: 20px; 
                 right: var(--m-buffer); 
             }
             #mobileDashBtn { 
@@ -63,12 +63,12 @@
                 right: var(--m-buffer); 
             }
             #minimapCanvas { 
-                bottom: 150px; 
+                bottom: 20px; 
                 left: var(--m-buffer); 
             }
             #inventory { top: 320px; left: var(--m-buffer); }
             #statsPanel { top: 300px; right: var(--m-buffer); }
-            #lobbyBottomBar { bottom: 50px; flex-direction: row; }
+            #lobbyBottomBar { bottom: 20px; flex-direction: row; }
             #systemNoticeList { top: 450px; right: var(--m-buffer); }
             #btnSkip { bottom: 200px; right: var(--m-buffer); padding: 25px 50px; font-size: 1.5rem; }
         }
@@ -89,7 +89,7 @@
             #statsPanel { 
                 top: 480px; left: 50%; transform: translateX(-50%);
                 width: 70%; max-height: 150px; padding: 15px; font-size: 12px;
-                background: rgba(0,0,0,0.85); border-radius: 10px; border-left: 4px solid #b89947;
+                background: rgba(0,0,0,0.4); border-radius: 10px; border-left: 4px solid #b89947;
             }
 
             #lobbyBottomBar { 
@@ -135,10 +135,7 @@
         .btn:active { transform: scale(0.95); }
         .btn:disabled { background: #555; color: #888; cursor: not-allowed; transform: none; border-color: #444; }
 
-        #lobbyTopBar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-start; z-index: 25; pointer-events: none; }
-        .currency-badge { background: rgba(0,0,0,0.6); border: 2px solid #ffb142; padding: 10px 20px; border-radius: 20px; font-size: 18px; color: white; font-weight: bold; display: flex; align-items: center; gap: 10px; pointer-events: auto; }
-        #lobbyBottomBar { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
-        .lobby-title { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
+        
         #gameCanvas { display: block; width: 100%; height: 100%; touch-action: none; transition: filter 0.1s; }
 
         .overlay {
@@ -170,7 +167,7 @@
 
         #lobbyTopBar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-start; z-index: 25; pointer-events: none; }
         .currency-badge { background: rgba(0,0,0,0.6); border: 2px solid #ffb142; padding: 10px 20px; border-radius: 20px; font-size: 18px; color: white; font-weight: bold; display: flex; align-items: center; gap: 10px; }
-        #lobbyBottomBar { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
+        #lobbyBottomBar { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
         .lobby-title { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
 
         #hudLeft { position: absolute; top: 20px; left: 20px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; }
@@ -270,8 +267,8 @@
         .aos-build #hudLeft { top: 120px !important; left: 150px !important; }
         .aos-build #hudRight { top: 120px !important; right: 150px !important; }
         .aos-build #hudCenter { top: 150px !important; }
-        .aos-build #minimapCanvas { bottom: 150px !important; left: 150px !important; width: 160px !important; height: 160px !important; }
-        .aos-build #pauseBtn { bottom: 150px !important; right: 150px !important; }
+        .aos-build #minimapCanvas { bottom: 20px !important; left: 150px !important; width: 160px !important; height: 160px !important; }
+        .aos-build #pauseBtn { bottom: 20px !important; right: 150px !important; }
         .aos-build #mobileDashBtn { bottom: 280px !important; right: 150px !important; width: 100px !important; height: 100px !important; }
         .aos-build #inventory { top: 320px !important; left: 150px !important; }
         .aos-build #statsPanel { top: 300px !important; right: 150px !important; }
@@ -339,6 +336,7 @@
                     <span style="font-size:14px;">🔊</span>
                     <input type="range" id="lobbyVol" min="0" max="1" step="0.05" value="0.5" onchange="window.changeVolume(this.value)" oninput="window.changeVolume(this.value)" style="width: 80px;">
                 </div>
+                <button id="fullscreenBtn" onclick="window.toggleFullscreen()" class="btn" style="padding: 10px; font-size: 14px; margin: 0; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid #555; border-radius: 5px;">⛶</button>
                 <button id="langBtn" class="btn" style="padding: 10px 20px; font-size: 14px; margin: 0;" onclick="window.toggleLanguage()">🌐 KO</button>
             </div>
             <button id="tutBtn" class="btn" style="padding: 15px 30px; font-size: 24px; margin: 0; background: #2d3436; color: #fff; border: 2px solid #636e72; border-radius: 40px;" onclick="window.openTutorial()">❓ TUTORIAL</button>
@@ -2889,7 +2887,20 @@ function gameLoop(timestamp) {
 // ==========================================
 // 10. 명시적 전역 API 내보내기
 // ==========================================
-Object.assign(window, { gameState, 
+
+window.toggleFullscreen = function() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+        });
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+};
+
+Object.assign(window, { toggleFullscreen,  gameState, 
     toggleLanguage, changeVolume, toggleGameSpeed, startStory, playStoryStep,
     nextStoryStep, skipStory, togglePause, returnToLobby, startGame, triggerStageClear,
     nextStage, resetStage, triggerLevelUp, openGacha, closeGacha, rollGacha,
@@ -2981,14 +2992,14 @@ window.updateVerdictUI = function() {
         ui.id = 'verdictUI';
         // 6 o'clock position (above rhythm bar)
         ui.style.position = 'absolute'; 
-        ui.style.bottom = '15px'; 
+        ui.style.bottom = '10px'; 
         ui.style.left = '50%'; 
         ui.style.transform = 'translateX(-50%)';
         ui.style.display = 'flex';
         ui.style.flexDirection = 'column';
         ui.style.alignItems = 'center';
         ui.style.zIndex = '50'; 
-        ui.style.pointerEvents = 'none'; ui.style.opacity = '0.3';
+        ui.style.pointerEvents = 'none'; ui.style.opacity = '0.3'; // Set to 0.3
         
         // CSS for the orb
         const style = document.createElement('style');
@@ -2998,7 +3009,7 @@ window.updateVerdictUI = function() {
                 width: 68px;
                 height: 68px;
                 border-radius: 50%;
-                background: #111;
+                background: rgba(17,17,17,0.4);
                 border: 4px solid #4a5568;
                 box-shadow: 0 0 15px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,0,0,0.8);
                 overflow: hidden;
