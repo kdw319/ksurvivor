@@ -6,6 +6,7 @@ on:
       - main
       - sandbox
       - aos-live
+      - aos-archive
 
 permissions:
   contents: read
@@ -15,8 +16,8 @@ permissions:
 jobs:
   deploy:
     environment:
-      name: ${{ github.ref == 'refs/heads/main' && 'github-pages' || (github.ref == 'refs/heads/aos-live' && 'AOS-Live' || 'Sandbox-Env') }}
-      url: ${{ steps.deployment.outputs.page_url }}${{ github.ref == 'refs/heads/sandbox' && 'sandbox/' || (github.ref == 'refs/heads/aos-live' && 'aos/' || '') }}
+      name: ${{ github.ref == 'refs/heads/main' && 'github-pages' || (github.ref == 'refs/heads/aos-live' && 'AOS-Live' || (github.ref == 'refs/heads/aos-archive' && 'AOS-Archive' || 'Sandbox-Env')) }}
+      url: ${{ steps.deployment.outputs.page_url }}${{ github.ref == 'refs/heads/sandbox' && 'sandbox/' || (github.ref == 'refs/heads/aos-live' && 'aos/' || (github.ref == 'refs/heads/aos-archive' && 'aos-archive/' || '')) }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,6 +29,7 @@ jobs:
         run: |
           mkdir -p deploy_out/sandbox
           mkdir -p deploy_out/aos
+          mkdir -p deploy_out/aos-archive
           
           # 1. Export Main to root
           git checkout main
@@ -40,6 +42,10 @@ jobs:
           # 3. Export AOS-Live to /aos
           git checkout aos-live
           cp -a www/. deploy_out/aos/
+
+          # 4. Export AOS-Archive to /aos-archive
+          git checkout aos-archive
+          cp -a www/. deploy_out/aos-archive/
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
