@@ -68,7 +68,7 @@
             }
             #inventory { top: 320px; left: var(--m-buffer); }
             #statsPanel { top: 300px; right: var(--m-buffer); }
-            #lobbyBottomBar { bottom: 150px; flex-direction: row; }
+            #lobbyBottomBar { bottom: 50px; flex-direction: row; }
             #systemNoticeList { top: 450px; right: var(--m-buffer); }
             #btnSkip { bottom: 200px; right: var(--m-buffer); padding: 25px 50px; font-size: 1.5rem; }
         }
@@ -138,7 +138,7 @@
         #lobbyTopBar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-start; z-index: 25; pointer-events: none; }
         .currency-badge { background: rgba(0,0,0,0.6); border: 2px solid #ffb142; padding: 10px 20px; border-radius: 20px; font-size: 18px; color: white; font-weight: bold; display: flex; align-items: center; gap: 10px; pointer-events: auto; }
         #lobbyBottomBar { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
-        .lobby-title { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
+        .lobby-title { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
         #gameCanvas { display: block; width: 100%; height: 100%; touch-action: none; transition: filter 0.1s; }
 
         .overlay {
@@ -171,7 +171,7 @@
         #lobbyTopBar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: flex-start; z-index: 25; pointer-events: none; }
         .currency-badge { background: rgba(0,0,0,0.6); border: 2px solid #ffb142; padding: 10px 20px; border-radius: 20px; font-size: 18px; color: white; font-weight: bold; display: flex; align-items: center; gap: 10px; }
         #lobbyBottomBar { position: absolute; bottom: 40px; width: 100%; display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; z-index: 25; }
-        .lobby-title { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
+        .lobby-title { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 25; pointer-events: none; }
 
         #hudLeft { position: absolute; top: 20px; left: 20px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; }
         #hudRight { position: absolute; top: 20px; right: 20px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
@@ -2988,7 +2988,7 @@ window.updateVerdictUI = function() {
         ui.style.flexDirection = 'column';
         ui.style.alignItems = 'center';
         ui.style.zIndex = '50'; 
-        ui.style.pointerEvents = 'none'; ui.style.opacity = '0.5';
+        ui.style.pointerEvents = 'none'; ui.style.opacity = '0.3';
         
         // CSS for the orb
         const style = document.createElement('style');
