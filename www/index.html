@@ -270,7 +270,7 @@
         .aos-build #mobileDashBtn { bottom: 280px !important; right: 150px !important; width: 100px !important; height: 100px !important; }
         .aos-build #inventory { top: 320px !important; left: 150px !important; }
         .aos-build #statsPanel { top: 300px !important; right: 150px !important; }
-        .aos-build #verdictUI { bottom: 130px !important; } /* Push Verdict UI up slightly for safety */
+        .aos-build #verdictUI { bottom: 130px !important; opacity: 1 !important; } /* Push Verdict UI up slightly for safety */
         
         /* Lobby specific safety box */
         .aos-build #lobbyTopBar { top: 120px !important; padding: 0 120px !important; }
@@ -2976,14 +2976,14 @@ window.updateVerdictUI = function() {
         ui.id = 'verdictUI';
         // 6 o'clock position (above rhythm bar)
         ui.style.position = 'absolute'; 
-        ui.style.bottom = '65px'; 
+        ui.style.bottom = '15px'; 
         ui.style.left = '50%'; 
         ui.style.transform = 'translateX(-50%)';
         ui.style.display = 'flex';
         ui.style.flexDirection = 'column';
         ui.style.alignItems = 'center';
         ui.style.zIndex = '50'; 
-        ui.style.pointerEvents = 'none';
+        ui.style.pointerEvents = 'none'; ui.style.opacity = '0.75';
         
         // CSS for the orb
         const style = document.createElement('style');

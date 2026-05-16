@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - sandbox
+      - aos-live
 
 permissions:
   contents: read
@@ -14,8 +15,8 @@ permissions:
 jobs:
   deploy:
     environment:
-      name: ${{ github.ref == 'refs/heads/main' && 'github-pages' || 'Sandbox-Env' }}
-      url: ${{ steps.deployment.outputs.page_url }}${{ github.ref == 'refs/heads/sandbox' && 'sandbox/' || '' }}
+      name: ${{ github.ref == 'refs/heads/main' && 'github-pages' || (github.ref == 'refs/heads/aos-live' && 'AOS-Live' || 'Sandbox-Env') }}
+      url: ${{ steps.deployment.outputs.page_url }}${{ github.ref == 'refs/heads/sandbox' && 'sandbox/' || (github.ref == 'refs/heads/aos-live' && 'aos/' || '') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,14 +27,19 @@ jobs:
       - name: Prepare Deployment Directory
         run: |
           mkdir -p deploy_out/sandbox
+          mkdir -p deploy_out/aos
           
-          # 1. Export Main to root (Always keep Main up-to-date)
+          # 1. Export Main to root
           git checkout main
           cp -a www/. deploy_out/
           
-          # 2. Export Sandbox to /sandbox (Always keep Sandbox up-to-date)
+          # 2. Export Sandbox to /sandbox
           git checkout sandbox
           cp -a www/. deploy_out/sandbox/
+
+          # 3. Export AOS-Live to /aos
+          git checkout aos-live
+          cp -a www/. deploy_out/aos/
           
       - name: Setup Pages
         uses: actions/configure-pages@v4
