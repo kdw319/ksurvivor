@@ -247,8 +247,53 @@
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #555; border-radius: 3px; border: 1px solid #222; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+    <script>
+        (function() {
+            const isAosPath = window.location.pathname.includes('/aos/') || window.location.pathname.includes('/sandbox/');
+            const isNative = window.Capacitor && window.Capacitor.getPlatform() !== 'web';
+            if (isAosPath || isNative) {
+                document.documentElement.classList.add('aos-build');
+                console.log("AOS UI Optimization: ACTIVE");
+            }
+        })();
+    </script>
+
+
+    <style>
+        /* Mobile UI Safety Box: 220px margin from corners for Landscape ergonomic comfort */
+        .aos-build #hudLeft { top: 120px !important; left: 150px !important; }
+        .aos-build #hudRight { top: 120px !important; right: 150px !important; }
+        .aos-build #hudCenter { top: 150px !important; }
+        .aos-build #minimapCanvas { bottom: 150px !important; left: 150px !important; width: 160px !important; height: 160px !important; }
+        .aos-build #pauseBtn { bottom: 150px !important; right: 150px !important; }
+        .aos-build #mobileDashBtn { bottom: 280px !important; right: 150px !important; width: 100px !important; height: 100px !important; }
+        .aos-build #inventory { top: 320px !important; left: 150px !important; }
+        .aos-build #statsPanel { top: 300px !important; right: 150px !important; }
+        .aos-build #verdictUI { bottom: 130px !important; } /* Push Verdict UI up slightly for safety */
+        
+        /* Lobby specific safety box */
+        .aos-build #lobbyTopBar { top: 120px !important; padding: 0 120px !important; }
+        .aos-build #lobbyBottomBar { bottom: 250px !important; gap: 30px !important; }
+        .aos-build .lobby-title { top: 220px !important; }
+        
+        .aos-build .portrait-warning {
+            display: none;
+        }
+        @media screen and (orientation: portrait) {
+            .aos-build .portrait-warning {
+                display: flex !important;
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: #000; color: #fff; z-index: 9999;
+                justify-content: center; align-items: center; text-align: center;
+                font-family: 'Press Start 2P', cursive; padding: 20px;
+            }
+        }
+    </style>
+
 </head>
 <body>
+    <div class="portrait-warning">PLEASE ROTATE TO LANDSCAPE</div>
 
 <div id="gameContainer">
     <div id="flashOverlay"></div>
@@ -2839,7 +2884,7 @@ function gameLoop(timestamp) {
 // ==========================================
 // 10. 명시적 전역 API 내보내기
 // ==========================================
-Object.assign(window, {
+Object.assign(window, { gameState, 
     toggleLanguage, changeVolume, toggleGameSpeed, startStory, playStoryStep,
     nextStoryStep, skipStory, togglePause, returnToLobby, startGame, triggerStageClear,
     nextStage, resetStage, triggerLevelUp, openGacha, closeGacha, rollGacha,
