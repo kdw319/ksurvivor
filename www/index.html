@@ -2422,13 +2422,11 @@ class Enemy {
         
         if(this.hp <= 0) { 
             
+            
             statsTracking.totalKills++; checkAchievements();
             if (window.verdictGauge < window.MAX_GAUGE) {
                 window.verdictGauge++;
-                if (window.verdictGauge >= window.MAX_GAUGE) {
-                    playSFX('exp'); // Ping sound when full
-                }
-                window.updateVerdictUI();
+                if (window.verdictGauge >= window.MAX_GAUGE) window.playSFX('exp');
             }
             expGems.push(new ExpGem(this.x, this.y, this.exp)); 
             
@@ -2851,5 +2849,109 @@ startStory();
 gameLoopId = requestAnimationFrame(gameLoop);
 
 </script>
+
+<script>
+window.verdictGauge = 0;
+window.verdictInventory = [];
+window.verdictBuffs = { red: 0, yellow: 0, green: 0 };
+window.MAX_GAUGE = 50;
+
+window.useVerdictRoulette = function() {
+    if (window.verdictGauge < window.MAX_GAUGE) {
+        window.showSystemNotice("Not enough power!");
+        return;
+    }
+    
+    window.verdictGauge -= window.MAX_GAUGE;
+    window.playSFX('gacha');
+    
+    const types = ['red', 'yellow', 'green'];
+    const result = types[Math.floor(Math.random() * types.length)];
+    window.verdictInventory.push(result);
+    
+    window.verdictBuffs[result] += 0.05;
+    window.player.recalculateStats();
+    
+    const names = { red: 'ATK', yellow: 'HP', green: 'SPD' };
+    window.showSystemNotice('[' + names[result] + ' +5%]');
+    
+    if (window.verdictInventory.length === 3) {
+        setTimeout(() => window.checkRouletteSynergy(), 1000);
+    }
+    window.updateVerdictUI();
+};
+
+window.checkRouletteSynergy = function() {
+    const inv = window.verdictInventory;
+    const counts = { red: 0, yellow: 0, green: 0 };
+    inv.forEach(i => counts[i]++);
+    
+    window.playSFX('levelup');
+    
+    if (counts.red === 3 || counts.yellow === 3 || counts.green === 3) {
+        const type = inv[0];
+        window.verdictBuffs[type] += 0.15; 
+        window.player.hp = Math.min(window.player.maxHp, window.player.hp + (window.player.maxHp * 0.5)); 
+        window.player.recalculateStats();
+        window.showSystemNotice('JACKPOT! ' + type.toUpperCase() + ' Boost + Heal!');
+    } else if (counts.red === 2 || counts.yellow === 2 || counts.green === 2) {
+        const type = Object.keys(counts).find(k => counts[k] === 2);
+        window.verdictBuffs[type] += 0.05; 
+        window.player.recalculateStats();
+        window.enemies.forEach(e => {
+            let dx = e.x - window.player.x; let dy = e.y - window.player.y; let dist = Math.hypot(dx, dy);
+            if (dist > 0 && dist < 300) { e.x += (dx/dist)*150; e.y += (dy/dist)*150; }
+        });
+        window.showSystemNotice('PAIR! ' + type.toUpperCase() + ' Boost + Knockback!');
+    } else {
+        window.player.stats.cooldownMult *= 0.85; 
+        window.showSystemNotice('STRAIGHT! 15% CDR!');
+    }
+    
+    window.verdictInventory = [];
+    window.updateVerdictUI();
+};
+
+window.updateVerdictUI = function() {
+    let ui = document.getElementById('verdictUI');
+    if (!ui) {
+        ui = document.createElement('div');
+        ui.id = 'verdictUI';
+        ui.style.position = 'absolute'; 
+        // 미니맵 위쪽으로 배치
+        ui.style.bottom = '180px'; 
+        ui.style.left = '20px'; 
+        ui.style.textAlign = 'left'; 
+        ui.style.zIndex = '50'; 
+        ui.style.pointerEvents = 'none';
+        document.body.appendChild(ui);
+    }
+    
+    const gaugeColor = window.verdictGauge >= window.MAX_GAUGE ? '#f1c40f' : '#fff';
+    const gaugeText = window.verdictGauge >= window.MAX_GAUGE ? 'SPACE!' : window.verdictGauge + '/' + window.MAX_GAUGE;
+    
+    const icons = { red: 'R', yellow: 'Y', green: 'G' };
+    const invText = window.verdictInventory.map(i => icons[i]).join(' ');
+    const emptySlots = 3 - window.verdictInventory.length;
+    const slotText = invText + ' _'.repeat(emptySlots);
+    
+    ui.innerHTML = '<div style="font-size: 16px; font-weight: bold; color: ' + gaugeColor + '; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; border: 1px solid ' + gaugeColor + ';">' +
+        'JUDGMENT: ' + gaugeText + ' <br> ' + slotText +
+    '</div>';
+    ui.style.display = 'block'; // Ensure it is visible
+};
+
+// Start update loop when UI exists
+setInterval(() => {
+    if (window.gameState === 'playing' && window.updateVerdictUI) {
+        window.updateVerdictUI();
+    } else {
+        let ui = document.getElementById('verdictUI');
+        if (ui) ui.style.display = 'none'; // Hide in lobby
+    }
+}, 200);
+
+</script>
+
 </body>
 </html>
