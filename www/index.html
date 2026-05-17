@@ -2928,64 +2928,77 @@ window.MAX_GAUGE = 50;
 
 window.useVerdictRoulette = function() {
     if (window.verdictGauge < window.MAX_GAUGE) {
-        window.showSystemNotice(currentLang === 'ko' ? "심판의 힘이 부족합니다!" : "Not enough power!");
+        if (window.showSystemNotice) {
+            window.showSystemNotice(window.currentLang === 'ko' ? '\uC2EC\uD310\uC758 \uD798\uC774 \uBD80\uC871\uD569\uB2C8\uB2E4!' : 'Not enough power!');
+        }
         return;
     }
     
     window.verdictGauge -= window.MAX_GAUGE;
-    window.playSFX('gacha');
+    if (window.playSFX) window.playSFX('gacha');
     
     const types = ['red', 'yellow', 'green'];
     const result = types[Math.floor(Math.random() * types.length)];
+    const namesEN = { red: 'ATK', yellow: 'HP', green: 'SPD' };
     
-    if (window.verdictInventory.length >= 3) {
-        window.verdictInventory.shift();
+    // 🎭 STEP 1: SPOTLIGHT NOTICE
+    const noticeText = window.currentLang === 'ko' ? '[' + namesEN[result] + ' \uAD6C\uC2AC \uD68D\uB4DD!]' : '[' + namesEN[result] + ' ORB GAINED!]';
+    
+    if (window.showSystemNotice) {
+        window.showSystemNotice(noticeText);
     }
-    window.verdictInventory.push(result);
     
-    window.verdictBuffs[result] += 0.05;
-    window.player.recalculateStats();
+    // ⏳ STEP 2: DELAYED SLOT FILLING
+    setTimeout(() => {
+        if (window.verdictInventory.length >= 3) {
+            window.verdictInventory.shift();
+        }
+        window.verdictInventory.push(result);
+        
+        window.verdictBuffs[result] += 0.05;
+        if (window.player) window.player.recalculateStats();
+        
+        window.updateVerdictUI();
+        
+        if (window.verdictInventory.length === 3) {
+            setTimeout(() => { if (window.checkRouletteSynergy) window.checkRouletteSynergy(); }, 500);
+        }
+    }, 800);
     
-    const names = { red: 'ATK', yellow: 'HP', green: 'SPD' };
-    window.showSystemNotice('[' + names[result] + ' +5%]');
-    
-    if (window.verdictInventory.length === 3) {
-        setTimeout(() => window.checkRouletteSynergy(), 500);
-    }
     window.updateVerdictUI();
 };
 
 window.checkRouletteSynergy = function() {
     const inv = window.verdictInventory;
     if (inv.length < 3) return;
-
     const counts = { red: 0, yellow: 0, green: 0 };
     inv.forEach(i => counts[i]++);
     
-    window.playSFX('levelup');
+    if (window.playSFX) window.playSFX('levelup');
     
     if (counts.red === 3 || counts.yellow === 3 || counts.green === 3) {
         const type = inv[0];
-        window.verdictBuffs[type] += 0.15; 
-        window.player.hp = Math.min(window.player.maxHp, window.player.hp + (window.player.maxHp * 0.5)); 
-        window.player.recalculateStats();
-        window.showSystemNotice('🎉 TRIPLE JACKPOT! ' + type.toUpperCase() + ' 폭발! 체력 회복!');
+        window.verdictBuffs[type] += 0.15;
+        if (window.player) {
+            window.player.hp = Math.min(window.player.maxHp, window.player.hp + (window.player.maxHp * 0.5));
+            window.player.recalculateStats();
+        }
+        if (window.showSystemNotice) window.showSystemNotice('\uD83C\uDF89 TRIPLE JACKPOT!');
     } else if (counts.red === 2 || counts.yellow === 2 || counts.green === 2) {
         const type = Object.keys(counts).find(k => counts[k] === 2);
-        window.verdictBuffs[type] += 0.05; 
-        window.player.recalculateStats();
-        window.enemies.forEach(e => {
-            let dx = e.x - window.player.x; let dy = e.y - window.player.y; let dist = Math.hypot(dx, dy);
-            if (dist > 0 && dist < 300) { e.x += (dx/dist)*150; e.y += (dy/dist)*150; }
-        });
-        window.showSystemNotice('✨ ONE PAIR! ' + type.toUpperCase() + ' 추가 버프! 적 넉백!');
+        window.verdictBuffs[type] += 0.05;
+        if (window.player) window.player.recalculateStats();
+        if (window.enemies && window.player) {
+            window.enemies.forEach(e => {
+                let dx = e.x - window.player.x; let dy = e.y - window.player.y; let dist = Math.hypot(dx, dy);
+                if (dist > 0 && dist < 300) { e.x += (dx/dist)*150; e.y += (dy/dist)*150; }
+            });
+        }
+        if (window.showSystemNotice) window.showSystemNotice('\u2728 ONE PAIR!');
     } else {
-        window.player.stats.cooldownMult *= 0.85; 
-        window.showSystemNotice('🃏 STRAIGHT! 모든 스킬 쿨타임 15% 감소!');
+        if (window.player) window.player.stats.cooldownMult *= 0.85;
+        if (window.showSystemNotice) window.showSystemNotice('\uD83C\uDCCF STRAIGHT!');
     }
-    
-    // We DO NOT clear the inventory anymore!
-    window.updateVerdictUI();
 };
 
 window.updateVerdictUI = function() {
@@ -2993,151 +3006,53 @@ window.updateVerdictUI = function() {
     if (!ui) {
         ui = document.createElement('div');
         ui.id = 'verdictUI';
-        // 6 o'clock position (above rhythm bar)
-        ui.style.position = 'absolute'; 
-        ui.style.bottom = '15px'; 
-        ui.style.left = '50%'; 
-        ui.style.transform = 'translateX(-50%)';
-        ui.style.display = 'flex';
-        ui.style.flexDirection = 'column';
-        ui.style.alignItems = 'center';
-        ui.style.zIndex = '50'; 
-        ui.style.pointerEvents = 'none'; ui.style.opacity = '0.75'; ui.style.opacity = '0.75';
+        ui.style.cssText = 'position:absolute; bottom:55px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; z-index:9999; pointer-events:none; opacity: 0.3;';
         
-        // CSS for the orb
         const style = document.createElement('style');
         style.innerHTML = `
-            .orb-container { opacity: 0.3 !important; 
-                position: relative;
-                width: 68px;
-                height: 68px;
-                border-radius: 50%;
-                background: #111;
-                border: 4px solid #4a5568;
-                box-shadow: 0 0 15px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,0,0,0.8);
-                overflow: hidden;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                transition: box-shadow 0.3s ease, border-color 0.3s ease;
-            }
-            .orb-liquid {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                background: linear-gradient(to top, #9c88ff, #00a8ff);
-                transition: height 0.3s ease, background 0.3s ease;
-                z-index: 1;
-            }
-            .orb-glass {
-                position: absolute;
-                top: 0; left: 0; width: 100%; height: 100%;
-                border-radius: 50%;
-                background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 40%);
-                z-index: 3;
-            }
-            .orb-text {
-                position: relative;
-                z-index: 4;
-                font-size: 16px;
-                font-weight: bold;
-                color: white;
-                text-shadow: 1px 1px 2px black, -1px -1px 2px black;
-                font-family: 'Press Start 2P', cursive;
-            }
-            .roulette-slots { opacity: 0.3 !important; 
-                display: flex;
-                gap: 5px;
-                margin-top: 10px;
-            }
-            .r-slot {
-                width: 24px;
-                height: 24px;
-                border-radius: 50%;
-                background: rgba(0,0,0,0.6);
-                border: 2px solid #718093;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                font-size: 12px;
-                font-weight: bold;
-                box-shadow: inset 0 0 5px black;
-                font-family: 'Press Start 2P', cursive;
-                transition: all 0.3s ease;
-            }
-            .r-slot[data-type="red"] { background: radial-gradient(circle, #ff4757, #c0392b); border-color: #ff4757; color: white;}
-            .r-slot[data-type="yellow"] { background: radial-gradient(circle, #f1c40f, #f39c12); border-color: #f1c40f; color: black; }
-            .r-slot[data-type="green"] { background: radial-gradient(circle, #2ecc71, #27ae60); border-color: #2ecc71; color: white; }
+            .orb-container { position: relative; width: 60px; height: 60px; border-radius: 50%; background: rgba(17,17,17,0.8); border: 3px solid #4a5568; box-shadow: 0 0 10px rgba(0,0,0,0.8); overflow: hidden; display: flex; justify-content: center; align-items: center; }
+            .orb-liquid { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, #9c88ff, #00a8ff); transition: height 0.3s ease; z-index: 1; }
+            .orb-glass { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 40%); z-index: 3; }
+            .orb-text { position: relative; z-index: 4; font-size: 14px; font-weight: bold; color: white; text-shadow: 1px 1px 2px black; font-family: 'Press Start 2P', cursive; }
+            .roulette-slots { display: flex; gap: 8px; margin-top: 8px; background: rgba(0,0,0,0.4); padding: 6px 12px; border-radius: 20px; border: 1px solid #555; }
+            .r-slot { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid #444; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+            .r-slot.red { background: #ff4757 !important; border-color: #fff !important; box-shadow: 0 0 8px #ff4757; }
+            .r-slot.yellow { background: #f1c40f !important; border-color: #fff !important; box-shadow: 0 0 8px #f1c40f; }
+            .r-slot.green { background: #2ecc71 !important; border-color: #fff !important; box-shadow: 0 0 8px #2ecc71; }
         `;
         document.head.appendChild(style);
         
-        // Initial HTML structure
-        ui.innerHTML = `
-            <div class="orb-container" id="vo-container">
-                <div class="orb-liquid" id="vo-liquid"></div>
-                <div class="orb-glass"></div>
-                <div class="orb-text" id="vo-text">0</div>
-            </div>
-            <div class="roulette-slots">
-                <div class="r-slot" id="vo-slot-0"></div>
-                <div class="r-slot" id="vo-slot-1"></div>
-                <div class="r-slot" id="vo-slot-2"></div>
-            </div>
-        `;
+        ui.innerHTML = `<div class="orb-container" id="vo-container"><div class="orb-liquid" id="vo-liquid"></div><div class="orb-glass"></div><div class="orb-text" id="vo-text">0</div></div><div class="roulette-slots"><div class="r-slot" id="vo-slot-0"></div><div class="r-slot" id="vo-slot-1"></div><div class="r-slot" id="vo-slot-2"></div></div>`;
         document.body.appendChild(ui);
     }
-    
-    // Update existing DOM elements instead of recreating them
+
     const fillPercent = Math.min((window.verdictGauge / window.MAX_GAUGE) * 100, 100);
     const isFull = window.verdictGauge >= window.MAX_GAUGE;
-    
-    let container = document.getElementById('vo-container');
-    let liquid = document.getElementById('vo-liquid');
-    let text = document.getElementById('vo-text');
-    
-    if (liquid && container && text) {
+    const liquid = document.getElementById('vo-liquid');
+    const text = document.getElementById('vo-text');
+    if (liquid && text) {
         liquid.style.height = fillPercent + '%';
-        if (isFull) {
-            liquid.style.background = 'linear-gradient(to top, #f1c40f, #f39c12)';
-            container.style.boxShadow = '0 0 20px #f1c40f, inset 0 0 20px #f1c40f';
-            container.style.borderColor = '#f1c40f';
-            text.innerText = 'SPACE';
-        } else {
-            liquid.style.background = 'linear-gradient(to top, #9c88ff, #00a8ff)';
-            container.style.boxShadow = '0 0 15px rgba(0,0,0,0.8), inset 0 0 15px rgba(0,0,0,0.8)';
-            container.style.borderColor = '#4a5568';
-            text.innerText = window.verdictGauge;
-        }
+        liquid.style.background = isFull ? 'linear-gradient(to top, #f1c40f, #f39c12)' : 'linear-gradient(to top, #9c88ff, #00a8ff)';
+        text.innerText = isFull ? 'MAX' : window.verdictGauge;
     }
     
     for(let i=0; i<3; i++) {
-        let slot = document.getElementById('vo-slot-' + i);
+        const slot = document.getElementById('vo-slot-' + i);
         if (slot) {
-            let type = window.verdictInventory[i];
+            const type = window.verdictInventory[i];
+            slot.className = 'r-slot'; // reset classes
             if (type) {
-                slot.setAttribute('data-type', type);
-                slot.innerText = type === 'red' ? 'A' : (type === 'yellow' ? 'H' : 'S');
-            } else {
-                slot.removeAttribute('data-type');
-                slot.innerText = '';
+                slot.classList.add(type);
             }
         }
     }
     
-    ui.style.display = 'flex'; // Ensure it is visible
-};
-// Start update loop when UI exists
-setInterval(() => {
-    if (window.gameState === 'playing' && window.updateVerdictUI) {
-        window.updateVerdictUI();
-    } else {
-        let ui = document.getElementById('verdictUI');
-        if (ui) ui.style.display = 'none'; // Hide in lobby
+    if (ui) {
+        ui.style.display = (window.gameState === 'playing' || window.gameState === 'levelup' || window.gameState === 'clear') ? 'flex' : 'none';
     }
-}, 200);
+};
 
+setInterval(() => { if (window.updateVerdictUI) window.updateVerdictUI(); }, 100);
 </script>
-
 </body>
 </html>
