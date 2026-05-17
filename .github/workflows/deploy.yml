@@ -16,7 +16,7 @@ permissions:
 jobs:
   deploy:
     environment:
-      name: ${{ github.ref == 'refs/heads/main' && 'github-pages' || (github.ref == 'refs/heads/aos-live' && 'AOS-Live' || (github.ref == 'refs/heads/aos-archive' && 'AOS-Archive' || 'Sandbox_Env')) }}
+      name: ${{ github.ref == 'refs/heads/main' && 'github-pages' || (github.ref == 'refs/heads/aos-live' && 'AOS-Live' || (github.ref == 'refs/heads/aos-archive' && 'AOS-Archive' || 'Sandbox-Env')) }}
       url: ${{ steps.deployment.outputs.page_url }}${{ github.ref == 'refs/heads/sandbox' && 'sandbox/' || (github.ref == 'refs/heads/aos-live' && 'aos/' || (github.ref == 'refs/heads/aos-archive' && 'aos-archive/' || '')) }}
     runs-on: ubuntu-latest
     steps:
