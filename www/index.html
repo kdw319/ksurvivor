@@ -249,9 +249,15 @@
             const path = window.location.pathname.toLowerCase();
             const isAosPath = path.indexOf('/aos') !== -1 || window.location.search.includes('aos=1');
             const isNative = window.Capacitor && window.Capacitor.getPlatform() !== 'web';
+            const isPC = window.steamAPI && window.steamAPI.isPC;
+
             if (isAosPath || isNative) {
                 document.documentElement.classList.add('aos-build');
                 console.log("AOS UI Optimization: ACTIVE");
+            }
+            if (isPC) {
+                document.documentElement.classList.add('pc-build');
+                console.log("PC Steamworks Optimization: ACTIVE");
             }
         })();
     </script>
@@ -295,6 +301,11 @@
     <style>
         /* Hide Fullscreen on AOS */
         .aos-build #fullscreenBtn { display: none !important; }
+        
+        /* PC Build Optimization */
+        .pc-build #mobileDashBtn,
+        .pc-build #fullscreenBtn,
+        .pc-build .portrait-warning { display: none !important; }
         
         /* AOS Build Safety Zone (Keep these as requested previously) */
         .aos-build #hudLeft { top: 120px !important; left: 150px !important; }
@@ -1178,16 +1189,23 @@ function checkAchievements() {
             if (ach.reqKills && statsTracking.totalKills >= ach.reqKills) unlocked = true;
             if (ach.reqStage && maxStageReached >= ach.reqStage) unlocked = true;
             if (ach.reqBadges && statsTracking.totalBadges >= ach.reqBadges) unlocked = true;
-            
+
             if (unlocked) {
                 achievements[ach.id] = true;
                 showSystemNotice(`🏆 ${currentLang === 'ko' ? '업적 달성' : 'Achievement'}: ${currentLang === 'ko' ? ach.name : ach.enName}`);
                 playSFX('clear');
+
+                // Steam Achievement Bridge
+                if (window.steamAPI) {
+                    const steamAchId = 'NEW_ACHIEVEMENT_' + ach.id.toUpperCase();
+                    window.steamAPI.unlockAchievement(steamAchId).then(success => {
+                        if (success) console.log(`Steam Achievement Unlocked: ${steamAchId}`);
+                    });
+                }
             }
         }
     });
 }
-
 function formatTime(sec) { 
     return `${Math.floor(sec / 60).toString().padStart(2, '0')}:${Math.floor(sec % 60).toString().padStart(2, '0')}`; 
 }
