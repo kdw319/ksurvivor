@@ -27,11 +27,19 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      devTools: false
     }
   });
 
   mainWindow.removeMenu();
+  
+  // 보안: F12 및 Ctrl+Shift+I 차단 (개발자 도구 접근 방지)
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F12' || (input.control && input.shift && input.key.toLowerCase() === 'i')) {
+      event.preventDefault();
+    }
+  });
 
   // Keep 16:9 Aspect Ratio
   mainWindow.setAspectRatio(16 / 9);
