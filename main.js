@@ -21,6 +21,8 @@ function createWindow() {
     height: 720,
     useContentSize: true,
     resizable: true,
+    fullscreen: true,
+    autoHideMenuBar: true,
     backgroundColor: '#000000',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -28,6 +30,8 @@ function createWindow() {
       nodeIntegration: false
     }
   });
+
+  mainWindow.removeMenu();
 
   // Keep 16:9 Aspect Ratio
   mainWindow.setAspectRatio(16 / 9);
