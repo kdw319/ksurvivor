@@ -304,8 +304,24 @@
         
         /* PC Build Optimization */
         .pc-build #mobileDashBtn,
-        .pc-build #fullscreenBtn,
         .pc-build .portrait-warning { display: none !important; }
+        .pc-build #fullscreenBtn { 
+            display: flex !important; 
+            top: 20px !important; 
+            right: 20px !important; 
+            width: 35px !important; 
+            height: 35px !important; 
+            font-size: 16px !important; 
+            background: rgba(0,0,0,0.3) !important; 
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            color: rgba(255,255,255,0.5) !important;
+            transition: all 0.2s;
+        }
+        .pc-build #fullscreenBtn:hover {
+            background: rgba(184, 153, 71, 0.8) !important;
+            border-color: #b89947 !important;
+            color: #fff !important;
+        }
         
         /* AOS Build Safety Zone (Keep these as requested previously) */
         .aos-build #hudLeft { top: 120px !important; left: 150px !important; }
