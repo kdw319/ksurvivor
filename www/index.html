@@ -174,7 +174,24 @@
         .exp-bar-container { position: absolute; top: 0 !important; left: 0; width: 100%; height: 15px; background: #222; z-index: 6; }
         .exp-bar-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 0%; transition: width 0.2s; }
 
-        #inventory { position: absolute; top: 250px; left: 110px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
+        #inventory { 
+            position: absolute; 
+            top: 250px; 
+            left: 110px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            z-index: 5; 
+            max-height: 280px; 
+            overflow-y: auto; 
+            pointer-events: auto; 
+            padding-right: 5px;
+            scrollbar-width: thin;
+            scrollbar-color: #b89947 transparent;
+        }
+        #inventory::-webkit-scrollbar { width: 4px; }
+        #inventory::-webkit-scrollbar-thumb { background: #b89947; border-radius: 4px; }
+
         .inv-item { background: rgba(0,0,0,0.7); border: 1px solid #b89947; padding: 8px 12px; color: white; font-size: 16px; border-radius: 6px; display: flex; align-items: center; gap: 10px; }
         .inv-icon { font-size: 20px; }
 
@@ -664,7 +681,10 @@ const GameSettings = {
         textbook: { name: "교과서", icon: "📘", desc: "주변을 맴도는 마법의 교과서.", damage: 8, cooldown: 0.1, radius: 90, color: '#8b4513', statBonus: { type: 'cooldownMult', value: -0.05, label: '쿨타임' } },
         recorder: { name: "리코더", icon: "🎵", desc: "전방을 향해 넓게 휘두릅니다.", damage: 35, cooldown: 1.2, range: 120, color: '#d4af37', statBonus: { type: 'damageMult', value: 0.10, label: '공격력' } },
         compass: { name: "컴퍼스", icon: "📐", desc: "적을 관통하는 컴퍼스를 투척합니다.", damage: 25, cooldown: 2.0, speed: 250, color: '#a0a0a0', statBonus: { type: 'speedMult', value: 0.05, label: '이동속도' } },
-        gymClothes: { name: "체육복", icon: "👕", desc: "최대 체력이 증가하고 서서히 회복합니다.", maxHpBonus: 20, healTick: 5.0, healAmount: 2, statBonus: { type: 'none', value: 0, label: '' } }
+        gymClothes: { name: "체육복", icon: "👕", desc: "최대 체력이 증가하고 서서히 회복합니다.", maxHpBonus: 20, healTick: 5.0, healAmount: 2, statBonus: { type: 'none', value: 0, label: '' } },
+        eraser: { name: "지우개", icon: "🧽", desc: "주변의 적들을 지워버리듯 밀쳐내며 타격합니다.", damage: 25, cooldown: 1.5, radius: 100, color: '#f5f6fa', statBonus: { type: 'cooldownMult', value: -0.05, label: '쿨타임' } },
+        triangle: { name: "삼각자", icon: "📐", desc: "날카로운 삼각자가 날아가 적을 찌릅니다.", damage: 30, cooldown: 1.2, speed: 450, color: '#badc58', statBonus: { type: 'damageMult', value: 0.05, label: '공격력' } },
+        lunchbox: { name: "도시락", icon: "🍱", desc: "맛있는 도시락 폭탄을 던져 광역 피해를 줍니다.", damage: 50, cooldown: 2.5, speed: 300, color: '#ffbe76', statBonus: { type: 'atkSpdMult', value: 0.05, label: '공격속도' } }
     },
     specialWeapons: {
         magicMic: { name: "마이크", icon: "🎤", desc: "강력한 음파로 적들을 관통합니다.", damage: 45, cooldown: 1.5, speed: 350, color: '#ff9ff3', statBonus: { type: 'damageMult', value: 0.1, label: '공격력' } },
@@ -683,7 +703,8 @@ const GameSettings = {
         caffeineAddict: { id: 'caffeineAddict', name: "☕ 카페인 중독 (책가방+드링크)", icon: "☕", req: ['backpack', 'energyDrink'], desc: "책가방 적중 시 에너지 폭발." },
         idolStage: { id: 'idolStage', name: "✨ 아이돌 무대 (마이크+체육복)", icon: "✨", req: ['magicMic', 'gymClothes'], desc: "마이크 타격 시 일정 확률로 체력 회복 또는 이속 버프." },
         digitalDefense: { id: 'digitalDefense', name: "🛡️ 디지털 방어 (태블릿+학생증)", icon: "🛡️", req: ['tablet', 'studentID'], desc: "학생증 반경 증가 및 타격 시 쿨감 버프." },
-        proGamer: { id: 'proGamer', name: "🎮 프로게이머 (스마트폰+마우스)", icon: "🎮", req: ['smartPhone', 'gamingMouse'], desc: "스마트폰 타격 시 쿨타임 대신 공격속도 비례 데미지, 공격속도 증가." }
+        proGamer: { id: 'proGamer', name: "🎮 프로게이머 (스마트폰+마우스)", icon: "🎮", req: ['smartPhone', 'gamingMouse'], desc: "스마트폰 타격 시 쿨타임 대신 공격속도 비례 데미지, 공격속도 증가." },
+        lunchBreak: { id: 'lunchBreak', name: "🍱 점심시간 (도시락+체육복)", icon: "🍱", req: ['lunchbox', 'gymClothes'], desc: "도시락 폭발 범위가 2배로 증가하고 공격속도가 상승합니다." }
     }
 };
 
@@ -701,6 +722,9 @@ const I18N = {
         w_recorder: { name: "리코더", desc: "전방을 향해 넓게 휘두릅니다.", stat: "공격력" },
         w_compass: { name: "컴퍼스", desc: "적을 관통하는 컴퍼스를 투척합니다.", stat: "이동속도" },
         w_gymClothes: { name: "체육복", desc: "최대 체력이 증가하고 서서히 회복합니다.", stat: "" },
+        w_eraser: { name: "지우개", desc: "주변의 적들을 지워버리듯 밀쳐내며 타격합니다.", stat: "쿨타임" },
+        w_triangle: { name: "삼각자", desc: "날카로운 삼각자가 날아가 적을 찌릅니다.", stat: "공격력" },
+        w_lunchbox: { name: "도시락", desc: "맛있는 도시락 폭탄을 던져 광역 피해를 줍니다.", stat: "공격속도" },
         w_magicMic: { name: "마이크", desc: "강력한 음파로 적들을 관통합니다.", stat: "공격력" },
         w_smartPhone: { name: "스마트폰", desc: "주변에 플래시 폭발을 일으킵니다.", stat: "쿨타임" },
         w_laserPointer: { name: "레이저 포인터", desc: "빛의 속도로 적을 관통합니다.", stat: "공격력" },
@@ -747,6 +771,9 @@ const I18N = {
         w_recorder: { name: "Recorder", desc: "Swings a recorder forward.", stat: "ATK" },
         w_compass: { name: "Compass", desc: "Throws a piercing compass.", stat: "SPD" },
         w_gymClothes: { name: "Gym Clothes", desc: "Increases Max HP and regens over time.", stat: "" },
+        w_eraser: { name: "Eraser", desc: "Strikes and knocks back nearby enemies.", stat: "Cooldown" },
+        w_triangle: { name: "Triangle Ruler", desc: "Fires a sharp triangle ruler at enemies.", stat: "ATK" },
+        w_lunchbox: { name: "Lunchbox", desc: "Throws a lunchbox bomb for AOE damage.", stat: "Atk Speed" },
         w_magicMic: { name: "Mic", desc: "Pierces enemies with soundwaves.", stat: "ATK" },
         w_smartPhone: { name: "Smartphone", desc: "Causes flash explosions around you.", stat: "Cooldown" },
         w_laserPointer: { name: "Laser Pointer", desc: "Pierces enemies at the speed of light.", stat: "ATK" },
@@ -754,12 +781,15 @@ const I18N = {
         w_studentID: { name: "Student ID", desc: "Defends a wide area around the player.", stat: "" },
         w_backpack: { name: "Backpack", desc: "Throws a massive, heavy backpack.", stat: "ATK" },
         w_tablet: { name: "Tablet", desc: "Strikes a wide radius with data waves.", stat: "Cooldown" },
+        w_gamingMouse: { name: "Gaming Mouse", desc: "Boosts attack speed with clicking power.", stat: "Atk Speed" },
         syn_study: { name: "🔥 Study Maniac", desc: "Chalk explodes on hit." },
         syn_music: { name: "🎶 Math & Music", desc: "Fire mini-compasses when swinging." },
         syn_cyber: { name: "⚡ Cyber Warrior", desc: "Smartphone explosion fires lasers in 4 directions." },
         syn_caffeine: { name: "☕ Caffeine Addict", desc: "Backpack explosion on hit." },
         syn_idol: { name: "✨ Idol Stage", desc: "Mic heals or buffs speed on hit." },
         syn_digital: { name: "🛡️ Digital Defense", desc: "Increased ID radius and cooldown buff on hit." },
+        syn_proGamer: { name: "🎮 Pro Gamer", desc: "Increased damage based on attack speed." },
+        syn_lunchBreak: { name: "🍱 Lunch Break", desc: "Lunchbox explosion radius doubled and boosts speed." },
         statDmg: "ATK", statCool: "Cooldown", statSpd: "SPD", progress: "Progress",
         gachaTitle: "Special Weapon Pickup", gachaOwnedText: "Owned Badges: ", gachaUnitText: "", gachaDesc: "Unlock special weapons and add them to the level-up pool. (Unlocked weapons have 1.5x appearance rate!)", gachaRollBtn: "1 Roll (10 Badges)", gachaCloseBtn: "Close", gachaResCloseBtn: "Confirm", gachaNoBadge: "Not enough badges!",
         gachaResTitleNew: "🎉 New Weapon Unlocked! 🎉", gachaResMsgNew: "Will now appear in the level-up pool.", gachaResTitleDup: "Duplicate Weapon", gachaResMsgDup: "5 badges have been refunded for duplicate.",
@@ -970,6 +1000,66 @@ function playSFX(type) {
         gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.1); 
         osc2.start(now); osc2.stop(now + 0.1);
     }
+    else if(type === 'verdictUse') {
+        // 마법 스킬 사용음 (빠른 주파수 상승과 잔향 느낌)
+        osc.type = 'sine'; 
+        osc.frequency.setValueAtTime(400 * pitch, now); 
+        osc.frequency.exponentialRampToValueAtTime(1200 * pitch, now + 0.3);
+        gain.gain.setValueAtTime(0.2, now); 
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); 
+        osc.start(now); osc.stop(now + 0.3);
+
+        const osc2 = audioCtx.createOscillator(); 
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2); gain2.connect(masterGainNode);
+        osc2.type = 'triangle'; 
+        osc2.frequency.setValueAtTime(800 * pitch, now + 0.1); 
+        osc2.frequency.exponentialRampToValueAtTime(2000 * pitch, now + 0.4);
+        gain2.gain.setValueAtTime(0.1, now + 0.1); 
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.4); 
+        osc2.start(now + 0.1); osc2.stop(now + 0.4);
+    }
+    else if(type === 'verdictJackpot') {
+        // 잭팟: 웅장한 아르페지오 (C 메이저 코드)
+        osc.type = 'square'; 
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.setValueAtTime(659.25, now + 0.15); // E5
+        osc.frequency.setValueAtTime(783.99, now + 0.3); // G5
+        osc.frequency.setValueAtTime(1046.50, now + 0.45); // C6
+        gain.gain.setValueAtTime(0.15, now); 
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2); 
+        osc.start(now); osc.stop(now + 1.2);
+
+        const osc2 = audioCtx.createOscillator(); 
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2); gain2.connect(masterGainNode);
+        osc2.type = 'sine'; 
+        osc2.frequency.setValueAtTime(1046.50, now); 
+        osc2.frequency.setValueAtTime(1318.51, now + 0.15); 
+        osc2.frequency.setValueAtTime(2093.00, now + 0.3); 
+        gain2.gain.setValueAtTime(0.15, now); 
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 1.5); 
+        osc2.start(now); osc2.stop(now + 1.5);
+    }
+    else if(type === 'verdictPair') {
+        // 원페어: 청아한 차임벨
+        osc.type = 'sine'; 
+        osc.frequency.setValueAtTime(880, now); // A5
+        osc.frequency.setValueAtTime(1108.73, now + 0.1); // C#6
+        gain.gain.setValueAtTime(0.2, now); 
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6); 
+        osc.start(now); osc.stop(now + 0.6);
+    }
+    else if(type === 'verdictStraight') {
+        // 스트레이트: 신비로운 하행음
+        osc.type = 'triangle'; 
+        osc.frequency.setValueAtTime(1318.51, now); // E6
+        osc.frequency.setValueAtTime(1046.50, now + 0.1); // C6
+        osc.frequency.setValueAtTime(880, now + 0.2); // A5
+        gain.gain.setValueAtTime(0.15, now); 
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8); 
+        osc.start(now); osc.stop(now + 0.8);
+    }
 }
 
 // ==========================================
@@ -1115,17 +1205,20 @@ function giveWeapon(id) {
     if(existing) {
         existing.level++;
     } else {
-        if(['chalk', 'compass', 'magicMic', 'laserPointer', 'backpack'].includes(id)) {
-            player.weapons.push(new ProjectileWeapon(id));
-        }
         else if(['recorder', 'tablet'].includes(id)) {
             player.weapons.push(new RecorderWeapon(id));
         }
         else if(['textbook', 'studentID'].includes(id)) {
             player.weapons.push(new OrbitWeapon(id));
         }
-        else if(['smartPhone', 'energyDrink'].includes(id)) {
+        else if(['smartPhone', 'energyDrink', 'eraser'].includes(id)) {
             player.weapons.push(new SmartPhoneWeapon(id));
+        }
+        else if(['chalk', 'compass', 'magicMic', 'laserPointer', 'backpack', 'triangle', 'lunchbox'].includes(id)) {
+            player.weapons.push(new ProjectileWeapon(id));
+        }
+        else if(['gamingMouse'].includes(id)) {
+             // Passive-only weapons handled by recalculateStats
         }
         else {
             player.weapons.push(new Weapon(id)); 
@@ -3072,7 +3165,7 @@ window.useVerdictRoulette = function() {
     }
     
     window.verdictGauge -= window.MAX_GAUGE;
-    if (window.playSFX) window.playSFX('gacha');
+    if (window.playSFX) window.playSFX('verdictUse');
     
     const types = ['red', 'yellow', 'green'];
     const result = types[Math.floor(Math.random() * types.length)];
@@ -3111,8 +3204,6 @@ window.checkRouletteSynergy = function() {
     const counts = { red: 0, yellow: 0, green: 0 };
     inv.forEach(i => counts[i]++);
     
-    if (window.playSFX) window.playSFX('levelup');
-    
     if (counts.red === 3 || counts.yellow === 3 || counts.green === 3) {
         const type = inv[0];
         window.verdictBuffs[type] += 0.15;
@@ -3120,6 +3211,7 @@ window.checkRouletteSynergy = function() {
             window.player.hp = Math.min(window.player.maxHp, window.player.hp + (window.player.maxHp * 0.5));
             window.player.recalculateStats();
         }
+        if (window.playSFX) window.playSFX('verdictJackpot');
         if (window.showSystemNotice) window.showSystemNotice('\uD83C\uDF89 TRIPLE JACKPOT!');
     } else if (counts.red === 2 || counts.yellow === 2 || counts.green === 2) {
         const type = Object.keys(counts).find(k => counts[k] === 2);
@@ -3131,9 +3223,11 @@ window.checkRouletteSynergy = function() {
                 if (dist > 0 && dist < 300) { e.x += (dx/dist)*150; e.y += (dy/dist)*150; }
             });
         }
+        if (window.playSFX) window.playSFX('verdictPair');
         if (window.showSystemNotice) window.showSystemNotice('\u2728 ONE PAIR!');
     } else {
         if (window.player) window.player.stats.cooldownMult *= 0.85;
+        if (window.playSFX) window.playSFX('verdictStraight');
         if (window.showSystemNotice) window.showSystemNotice('\uD83C\uDCCF STRAIGHT!');
     }
 };
