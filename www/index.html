@@ -1214,30 +1214,29 @@ function giveWeapon(id) {
     let existing = player.weapons.find(w => w.id === id);
     if(existing) {
         existing.level++;
-    } else {
-        else if(['recorder', 'tablet'].includes(id)) {
-            player.weapons.push(new RecorderWeapon(id));
-        }
-        else if(['textbook', 'studentID'].includes(id)) {
-            player.weapons.push(new OrbitWeapon(id));
-        }
-        else if(['smartPhone', 'energyDrink', 'eraser'].includes(id)) {
-            player.weapons.push(new SmartPhoneWeapon(id));
-        }
-        else if(['chalk', 'compass', 'magicMic', 'laserPointer', 'backpack', 'triangle', 'lunchbox'].includes(id)) {
-            player.weapons.push(new ProjectileWeapon(id));
-        }
-        else if(['gamingMouse'].includes(id)) {
-             // Passive-only weapons handled by recalculateStats
-        }
-        else {
-            player.weapons.push(new Weapon(id)); 
-        }
-        
-        if(id === 'gymClothes') { 
-            player.maxHp += GameSettings.weapons.gymClothes.maxHpBonus; 
-            player.hp += GameSettings.weapons.gymClothes.maxHpBonus; 
-        }
+    } 
+    else if(['recorder', 'tablet'].includes(id)) {
+        player.weapons.push(new RecorderWeapon(id));
+    }
+    else if(['textbook', 'studentID'].includes(id)) {
+        player.weapons.push(new OrbitWeapon(id));
+    }
+    else if(['smartPhone', 'energyDrink', 'eraser'].includes(id)) {
+        player.weapons.push(new SmartPhoneWeapon(id));
+    }
+    else if(['chalk', 'compass', 'magicMic', 'laserPointer', 'backpack', 'triangle', 'lunchbox'].includes(id)) {
+        player.weapons.push(new ProjectileWeapon(id));
+    }
+    else if(['gamingMouse'].includes(id)) {
+         // Passive-only weapons handled by recalculateStats
+    }
+    else {
+        player.weapons.push(new Weapon(id)); 
+    }
+    
+    if(!existing && id === 'gymClothes') { 
+        player.maxHp += GameSettings.weapons.gymClothes.maxHpBonus; 
+        player.hp += GameSettings.weapons.gymClothes.maxHpBonus; 
     }
     
     if (player) { 
