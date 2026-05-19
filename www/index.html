@@ -914,7 +914,13 @@ function startBGM() {
     if(!audioCtx) initAudio();
     if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     stopBGM();
-    const bgmFile = (window.gameState === 'playing') ? 'battle_bgm.mp3' : 'lobby_bgm.mp3';
+    
+    let bgmFile = 'lobby_bgm.mp3';
+    if (window.gameState === 'playing') {
+        const stageNum = ((currentStage - 1) % 10) + 1;
+        bgmFile = `battle_bgm_${stageNum}.mp3`;
+    }
+
     currentBgmAudio = new Audio('./assets/bgm/' + bgmFile);
     currentBgmAudio.loop = true;
     currentBgmAudio.volume = masterVolume * 0.55;
@@ -1757,6 +1763,7 @@ function resetStage(fullReset = false) {
     let stageDispUI = document.getElementById('stageDispUI');
     if(stageDispUI) { let lang = I18N[currentLang]; stageDispUI.innerText = `STAGE ${currentStage} : ${lang[theme.id]}`; }
     updateHUD(); if(window.updateVerdictUI) window.updateVerdictUI();
+    startBGM();
 }
 
 function triggerLevelUp() {
