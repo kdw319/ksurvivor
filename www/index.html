@@ -569,7 +569,17 @@ player_idle: "character_idle.webp",
     boss_mid: "bosses/midboss.png",
     boss_10: "bosses/boss_10.png",
     boss_20: "bosses/boss_20.png",
-    boss_30: "bosses/boss_30.png"
+    boss_30: "bosses/boss_30.png",
+    stage1_floor: "stage1_floor.png",
+    stage2_floor: "stage2_floor.png",
+    stage3_floor: "stage3_floor.png",
+    stage4_floor: "stage4_floor.png",
+    stage5_floor: "stage5_floor.png",
+    stage6_floor: "stage6_floor.png",
+    stage7_floor: "stage7_floor.png",
+    stage8_floor: "stage8_floor.png",
+    stage9_floor: "stage9_floor.png",
+    stage10_floor: "stage10_floor.png"
 };
 const loadedImages = {};
 
@@ -1728,7 +1738,14 @@ function resetStage(fullReset = false) {
     
     let themeIndex = (currentStage - 1) % GameSettings.maps.length;
     let theme = GameSettings.maps[themeIndex];
-    currentBgPattern = generateMapPattern(theme);
+    
+    // [Stage Asset Integration] 해당 스테이지의 전용 바닥 에셋이 로드되었다면 우선 사용
+    const stageImgKey = 'stage' + currentStage + '_floor';
+    if (loadedImages[stageImgKey] && loadedImages[stageImgKey].complete && loadedImages[stageImgKey].naturalWidth > 0) {
+        currentBgPattern = ctx.createPattern(loadedImages[stageImgKey], 'repeat');
+    } else {
+        currentBgPattern = generateMapPattern(theme);
+    }
     
     let stageDispUI = document.getElementById('stageDispUI');
     if(stageDispUI) { let lang = I18N[currentLang]; stageDispUI.innerText = `STAGE ${currentStage} : ${lang[theme.id]}`; }
