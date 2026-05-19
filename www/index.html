@@ -893,6 +893,7 @@ let masterVolume = 0.5;
 let bgPattern = null;
 let lobbyPattern = null;
 let currentBgPattern = null;
+let currentTileSize = 200;
 let gameLoopId = null;
 let currentBgmAudio = null;
 
@@ -1407,12 +1408,17 @@ function drawBackground(ctx, inLobby) {
     if(!lobbyPattern) lobbyPattern = ctx.createPattern(lobbyCanvas, 'repeat');
     
     ctx.save(); 
-    let offsetX = -(camera.x % 200) | 0; 
-    let offsetY = -(camera.y % 200) | 0;
+    // Snap camera to integers to prevent sub-pixel jitter
+    let camX = (camera.x) | 0;
+    let camY = (camera.y) | 0;
+    
+    let offsetX = -(camX % currentTileSize); 
+    let offsetY = -(camY % currentTileSize);
     ctx.translate(offsetX, offsetY); 
     
     ctx.fillStyle = inLobby ? lobbyPattern : (currentBgPattern || bgPattern); 
-    ctx.fillRect(-200, -200, gameWidth + 400, gameHeight + 400); 
+    // Draw a larger area to ensure no gaps during fast movement
+    ctx.fillRect(-currentTileSize, -currentTileSize, gameWidth + currentTileSize * 2, gameHeight + currentTileSize * 2); 
     ctx.restore();
 }
 
@@ -1742,8 +1748,10 @@ function resetStage(fullReset = false) {
     const stageImgKey = 'stage' + currentStage + '_floor';
     if (loadedImages[stageImgKey] && loadedImages[stageImgKey].complete && loadedImages[stageImgKey].naturalWidth > 0) {
         currentBgPattern = ctx.createPattern(loadedImages[stageImgKey], 'repeat');
+        currentTileSize = loadedImages[stageImgKey].naturalWidth;
     } else {
         currentBgPattern = generateMapPattern(theme);
+        currentTileSize = 200; // Generated pattern size
     }
     
     let stageDispUI = document.getElementById('stageDispUI');
