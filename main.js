@@ -76,3 +76,7 @@ ipcMain.handle('steam-unlock-achievement', (event, achievementId) => {
   }
   return false;
 });
+
+ipcMain.on('quit-app', () => {
+  app.quit();
+});
