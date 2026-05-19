@@ -231,7 +231,7 @@
 
         #storyUI { background: #000; z-index: 50; }
         .typewriter-text { font-size: 1.5rem; line-height: 2; color: #fff; min-height: 120px; text-align: center; }
-        .skip-btn { position: absolute; top: 10px; right: 10px; background: none; border: 1px solid #555; color: #aaa; cursor: pointer; padding: 10px; border-radius: 4px; }
+        .skip-btn { position: absolute; top: 70px; right: 10px; background: none; border: 1px solid #555; color: #aaa; cursor: pointer; padding: 10px; border-radius: 4px; }
         .skip-btn:hover { background: #333; }
 
         #flashOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 10000; }
@@ -840,7 +840,7 @@ let lobbyCharVy = 0;
 let lobbyInteractTimer = 0; 
 let lobbyParticles = [];
 
-let joystick = { active: false, cx: 0, cy: 0, tx: 0, ty: 0, dx: 0, dy: 0, radius: 50 };
+let joystick = { active: false, cx: 0, cy: 0, tx: 0, ty: 0, dx: 0, dy: 0, radius: 80, touchId: null };
 let gameWidth = 0;
 let gameHeight = 0;
 let globalScale = 1;
@@ -2719,48 +2719,75 @@ window.addEventListener('pointerdown', e => {
 
 canvas.addEventListener('touchstart', e => {
     if (window.gameState !== 'playing' || isPaused) return;
-    let pos = getPointerPos(e);
     
-    joystick.active = true;
-    joystick.cx = pos.x; 
-    joystick.cy = pos.y; 
-    joystick.tx = pos.x; 
-    joystick.ty = pos.y; 
-    joystick.dx = 0; 
-    joystick.dy = 0;
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        let touch = e.changedTouches[i];
+        let pos = { x: (touch.clientX - canvas.getBoundingClientRect().left) / globalScale, y: (touch.clientY - canvas.getBoundingClientRect().top) / globalScale };
+        
+        // Joystick typically activates on the left side of the screen
+        if (!joystick.active && touch.clientX < window.innerWidth / 2) {
+            joystick.active = true;
+            joystick.touchId = touch.identifier;
+            joystick.cx = pos.x; 
+            joystick.cy = pos.y; 
+            joystick.tx = pos.x; 
+            joystick.ty = pos.y; 
+            joystick.dx = 0; 
+            joystick.dy = 0;
+            break;
+        }
+    }
 }, {passive: false});
 
 canvas.addEventListener('touchmove', e => {
     if (!joystick.active || window.gameState !== 'playing') return;
     e.preventDefault(); 
     
-    let pos = getPointerPos(e);
-    joystick.tx = pos.x; 
-    joystick.ty = pos.y;
-    
-    let dx = joystick.tx - joystick.cx; 
-    let dy = joystick.ty - joystick.cy;
-    let dist = Math.hypot(dx, dy);
-    
-    if (dist > joystick.radius) { 
-        dx = (dx/dist) * joystick.radius; 
-        dy = (dy/dist) * joystick.radius; 
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        let touch = e.changedTouches[i];
+        if (touch.identifier === joystick.touchId) {
+            let pos = { x: (touch.clientX - canvas.getBoundingClientRect().left) / globalScale, y: (touch.clientY - canvas.getBoundingClientRect().top) / globalScale };
+            joystick.tx = pos.x; 
+            joystick.ty = pos.y;
+            
+            let dx = joystick.tx - joystick.cx; 
+            let dy = joystick.ty - joystick.cy;
+            let dist = Math.hypot(dx, dy);
+            
+            if (dist > joystick.radius) { 
+                dx = (dx/dist) * joystick.radius; 
+                dy = (dy/dist) * joystick.radius; 
+            }
+            
+            joystick.dx = dx / joystick.radius; 
+            joystick.dy = dy / joystick.radius;
+            break;
+        }
     }
-    
-    joystick.dx = dx / joystick.radius; 
-    joystick.dy = dy / joystick.radius;
 }, {passive: false});
 
 canvas.addEventListener('touchend', e => { 
-    joystick.active = false; 
-    joystick.dx = 0; 
-    joystick.dy = 0; 
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === joystick.touchId) {
+            joystick.active = false; 
+            joystick.dx = 0; 
+            joystick.dy = 0; 
+            joystick.touchId = null;
+            break;
+        }
+    }
 });
 
 canvas.addEventListener('touchcancel', e => { 
-    joystick.active = false; 
-    joystick.dx = 0; 
-    joystick.dy = 0; 
+    for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === joystick.touchId) {
+            joystick.active = false; 
+            joystick.dx = 0; 
+            joystick.dy = 0; 
+            joystick.touchId = null;
+            break;
+        }
+    }
 });
 
 let dashBtnEl = document.getElementById('mobileDashBtn');
@@ -3000,10 +3027,14 @@ function gameLoop(timestamp) {
 // ==========================================
 
 window.toggleFullscreen = function() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => { console.error(err); });
+    if (window.steamAPI && window.steamAPI.toggleFullscreen) {
+        window.steamAPI.toggleFullscreen();
     } else {
-        if (document.exitFullscreen) document.exitFullscreen();
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => { console.error(err); });
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+        }
     }
 };
 
