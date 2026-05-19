@@ -970,6 +970,66 @@ function playSFX(type) {
         gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.1); 
         osc2.start(now); osc2.stop(now + 0.1);
     }
+    else if(type === 'verdictUse') {
+        // 마법 스킬 사용음 (빠른 주파수 상승과 잔향 느낌)
+        osc.type = 'sine'; 
+        osc.frequency.setValueAtTime(400 * pitch, now); 
+        osc.frequency.exponentialRampToValueAtTime(1200 * pitch, now + 0.3);
+        gain.gain.setValueAtTime(0.2, now); 
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); 
+        osc.start(now); osc.stop(now + 0.3);
+
+        const osc2 = audioCtx.createOscillator(); 
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2); gain2.connect(masterGainNode);
+        osc2.type = 'triangle'; 
+        osc2.frequency.setValueAtTime(800 * pitch, now + 0.1); 
+        osc2.frequency.exponentialRampToValueAtTime(2000 * pitch, now + 0.4);
+        gain2.gain.setValueAtTime(0.1, now + 0.1); 
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.4); 
+        osc2.start(now + 0.1); osc2.stop(now + 0.4);
+    }
+    else if(type === 'verdictJackpot') {
+        // 잭팟: 웅장한 아르페지오 (C 메이저 코드)
+        osc.type = 'square'; 
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.setValueAtTime(659.25, now + 0.15); // E5
+        osc.frequency.setValueAtTime(783.99, now + 0.3); // G5
+        osc.frequency.setValueAtTime(1046.50, now + 0.45); // C6
+        gain.gain.setValueAtTime(0.15, now); 
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2); 
+        osc.start(now); osc.stop(now + 1.2);
+
+        const osc2 = audioCtx.createOscillator(); 
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2); gain2.connect(masterGainNode);
+        osc2.type = 'sine'; 
+        osc2.frequency.setValueAtTime(1046.50, now); 
+        osc2.frequency.setValueAtTime(1318.51, now + 0.15); 
+        osc2.frequency.setValueAtTime(2093.00, now + 0.3); 
+        gain2.gain.setValueAtTime(0.15, now); 
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 1.5); 
+        osc2.start(now); osc2.stop(now + 1.5);
+    }
+    else if(type === 'verdictPair') {
+        // 원페어: 청아한 차임벨
+        osc.type = 'sine'; 
+        osc.frequency.setValueAtTime(880, now); // A5
+        osc.frequency.setValueAtTime(1108.73, now + 0.1); // C#6
+        gain.gain.setValueAtTime(0.2, now); 
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6); 
+        osc.start(now); osc.stop(now + 0.6);
+    }
+    else if(type === 'verdictStraight') {
+        // 스트레이트: 신비로운 하행음
+        osc.type = 'triangle'; 
+        osc.frequency.setValueAtTime(1318.51, now); // E6
+        osc.frequency.setValueAtTime(1046.50, now + 0.1); // C6
+        osc.frequency.setValueAtTime(880, now + 0.2); // A5
+        gain.gain.setValueAtTime(0.15, now); 
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8); 
+        osc.start(now); osc.stop(now + 0.8);
+    }
 }
 
 // ==========================================
@@ -3072,7 +3132,7 @@ window.useVerdictRoulette = function() {
     }
     
     window.verdictGauge -= window.MAX_GAUGE;
-    if (window.playSFX) window.playSFX('gacha');
+    if (window.playSFX) window.playSFX('verdictUse');
     
     const types = ['red', 'yellow', 'green'];
     const result = types[Math.floor(Math.random() * types.length)];
@@ -3111,8 +3171,6 @@ window.checkRouletteSynergy = function() {
     const counts = { red: 0, yellow: 0, green: 0 };
     inv.forEach(i => counts[i]++);
     
-    if (window.playSFX) window.playSFX('levelup');
-    
     if (counts.red === 3 || counts.yellow === 3 || counts.green === 3) {
         const type = inv[0];
         window.verdictBuffs[type] += 0.15;
@@ -3120,6 +3178,7 @@ window.checkRouletteSynergy = function() {
             window.player.hp = Math.min(window.player.maxHp, window.player.hp + (window.player.maxHp * 0.5));
             window.player.recalculateStats();
         }
+        if (window.playSFX) window.playSFX('verdictJackpot');
         if (window.showSystemNotice) window.showSystemNotice('\uD83C\uDF89 TRIPLE JACKPOT!');
     } else if (counts.red === 2 || counts.yellow === 2 || counts.green === 2) {
         const type = Object.keys(counts).find(k => counts[k] === 2);
@@ -3131,9 +3190,11 @@ window.checkRouletteSynergy = function() {
                 if (dist > 0 && dist < 300) { e.x += (dx/dist)*150; e.y += (dy/dist)*150; }
             });
         }
+        if (window.playSFX) window.playSFX('verdictPair');
         if (window.showSystemNotice) window.showSystemNotice('\u2728 ONE PAIR!');
     } else {
         if (window.player) window.player.stats.cooldownMult *= 0.85;
+        if (window.playSFX) window.playSFX('verdictStraight');
         if (window.showSystemNotice) window.showSystemNotice('\uD83C\uDCCF STRAIGHT!');
     }
 };
