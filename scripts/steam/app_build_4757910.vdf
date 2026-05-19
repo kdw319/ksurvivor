@@ -1,0 +1,11 @@
+"AppBuild"
+{
+	"AppID" "4757910"
+	"Desc" "Soundtrack for Lastgirl Survivor"
+	"ContentRoot" "..\..\dist_soundtrack"
+	"BuildOutput" "..\..\steam_build_output_soundtrack"
+	"Depots"
+	{
+		"4757911" "depot_build_4757911.vdf"
+	}
+}
