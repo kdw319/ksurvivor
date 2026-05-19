@@ -80,3 +80,12 @@ ipcMain.handle('steam-unlock-achievement', (event, achievementId) => {
 ipcMain.on('quit-app', () => {
   app.quit();
 });
+
+ipcMain.handle('toggle-fullscreen', () => {
+  if (mainWindow) {
+    const isFull = mainWindow.isFullScreen();
+    mainWindow.setFullScreen(!isFull);
+    return !isFull;
+  }
+  return false;
+});
