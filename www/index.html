@@ -249,9 +249,15 @@
             const path = window.location.pathname.toLowerCase();
             const isAosPath = path.indexOf('/aos') !== -1 || window.location.search.includes('aos=1');
             const isNative = window.Capacitor && window.Capacitor.getPlatform() !== 'web';
+            const isPC = window.steamAPI && window.steamAPI.isPC;
+
             if (isAosPath || isNative) {
                 document.documentElement.classList.add('aos-build');
                 console.log("AOS UI Optimization: ACTIVE");
+            }
+            if (isPC) {
+                document.documentElement.classList.add('pc-build');
+                console.log("PC Steamworks Optimization: ACTIVE");
             }
         })();
     </script>
@@ -296,6 +302,27 @@
         /* Hide Fullscreen on AOS */
         .aos-build #fullscreenBtn { display: none !important; }
         
+        /* PC Build Optimization */
+        .pc-build #mobileDashBtn,
+        .pc-build .portrait-warning { display: none !important; }
+        .pc-build #fullscreenBtn { 
+            display: flex !important; 
+            top: 20px !important; 
+            right: 20px !important; 
+            width: 35px !important; 
+            height: 35px !important; 
+            font-size: 16px !important; 
+            background: rgba(0,0,0,0.3) !important; 
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            color: rgba(255,255,255,0.5) !important;
+            transition: all 0.2s;
+        }
+        .pc-build #fullscreenBtn:hover {
+            background: rgba(184, 153, 71, 0.8) !important;
+            border-color: #b89947 !important;
+            color: #fff !important;
+        }
+        
         /* AOS Build Safety Zone (Keep these as requested previously) */
         .aos-build #hudLeft { top: 120px !important; left: 150px !important; }
         .aos-build #hudRight { top: 120px !important; right: 150px !important; }
@@ -330,6 +357,7 @@
         <div id="statsTitle" style="text-align: center; color: #e0d0a0; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #555; padding-bottom: 5px;">능력치</div>
         <div class="stat-line"><span id="lblStatDmg">공격력</span><div class="stat-val" id="statDmg">0 (+0)</div></div>
         <div class="stat-line"><span id="lblStatCool">쿨타임</span><div class="stat-val" id="statCool">0s (-0s)</div></div>
+        <div class="stat-line"><span id="lblStatAtkSpd">공격속도</span><div class="stat-val" id="statAtkSpd">100% (+0%)</div></div>
         <div class="stat-line"><span id="lblStatSpd">이동속도</span><div class="stat-val" id="statSpd">0 (+0)</div></div>
     </div>
     <div id="inventory" class="hidden"></div>
@@ -361,8 +389,20 @@
         <button id="btnAchieveLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #f39c12; color: white;" onclick="window.openAchieve()">도전과제</button>
         <button id="btnGachaLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px;" onclick="window.openGacha()">픽업 가챠</button>
         <button id="btnDataLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #0984e3; color: white;" onclick="window.openSaveLoad()">데이터 센터</button>
+        <button id="btnExitLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #d63031; color: white; display: none;" onclick="window.openExitConfirm()">게임 종료</button>
     </div>
     <div id="speechBubble" class="speech-bubble" style="opacity: 0;">빨리 시작하자!</div>
+
+    <div id="exitConfirmUI" class="overlay hidden">
+        <div class="panel" style="max-width: 400px;">
+            <h2 id="exitConfirmTitle" style="color: #ff4757;">게임 종료</h2>
+            <p id="exitConfirmDesc" style="color: #ccc; margin-bottom: 30px;">정말 게임을 종료하시겠습니까?</p>
+            <div style="display: flex; justify-content: space-around;">
+                <button id="btnExitYes" class="btn primary" style="width: 120px;" onclick="window.confirmExit()">O</button>
+                <button id="btnExitNo" class="btn" style="width: 120px; background: #555; color: #fff;" onclick="window.closeExitConfirm()">X</button>
+            </div>
+        </div>
+    </div>
 
     <div id="tutorialUI" class="overlay hidden">
         <div class="panel" style="max-width: 500px;">
@@ -512,15 +552,7 @@ player_idle: "character_idle.webp",
     boss_mid: "bosses/midboss.png",
     boss_10: "bosses/boss_10.png",
     boss_20: "bosses/boss_20.png",
-    boss_30: "bosses/boss_30.png",
-    mob_juror: "mobs/1.png",
-    mob_gavel: "mobs/2.png",
-    mob_spectre: "mobs/4.png",
-    mob_evidence: "mobs/5.png",
-    boss_mid: "bosses/midboss.png",
-    boss_10: "bosses/boss10.png",
-    boss_20: "bosses/boss20.png",
-    boss_30: "bosses/boss30.png"
+    boss_30: "bosses/boss_30.png"
 };
 const loadedImages = {};
 
@@ -550,13 +582,44 @@ let currentOutfitId = 'default1';
 let beatScale = 1.0;
 let lastBeatCount = 0;
 
-let statsTracking = { totalKills: 0, totalBadges: 0 };
-let achievements = { kills: false, stage5: false, rich: false };
+let statsTracking = { 
+    totalKills: 0, totalBadges: 0, totalDamage: 0, totalDistance: 0, 
+    totalDash: 0, totalRoulette: 0, totalPerfectDash: 0, totalTime: 0,
+    maxCombo: 0, marblesCollected: 0
+};
+let achievements = {};
 
 const ACHIEVEMENTS_DATA = [
-    { id: 'kills', name: "첫 피의 세례", enName: "First Blood", desc: "적 100마리 처치", enDesc: "Kill 100 enemies", reqKills: 100, icon: "⚔️" },
-    { id: 'stage5', name: "생존 전문가", enName: "Survivor", desc: "스테이지 5 도달", enDesc: "Reach Stage 5", reqStage: 5, icon: "🛡️" },
-    { id: 'rich', name: "매점 VIP", enName: "Rich Student", desc: "누적 뱃지 1,000개 획득", enDesc: "Collect 1,000 badges total", reqBadges: 1000, icon: "💰" }
+    { id: 'kills_100', name: "첫 피의 세례", enName: "First Blood", desc: "적 100마리 처치", enDesc: "Kill 100 enemies", reqKills: 100, icon: "⚔️" },
+    { id: 'kills_500', name: "학살의 시작", enName: "Slayer", desc: "적 500마리 처치", enDesc: "Kill 500 enemies", reqKills: 500, icon: "🔥" },
+    { id: 'kills_1000', name: "심판관", enName: "Judge", desc: "적 1,000마리 처치", enDesc: "Kill 1,000 enemies", reqKills: 1000, icon: "⚖️" },
+    { id: 'kills_5000', name: "무자비한 변론", enName: "Merciless", desc: "적 5,000마리 처치", enDesc: "Kill 5,000 enemies", reqKills: 5000, icon: "💀" },
+    { id: 'kills_10000', name: "전설의 사신", enName: "Reaper", desc: "적 10,000마리 처치", enDesc: "Kill 10,000 enemies", reqKills: 10000, icon: "🌌" },
+    { id: 'stage_5', name: "생존 전문가 I", enName: "Survivor I", desc: "스테이지 5 도달", enDesc: "Reach Stage 5", reqStage: 5, icon: "🛡️" },
+    { id: 'stage_10', name: "생존 전문가 II", enName: "Survivor II", desc: "스테이지 10 도달", enDesc: "Reach Stage 10", reqStage: 10, icon: "🏰" },
+    { id: 'stage_20', name: "생존 전문가 III", enName: "Survivor III", desc: "스테이지 20 도달", enDesc: "Reach Stage 20", reqStage: 20, icon: "🏅" },
+    { id: 'stage_30', name: "마스터 서바이버", enName: "Master Survivor", desc: "스테이지 30 도달", enDesc: "Reach Stage 30", reqStage: 30, icon: "💎" },
+    { id: 'stage_50', name: "불멸의 학생", enName: "Immortal Student", desc: "스테이지 50 도달", enDesc: "Reach Stage 50", reqStage: 50, icon: "👑" },
+    { id: 'badges_1000', name: "매점 VIP", enName: "Snack Bar VIP", desc: "누적 뱃지 1,000개 획득", enDesc: "Collect 1,000 badges total", reqBadges: 1000, icon: "💰" },
+    { id: 'badges_5000', name: "자산가", enName: "Wealthy", desc: "누적 뱃지 5,000개 획득", enDesc: "Collect 5,000 badges total", reqBadges: 5000, icon: "💎" },
+    { id: 'badges_10000', name: "백만장자", enName: "Millionaire", desc: "누적 뱃지 10,000개 획득", enDesc: "Collect 10,000 badges total", reqBadges: 10000, icon: "🏦" },
+    { id: 'roulette_1', name: "도박의 시작", enName: "First Gamble", desc: "심판의 룰렛 1회 사용", enDesc: "Use Verdict Roulette once", reqRoulette: 1, icon: "🎰" },
+    { id: 'roulette_10', name: "룰렛 매니아", enName: "Roulette Lover", desc: "심판의 룰렛 10회 사용", enDesc: "Use Verdict Roulette 10 times", reqRoulette: 10, icon: "🎲" },
+    { id: 'roulette_50', name: "운명에 맡긴 자", enName: "Fate's Gambler", desc: "심판의 룰렛 50회 사용", enDesc: "Use Verdict Roulette 50 times", reqRoulette: 50, icon: "🔮" },
+    { id: 'dash_100', name: "바람을 가르는", enName: "Wind Walker", desc: "대쉬 100회 사용", enDesc: "Dash 100 times", reqDash: 100, icon: "💨" },
+    { id: 'dash_500', name: "번개 같은 속도", enName: "Lightning Speed", desc: "대쉬 500회 사용", enDesc: "Dash 500 times", reqDash: 500, icon: "⚡" },
+    { id: 'perfect_roulette', name: "행운의 신", enName: "God of Luck", desc: "룰렛에서 3개 같은 구슬 획득", enDesc: "Get 3 same orbs in roulette", reqPerfectRoulette: 1, icon: "🌟" },
+    { id: 'boss_10', name: "첫 번째 고난 극복", enName: "First Trial Overcome", desc: "10스테이지 보스 처치", enDesc: "Defeat Stage 10 Boss", reqBoss: 10, icon: "⚔️" },
+    { id: 'boss_20', name: "두 번째 고난 극복", enName: "Second Trial Overcome", desc: "20스테이지 보스 처치", enDesc: "Defeat Stage 20 Boss", reqBoss: 20, icon: "🗡️" },
+    { id: 'boss_30', name: "최종 변론 준비", enName: "Final Argument Prep", desc: "30스테이지 보스 처치", enDesc: "Defeat Stage 30 Boss", reqBoss: 30, icon: "📜" },
+    { id: 'no_hit_1', name: "무결점 생존", enName: "Flawless Survival", desc: "한 스테이지 피격 없이 클리어", enDesc: "Clear a stage without taking damage", reqNoHit: 1, icon: "🛡️" },
+    { id: 'time_30', name: "버티기의 달인", enName: "Endurance Master", desc: "한 판에서 30분 생존", enDesc: "Survive 30 minutes in a single run", reqTime: 1800, icon: "⏱️" },
+    { id: 'level_50', name: "초월자", enName: "Transcendent", desc: "한 판에서 레벨 50 달성", enDesc: "Reach level 50 in a single run", reqLevel: 50, icon: "✨" },
+    { id: 'all_skills', name: "만능 해결사", enName: "All-Rounder", desc: "모든 스킬 만렙 달성", enDesc: "Reach max level for all active skills", reqMaxSkills: 1, icon: "🌀" },
+    { id: 'combo_100', name: "화려한 콤보", enName: "Stylish Combo", desc: "100 콤보 달성", enDesc: "Reach 100 combo", reqCombo: 100, icon: "💥" },
+    { id: 'rainbow_roulette', name: "무지개 심판", enName: "Rainbow Verdict", desc: "룰렛에서 서로 다른 3개 구슬 획득", enDesc: "Get 3 different orbs in roulette", reqRainbowRoulette: 1, icon: "🌈" },
+    { id: 'marbles_100', name: "구슬 수집가", enName: "Orb Collector", desc: "구슬 100개 획득", enDesc: "Collect 100 orbs total", reqMarbles: 100, icon: "🔮" },
+    { id: 'legend_reached', name: "고등학교의 전설", enName: "Legend of Highschool", desc: "모든 업적 달성", enDesc: "Unlock all achievements", reqAll: 1, icon: "🏆" }
 ];
 
 const OUTFITS = [
@@ -610,7 +673,8 @@ const GameSettings = {
         energyDrink: { name: "에너지 드링크", icon: "🥫", desc: "주변에 강력한 에너지를 분출합니다.", damage: 80, cooldown: 4.0, radius: 180, color: '#badc58', statBonus: { type: 'speedMult', value: 0.1, label: '이동속도' } },
         studentID: { name: "학생증", icon: "🪪", desc: "플레이어 주변을 넓게 방어합니다.", damage: 15, cooldown: 0.1, radius: 130, color: '#c7ecee', statBonus: { type: 'none', value: 0, label: '' } },
         backpack: { name: "책가방", icon: "🎒", desc: "거대한 가방을 던져 압살합니다.", damage: 150, cooldown: 3.5, speed: 150, color: '#ffbe76', statBonus: { type: 'damageMult', value: 0.15, label: '공격력' } },
-        tablet: { name: "태블릿", icon: "📱", desc: "넓은 반경을 데이터 파동으로 타격합니다.", damage: 40, cooldown: 1.5, range: 160, color: '#e056fd', statBonus: { type: 'cooldownMult', value: -0.05, label: '쿨타임' } }
+        tablet: { name: "태블릿", icon: "📱", desc: "넓은 반경을 데이터 파동으로 타격합니다.", damage: 40, cooldown: 1.5, range: 160, color: '#e056fd', statBonus: { type: 'cooldownMult', value: -0.05, label: '쿨타임' } },
+        gamingMouse: { name: "게이밍 마우스", icon: "🖱️", desc: "광클의 힘으로 공격 속도가 대폭 상승합니다.", damage: 10, cooldown: 1.0, speed: 0, color: '#333', statBonus: { type: 'atkSpdMult', value: 0.1, label: '공격속도' } }
     },
     synergies: {
         studyManiac: { id: 'studyManiac', name: "🔥 학구열 (분필+교과서)", icon: "🔥", req: ['chalk', 'textbook'], desc: "분필이 적에게 적중 시 폭발합니다." },
@@ -618,7 +682,8 @@ const GameSettings = {
         cyberWarrior: { id: 'cyberWarrior', name: "⚡ 사이버 전사 (스마트폰+레이저)", icon: "⚡", req: ['smartPhone', 'laserPointer'], desc: "스마트폰 폭발 시 4방향으로 레이저 발사." },
         caffeineAddict: { id: 'caffeineAddict', name: "☕ 카페인 중독 (책가방+드링크)", icon: "☕", req: ['backpack', 'energyDrink'], desc: "책가방 적중 시 에너지 폭발." },
         idolStage: { id: 'idolStage', name: "✨ 아이돌 무대 (마이크+체육복)", icon: "✨", req: ['magicMic', 'gymClothes'], desc: "마이크 타격 시 일정 확률로 체력 회복 또는 이속 버프." },
-        digitalDefense: { id: 'digitalDefense', name: "🛡️ 디지털 방어 (태블릿+학생증)", icon: "🛡️", req: ['tablet', 'studentID'], desc: "학생증 반경 증가 및 타격 시 쿨감 버프." }
+        digitalDefense: { id: 'digitalDefense', name: "🛡️ 디지털 방어 (태블릿+학생증)", icon: "🛡️", req: ['tablet', 'studentID'], desc: "학생증 반경 증가 및 타격 시 쿨감 버프." },
+        proGamer: { id: 'proGamer', name: "🎮 프로게이머 (스마트폰+마우스)", icon: "🎮", req: ['smartPhone', 'gamingMouse'], desc: "스마트폰 타격 시 쿨타임 대신 공격속도 비례 데미지, 공격속도 증가." }
     }
 };
 
@@ -643,12 +708,14 @@ const I18N = {
         w_studentID: { name: "학생증", desc: "플레이어 주변을 넓게 방어합니다.", stat: "" },
         w_backpack: { name: "책가방", desc: "거대한 가방을 던져 압살합니다.", stat: "공격력" },
         w_tablet: { name: "태블릿", desc: "넓은 반경을 데이터 파동으로 타격합니다.", stat: "쿨타임" },
+        w_gamingMouse: { name: "게이밍 마우스", desc: "광클의 힘으로 공격 속도가 대폭 상승합니다.", stat: "공격속도" },
         syn_study: { name: "🔥 학구열 (분필+교과서)", desc: "분필이 적에게 적중 시 폭발합니다." },
         syn_music: { name: "🎶 음악과 수학 (리코더+컴퍼스)", desc: "리코더 휘두를 때 미니 컴퍼스를 발사합니다." },
         syn_cyber: { name: "⚡ 사이버 전사 (스마트폰+레이저)", desc: "스마트폰 폭발 시 4방향으로 레이저 발사." },
         syn_caffeine: { name: "☕ 카페인 중독 (책가방+드링크)", desc: "책가방 적중 시 에너지 폭발." },
         syn_idol: { name: "✨ 아이돌 무대 (마이크+체육복)", desc: "마이크 타격 시 일정 확률로 체력 회복 또는 이속 버프." },
         syn_digital: { name: "🛡️ 디지털 방어 (태블릿+학생증)", desc: "학생증 반경 증가 및 타격 시 쿨감 버프." },
+        syn_proGamer: { name: "🎮 프로게이머 (스마트폰+마우스)", desc: "스마트폰 타격 시 쿨타임 대신 공격속도 비례 데미지, 공격속도 증가." },
         statDmg: "공격력", statCool: "쿨타임", statSpd: "이동속도", progress: "진행도",
         gachaTitle: "특수 무기 픽업", gachaOwnedText: "보유 뱃지: ", gachaUnitText: "개", gachaDesc: "다양한 특수 무기를 해금하여<br>레벨업 풀에 추가합니다. (해금 무기는 등장 확률 1.5배!)", gachaRollBtn: "1회 뽑기 (10 뱃지)", gachaCloseBtn: "닫기", gachaResCloseBtn: "확인", gachaNoBadge: "뱃지가 부족합니다!",
         gachaResTitleNew: "🎉 신규 무기 해금! 🎉", gachaResMsgNew: "이제 인게임 레벨업 시 등장합니다.", gachaResTitleDup: "중복 무기 획득", gachaResMsgDup: "중복 보상으로 뱃지 5개가 환급되었습니다.",
@@ -1121,6 +1188,9 @@ function updateHUD() {
     setHtml('statDmg', s.baseDmgFactor, dDmg); 
     setHtml('statCool', s.baseCoolFactor, -dCool, 's', true); 
     setHtml('statSpd', s.baseSpeed, dSpd);
+    
+    let dAtkSpd = (player.stats.atkSpdMult - 1.0) * 100;
+    setHtml('statAtkSpd', 100, dAtkSpd, '%');
 }
 
 function updateInventoryUI() {
@@ -1178,16 +1248,23 @@ function checkAchievements() {
             if (ach.reqKills && statsTracking.totalKills >= ach.reqKills) unlocked = true;
             if (ach.reqStage && maxStageReached >= ach.reqStage) unlocked = true;
             if (ach.reqBadges && statsTracking.totalBadges >= ach.reqBadges) unlocked = true;
-            
+
             if (unlocked) {
                 achievements[ach.id] = true;
                 showSystemNotice(`🏆 ${currentLang === 'ko' ? '업적 달성' : 'Achievement'}: ${currentLang === 'ko' ? ach.name : ach.enName}`);
                 playSFX('clear');
+
+                // Steam Achievement Bridge
+                if (window.steamAPI) {
+                    const steamAchId = 'NEW_ACHIEVEMENT_' + ach.id.toUpperCase();
+                    window.steamAPI.unlockAchievement(steamAchId).then(success => {
+                        if (success) console.log(`Steam Achievement Unlocked: ${steamAchId}`);
+                    });
+                }
             }
         }
     });
 }
-
 function formatTime(sec) { 
     return `${Math.floor(sec / 60).toString().padStart(2, '0')}:${Math.floor(sec % 60).toString().padStart(2, '0')}`; 
 }
@@ -1771,6 +1848,25 @@ function renderAchieveList() {
     });
 }
 
+// --- EXIT LOGIC ---
+function openExitConfirm() {
+    let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('exitConfirmUI');
+    if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden');
+}
+
+function closeExitConfirm() {
+    let ui = document.getElementById('exitConfirmUI'); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar');
+    if (ui) ui.classList.add('hidden'); if (title) title.classList.remove('hidden'); if (bbar) bbar.classList.remove('hidden');
+}
+
+function confirmExit() {
+    if (window.steamAPI && window.steamAPI.quitApp) {
+        window.steamAPI.quitApp();
+    } else {
+        window.close(); // Fallback for standard browsers
+    }
+}
+
 // --- TUTORIAL LOGIC ---
 function openTutorial() {
     initAudio(); playSFX('levelup');
@@ -2234,7 +2330,7 @@ class Player {
     constructor() {
         this.x = 0; this.y = 0;
         this.maxHp = GameSettings.player.baseHp + (permanentStats.maxHp * 10); this.hp = this.maxHp;
-        this.stats = { speedMult: 1.0, damageMult: 1.0, cooldownMult: 1.0 };
+        this.stats = { speedMult: 1.0, damageMult: 1.0, cooldownMult: 1.0, atkSpdMult: 1.0 };
         this.baseSpeed = GameSettings.player.baseSpeed; this.radius = 15; this.dirX = 1; this.level = 1; this.exp = 0; this.maxExp = 10;
         this.weapons = []; this.activeSynergies = {}; this.passiveTimer = 0;
         this.dashTimer = 0; this.dashCooldownTimer = 0; this.invincibleTimer = 0; this.dashDir = { x: 1, y: 0 };
@@ -2254,9 +2350,10 @@ class Player {
         return mult;
     }
 
-    playAnim(stateName) { this.animState = stateName; this.animTimer = 0.2; }
+    playAnim(stateName) { this.animState = stateName; this.animTimer = 0.2 / this.stats.atkSpdMult; }
     recalculateStats() {
         this.stats.damageMult = 1.0 + (permanentStats.damage * 0.05); this.stats.cooldownMult = 1.0 - (permanentStats.cooldown * 0.02); this.stats.speedMult = 1.0 + (permanentStats.speed * 0.05);
+        this.stats.atkSpdMult = 1.0;
         
         if (window.orbStacks) {
             this.stats.damageMult += (window.orbStacks.red * 0.05);
@@ -2270,6 +2367,11 @@ class Player {
             this.stats.speedMult += window.verdictBuffs.green;
         }
         this.weapons.forEach(w => { let bonus = w.settings.statBonus; if(bonus && bonus.type !== 'none') { this.stats[bonus.type] += (bonus.value * w.level); } });
+        
+        if (this.activeSynergies.proGamer) {
+            this.stats.atkSpdMult += 0.2;
+        }
+
         this.stats.cooldownMult = Math.max(0.2, this.stats.cooldownMult); updateHUD(); 
     }
     
