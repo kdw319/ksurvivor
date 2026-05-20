@@ -247,9 +247,21 @@
         .achieve-card.unlocked .achieve-icon { opacity: 1; text-shadow: 0 0 10px #f1c40f; }
 
         #storyUI { background: #000; z-index: 50; }
-        .typewriter-text { font-size: 1.5rem; line-height: 2; color: #fff; min-height: 120px; text-align: center; }
-        .skip-btn { position: absolute; top: 150px; right: 10px; background: none; border: 1px solid #555; color: #aaa; cursor: pointer; padding: 10px; border-radius: 4px; }
-        .skip-btn:hover { background: #333; }
+        #storyBg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; transition: background-image 0.5s; }
+        #storyDialogContainer { position: absolute; bottom: 0; left: 0; width: 100%; height: 35%; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; box-sizing: border-box; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 80%, rgba(0,0,0,0) 100%); pointer-events: none; }
+        #storyDialogBox { background: rgba(20, 20, 25, 0.85); border: 3px solid #b89947; border-radius: 12px; width: 90%; max-width: 1000px; padding: 30px; position: relative; pointer-events: auto; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        #storySpeaker { position: absolute; top: -25px; left: -10px; background: #c23616; color: white; padding: 5px 20px; font-weight: bold; font-size: 1.2rem; border: 2px solid #b89947; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
+        .typewriter-text { font-size: 1.3rem; line-height: 1.8; color: #fff; min-height: 80px; text-align: left; text-shadow: 1px 1px 2px #000; }
+        .skip-btn { position: absolute; top: 150px; right: 10px; background: rgba(0,0,0,0.5); border: 1px solid #555; color: #aaa; cursor: pointer; padding: 10px 20px; border-radius: 4px; font-weight: bold; z-index: 55; }
+        .skip-btn:hover { background: rgba(0,0,0,0.8); border-color: #b89947; color: #fff; }
+        
+        #storyListUI .panel { max-width: 800px; }
+        .story-list-item { background: rgba(0,0,0,0.6); border: 1px solid #555; padding: 15px; margin-bottom: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s; }
+        .story-list-item.unlocked { border-left: 4px solid #feca57; }
+        .story-list-item.unlocked:hover { background: rgba(254, 202, 87, 0.2); border-color: #feca57; transform: translateX(5px); }
+        .story-list-item.locked { opacity: 0.5; cursor: not-allowed; }
+        .story-badge { background: #ff4757; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; position: absolute; top: -5px; right: -5px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
         #flashOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 10000; }
         
