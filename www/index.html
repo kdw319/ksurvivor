@@ -899,10 +899,10 @@ let items = [];
 let spotlight = null;
 let spotlightSpawnTimer = 0;
 
-const STORY_DATA = Array.from({length: 20}, (_, i) => ({
+const STORY_DATA = Array.from({length: 21}, (_, i) => ({
     ep: i + 1,
-    title: `Episode ${i + 1}`,
-    reqStage: i === 0 ? 0 : i * 5, // Ep 1 open initially, then every 5 stages
+    title: i === 20 ? "에필로그 (Epilogue)" : `Episode ${i + 1}`,
+    reqStage: i === 0 ? 0 : i * 5, // Ep 1 open initially, then every 5 stages. Ep 21 requires Stage 100.
     bg: `scene_${i + 1}.png`,
     ko: [
         { s: "이솔", t: `(이것은 에피소드 ${i + 1}의 스토리입니다.)` },
@@ -926,6 +926,10 @@ STORY_DATA[1].en = [{s:"Isol", t:"The teachers and friends... they've turned int
 STORY_DATA[19].title = "최후의 판결 (The Final Verdict)";
 STORY_DATA[19].ko = [{s:"이솔", t:"이 모든 게 나를 가두기 위한 거짓말이었다니..."}, {s:"이솔", t:"이제 내가 너희를 심판하겠어. 나는 최후의 소녀가 되겠다!"}];
 STORY_DATA[19].en = [{s:"Isol", t:"To think all of this was a lie to trap me..."}, {s:"Isol", t:"Now I will judge you. I will be the Last Girl!"}];
+
+STORY_DATA[20].title = "에필로그: 대역전의 종소리 (Epilogue)";
+STORY_DATA[20].ko = [{s:"이솔", t:"결국 이 재판의 끝에 서게 되었네."}, {s:"이솔", t:"부서진 세계는 사라지고, 이제 진정한 아침이 밝아올 거야."}];
+STORY_DATA[20].en = [{s:"Isol", t:"I've finally reached the end of this trial."}, {s:"Isol", t:"The broken world fades, and a true morning will dawn."}];
 
 let storyStep = 0; 
 let isTyping = false;
