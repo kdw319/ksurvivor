@@ -547,13 +547,26 @@
         </div>
     </div>
 
+    <div id="storyListUI" class="overlay hidden">
+        <div class="panel" style="max-width: 800px;">
+            <h2 id="storyListTitle" style="color: #a29bfe;">기록 보관소 (Story)</h2>
+            <p id="storyListDesc" style="color: #ccc; margin-bottom: 20px;">잃어버린 기억의 파편을 열람합니다.</p>
+            <div id="storyListContainer" style="display:flex; flex-direction:column; gap:10px; margin: 20px 0; max-height: 50vh; overflow-y: auto; padding-right: 10px;"></div>
+            <button id="storyListCloseBtn" class="btn" onclick="window.closeStoryList()" style="margin-top: 20px;">닫기</button>
+        </div>
+    </div>
+
     <div id="storyUI" class="overlay hidden" style="pointer-events: auto;">
-        <div class="panel" style="background: transparent; border: none; box-shadow: none; max-width: 800px;">
-            <div id="storyText" class="typewriter-text"></div>
-            <button id="storyNextBtn" class="btn primary hidden" onclick="window.nextStoryStep()">다음</button>
+        <div id="storyBg"></div>
+        <div id="storyDialogContainer">
+            <div id="storyDialogBox" onclick="window.nextStoryStep()">
+                <div id="storySpeaker">이솔</div>
+                <div id="storyText" class="typewriter-text"></div>
+                <button id="storyNextBtn" class="btn primary hidden" style="position: absolute; bottom: 20px; right: 20px;">다음 ❯</button>
+            </div>
         </div>
         <button id="storyLangBtn" class="btn" style="position: absolute; top: 30px; left: 30px; font-size: 24px; padding: 15px 25px; background: rgba(0,0,0,0.7); color: #fff; border: 2px solid #b89947; border-radius: 10px; cursor: pointer; pointer-events: auto; z-index: 100;" onclick="event.stopPropagation(); window.toggleLanguage()">🌐 KO</button>
-        <button id="storySkipBtn" class="btn skip-btn" onclick="window.skipStory()">Skip</button>
+        <button id="storySkipBtn" class="btn skip-btn" onclick="window.skipStory()">Skip ❯❯</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -1629,12 +1642,25 @@ function toggleGameSpeed() {
     }
 }
 
-function startStory() {
+function startStory(epIndex) {
+    if(epIndex === undefined) {
+        // Find latest unlocked story
+        epIndex = 0;
+        for(let i=0; i<STORY_DATA.length; i++) {
+            if(maxStageReached >= STORY_DATA[i].reqStage || STORY_DATA[i].reqStage === 0) epIndex = i;
+            else break;
+        }
+    }
+    
+    currentStoryEp = epIndex;
     window.gameState = 'story'; 
     let ui = document.getElementById('storyUI');
     if (ui) ui.classList.remove('hidden');
     
-    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => { 
+    let bgEl = document.getElementById('storyBg');
+    if (bgEl) bgEl.style.backgroundImage = `url('./assets/${STORY_DATA[currentStoryEp].bg}')`;
+
+    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar', 'storyListUI'].forEach(id => { 
         let el = document.getElementById(id); 
         if (el) el.classList.add('hidden'); 
     });
@@ -1644,8 +1670,10 @@ function startStory() {
 }
 
 function playStoryStep() {
-    const lang = I18N[currentLang];
-    if (storyStep >= lang.storyLines.length) { 
+    const epData = STORY_DATA[currentStoryEp];
+    const lines = currentLang === 'ko' ? epData.ko : epData.en;
+    
+    if (storyStep >= lines.length) { 
         skipStory(); 
         return; 
     }
@@ -1653,16 +1681,19 @@ function playStoryStep() {
     let nextBtn = document.getElementById('storyNextBtn');
     if (nextBtn) nextBtn.classList.add('hidden');
     
+    const speakerEl = document.getElementById('storySpeaker');
+    if (speakerEl) speakerEl.innerText = lines[storyStep].s;
+
     const textEl = document.getElementById('storyText'); 
     if (textEl) {
-        textEl.innerHTML = lang.storyLines[storyStep].split('').map(char => `<span style="opacity:0; display:inline-block;">${char === ' ' ? '&nbsp;' : char}</span>`).join('');
+        textEl.innerHTML = lines[storyStep].t.split('').map(char => `<span style="opacity:0; display:inline-block;">${char === ' ' ? '&nbsp;' : char}</span>`).join('');
         anime({ 
             targets: '#storyText span', 
             opacity: [0, 1], 
-            translateY: [-10, 0], 
-            easing: 'easeOutExpo', 
-            duration: 300, 
-            delay: anime.stagger(50), 
+            translateY: [-5, 0], 
+            easing: 'easeOutQuad', 
+            duration: 150, 
+            delay: anime.stagger(30), 
             complete: () => { 
                 isTyping = false; 
                 if (nextBtn) nextBtn.classList.remove('hidden'); 
@@ -1685,6 +1716,7 @@ function nextStoryStep() {
     } 
     else { 
         storyStep++; 
+        playSFX('exp');
         playStoryStep(); 
     }
 }
@@ -1950,7 +1982,53 @@ function renderClosetList() {
     });
 }
 
-function openAchieve() {
+function openStoryList() {
+    initAudio(); playSFX('levelup');
+    let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('storyListUI'); 
+    if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden');
+    let badge = document.getElementById('storyBadge'); if (badge) badge.classList.add('hidden'); // Clear badge when opened
+    renderStoryList();
+}
+
+function closeStoryList() {
+    let ui = document.getElementById('storyListUI'); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); 
+    if (ui) ui.classList.add('hidden'); if (title) title.classList.remove('hidden'); if (bbar) bbar.classList.remove('hidden'); 
+}
+
+function renderStoryList() {
+    const list = document.getElementById('storyListContainer');
+    if(!list) return;
+    list.innerHTML = '';
+    
+    // Check if any new stories were unlocked
+    let hasNew = false;
+
+    STORY_DATA.forEach((data, index) => {
+        let isUnlocked = maxStageReached >= data.reqStage || data.reqStage === 0;
+        let isLatest = isUnlocked && (index === STORY_DATA.length - 1 || maxStageReached < STORY_DATA[index+1].reqStage);
+        
+        if (isLatest) hasNew = true;
+
+        let div = document.createElement('div');
+        div.className = `story-list-item ${isUnlocked ? 'unlocked' : 'locked'}`;
+        div.innerHTML = `
+            <div style="flex:1;">
+                <div style="font-weight:bold; color:${isUnlocked ? '#feca57' : '#aaa'}; font-size:1.1rem; margin-bottom:5px;">EP ${data.ep}. ${data.title}</div>
+                <div style="font-size:0.9rem; color:#888;">${isUnlocked ? '해금됨' : `해금 조건: 스테이지 ${data.reqStage} 도달`}</div>
+            </div>
+            ${isUnlocked ? '<div style="font-size:24px;">📖</div>' : '<div style="font-size:24px; opacity:0.3;">🔒</div>'}
+        `;
+        
+        if (isUnlocked) {
+            div.onclick = () => {
+                closeStoryList();
+                startStory(index);
+            };
+        }
+        list.appendChild(div);
+    });
+}
+
     let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('achieveUI'); 
     if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden'); 
     renderAchieveList();
@@ -3205,14 +3283,15 @@ window.toggleFullscreen = function() {
     }
 };
 
-Object.assign(window, { showSystemNotice, currentLang,  toggleFullscreen,  gameState, 
+Object.assign(window, { playSFX, showSystemNotice, currentLang,  toggleFullscreen,  gameState, 
     toggleLanguage, changeVolume, toggleGameSpeed, startStory, playStoryStep,
     nextStoryStep, skipStory, togglePause, returnToLobby, startGame, triggerStageClear,
     nextStage, resetStage, triggerLevelUp, openGacha, closeGacha, rollGacha,
     openUpgrade, closeUpgrade, doUpgrade, renderUpgradeList, openSaveLoad, closeSaveLoad,
     renderSaveSlots, saveToSlot, loadFromSlot, openCloset, closeCloset, equipOutfit,
     renderClosetList, openAchieve, closeAchieve, renderAchieveList,
-    openTutorial, closeTutorial, nextTutorialPage, prevTutorialPage, renderTutorialPage
+    openTutorial, closeTutorial, nextTutorialPage, prevTutorialPage, renderTutorialPage,
+    openStoryList, closeStoryList, renderStoryList
 });
 
 // 게임 부팅
