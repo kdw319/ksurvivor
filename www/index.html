@@ -264,6 +264,8 @@
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
         #flashOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 10000; }
+        #storyFadeOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; opacity: 0; pointer-events: none; z-index: 45; transition: opacity 1.5s ease; }
+        .story-fading { opacity: 1 !important; }
         
         input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #ffb142; cursor: pointer; margin-top: -6px; border: 2px solid #fff; }
@@ -859,9 +861,9 @@ let stageMarblesDropped = 0;
 let verdictOrbs = []; // Current orbs on field
 const MAX_MARBLES_PER_STAGE = 6;
 const MARBLE_TYPES = [
-    { type: 'red', color: '#ff4757', glow: 'rgba(255, 71, 87, 0.5)', icon: '🔴' },
-    { type: 'yellow', color: '#f1c40f', glow: 'rgba(241, 196, 15, 0.5)', icon: '🟡' },
-    { type: 'green', color: '#2ed573', glow: 'rgba(46, 213, 115, 0.5)', icon: '🟢' }
+    { type: 'red', color: '#ff4757', glow: 'rgba(255, 71, 87, 0.5)', icon: '🔴', name: 'Justice Red (ATK)' },
+    { type: 'yellow', color: '#f1c40f', glow: 'rgba(241, 196, 15, 0.5)', icon: '🟡', name: 'Judgment Yellow (ATK SPD)' },
+    { type: 'green', color: '#2ed573', glow: 'rgba(46, 213, 115, 0.5)', icon: '🟢', name: 'Mercy Green (SPD)' }
 ];
 
 window.gameState = 'story'; 
@@ -899,37 +901,155 @@ let items = [];
 let spotlight = null;
 let spotlightSpawnTimer = 0;
 
-const STORY_DATA = Array.from({length: 21}, (_, i) => ({
-    ep: i + 1,
-    title: i === 20 ? "에필로그 (Epilogue)" : `Episode ${i + 1}`,
-    reqStage: i === 0 ? 0 : i * 5, // Ep 1 open initially, then every 5 stages. Ep 21 requires Stage 100.
-    bg: `scene_${i + 1}.png`,
-    ko: [
-        { s: "이솔", t: `(이것은 에피소드 ${i + 1}의 스토리입니다.)` },
-        { s: "미지의 목소리", t: "생존을 증명하라..." }
-    ],
-    en: [
-        { s: "Isol", t: `(This is the story of Episode ${i + 1}.)` },
-        { s: "Unknown Voice", t: "Prove your survival..." }
-    ]
-}));
+const STORY_DATA = [
+    {
+        ep: 1, title: "기억의 파편 (Fragments of Memory)", reqStage: 0, bg: "scene_1.png",
+        ko: [
+            { s: "이솔", t: "수학여행 버스... 그래, 분명 끔찍한 사고가 났었어." },
+            { s: "이솔", t: "온통 비명소리뿐이었는데... 정신을 차려보니 여기네." },
+            { s: "이솔", t: "그런데 이 학교, 내가 알던 곳이 아냐. 훨씬 낡고... 기괴해." },
+            { s: "이솔", t: "바닥에 이 거대한 저울 문양은 뭐지? 마치 거대한 법정 같아." },
+            { s: "미지의 목소리", t: "깨어났는가, 죄인이여." },
+            { s: "이솔", t: "누구야?! 죄인이라니, 나는 그냥 수학여행을 가던 학생이라고!" },
+            { s: "미지의 목소리", t: "네 삶의 무게를 증명하라. 그렇지 못하면 영원히 이곳에 갇히리라." },
+            { s: "이솔", t: "증명...? 도대체 뭘 어떻게 하라는 거야?" },
+            { s: "이솔", t: "일단 움직여야 해. 저 문 너머에서 이상한 소리가 들려." },
+            { s: "이솔", t: "살아남아야 한다. 반드시... 집으로 돌아가야 해." }
+        ],
+        en: [
+            { s: "Isol", t: "The school trip bus... right, there was a terrible accident." },
+            { s: "Isol", t: "It was all screams... then I woke up here." },
+            { s: "Isol", t: "But this school isn't the one I know. It's much older... and twisted." },
+            { s: "Isol", t: "What is this giant scale pattern on the floor? It's like a massive courtroom." },
+            { s: "Unknown Voice", t: "Have you awakened, sinner?" },
+            { s: "Isol", t: "Who's there?! A sinner? I'm just a student on a field trip!" },
+            { s: "Unknown Voice", t: "Prove the weight of your life. Failure means eternal imprisonment." },
+            { s: "Isol", t: "Prove it...? What on earth am I supposed to do?" },
+            { s: "Isol", t: "I have to move. I hear strange noises from beyond that door." },
+            { s: "Isol", t: "I must survive. I have to... go back home, no matter what." }
+        ]
+    },
+    {
+        ep: 2, title: "거짓된 죄목 (False Charges)", reqStage: 5, bg: "scene_2.png",
+        ko: [
+            { s: "이솔", t: "복도가 끝없이 이어져 있어. 선생님... 친구들... 다 어디 간 거지?" },
+            { s: "이솔", t: "저기 누군가 있어! ...아냐, 저건 사람이 아냐." },
+            { s: "이솔", t: "괴물들이 법복을 입고 있어? 손에는 거대한 의사봉을 들고..." },
+            { s: "미지의 목소리", t: "네 첫 번째 죄목은 '도피'다. 현실을 외면한 죄." },
+            { s: "이솔", t: "도피라고? 난 아무것도 도망치지 않았어!" },
+            { s: "미지의 목소리", t: "거짓말은 형벌을 가중시킬 뿐. 배심원들이 너를 지켜보고 있다." },
+            { s: "이솔", t: "말도 안 돼... 저 괴물들이 배심원이라고?" },
+            { s: "이솔", t: "나를 심판하려 들지 마! 난 잘못한 게 없어!" },
+            { s: "이솔", t: "분필... 이 분필로 저들을 막을 수 있을까?" },
+            { s: "이솔", t: "싸워야 해. 저들의 판결을 거부하겠어." }
+        ],
+        en: [
+            { s: "Isol", t: "The hallway goes on forever. Teacher... friends... where did everyone go?" },
+            { s: "Isol", t: "Someone's over there! ...No, that's not a person." },
+            { s: "Isol", t: "Monsters wearing judicial robes? And they're holding giant gavels..." },
+            { s: "Unknown Voice", t: "Your first charge is 'Escapism'. The sin of ignoring reality." },
+            { s: "Isol", t: "Escapism? I haven't run away from anything!" },
+            { s: "Unknown Voice", t: "Lies will only increase your sentence. The jurors are watching you." },
+            { s: "Isol", t: "This is insane... those monsters are the jurors?" },
+            { s: "Isol", t: "Don't try to judge me! I've done nothing wrong!" },
+            { s: "Isol", t: "Chalk... maybe I can use this chalk to stop them." },
+            { s: "Isol", t: "I have to fight. I reject their verdict." }
+        ]
+    },
+    {
+        ep: 3, title: "기록의 미로 (Labyrinth of Records)", reqStage: 10, bg: "scene_3.png",
+        ko: [
+            { s: "이솔", t: "이곳은 도서관인가? 아니, 문서고 같아." },
+            { s: "이솔", t: "내 이름이 적힌 서류들이... 산더미처럼 쌓여 있어." },
+            { s: "이솔", t: "'이솔에 대한 최종 보고서'. 내 삶이 여기 다 기록된 거야?" },
+            { s: "미지의 목소리", t: "기록은 속이지 않는다. 네가 흘린 눈물과 상처까지도." },
+            { s: "이솔", t: "이건 너무해... 남의 사생활을 엿보는 게 무슨 재판이야!" },
+            { s: "미지의 목소리", t: "이곳에서 비밀이란 없다. 오직 증거만이 존재할 뿐." },
+            { s: "이솔", t: "증거...? 그래, 저기 내 학생증이 보여. 하지만 피가 묻어 있어." },
+            { s: "이솔", t: "사고 당시의 기억이 조금씩 떠오르기 시작했어. 아주 파편적으로." },
+            { s: "이솔", t: "내가 왜 이곳에 오게 되었는지, 이 문서들 속에 답이 있을지도 몰라." },
+            { s: "이솔", t: "하지만 이 괴물들이 방해하게 두진 않겠어." }
+        ],
+        en: [
+            { s: "Isol", t: "Is this a library? No, it looks like an archive." },
+            { s: "Isol", t: "Documents with my name on them... they're piled up like mountains." },
+            { s: "Isol", t: "'Final Report on Isol'. Is my entire life recorded here?" },
+            { s: "Unknown Voice", t: "Records do not lie. Not even about your tears or your scars." },
+            { s: "Isol", t: "This is too much... how is peeking into someone's private life a trial!" },
+            { s: "Unknown Voice", t: "There are no secrets here. Only evidence exists." },
+            { s: "Isol", t: "Evidence...? Right, I see my student ID over there. But it's covered in blood." },
+            { s: "Isol", t: "The memories of the accident are starting to return. Piece by piece." },
+            { s: "Isol", t: "The answer to why I'm here might be hidden in these papers." },
+            { s: "Isol", t: "But I won't let these monsters stand in my way." }
+        ]
+    },
+    {
+        ep: 4, title: "각성의 불꽃 (Spark of Awakening)", reqStage: 15, bg: "scene_4.png",
+        ko: [
+            { s: "이솔", t: "몸이 무거워... 하지만 힘이 느껴져." },
+            { s: "이솔", t: "이 구슬들, 공중에 떠다니는 저 빛나는 것들..." },
+            { s: "이솔", t: "단순한 장식인 줄 알았는데, 내 의지에 반응하고 있어." },
+            { s: "미지의 목소리", t: "그것은 '심판의 구슬'. 네 영혼의 농축된 조각이다." },
+            { s: "이솔", t: "심판의 구슬? 붉은색, 노란색, 초록색... 다 다른 기운이 느껴져." },
+            { s: "미지의 목소리", t: "어떻게 조합하느냐에 따라 너의 운명이 바뀔 것이다." },
+            { s: "이솔", t: "운명을 바꾼다고? 그렇다면 이 구슬의 힘을 빌려 여기서 나가겠어." },
+            { s: "이솔", t: "재판을 주관하는 당신들에게 보여줄게. 내 의지가 얼마나 강한지." },
+            { s: "이솔", t: "더 이상 두렵지 않아. 이 빛들이 나를 인도할 거야." },
+            { s: "이솔", t: "자, 이제 다음 재판장으로 가자!" }
+        ],
+        en: [
+            { s: "Isol", t: "My body feels heavy... but I can feel a power rising." },
+            { s: "Isol", t: "These orbs, those glowing things floating in the air..." },
+            { s: "Isol", t: "I thought they were just decorations, but they're responding to my will." },
+            { s: "Unknown Voice", t: "Those are 'Verdict Orbs'. Concentrated fragments of your soul." },
+            { s: "Isol", t: "Verdict Orbs? Red, yellow, green... I can feel different energies from each." },
+            { s: "Unknown Voice", t: "Depending on how you combine them, your destiny will shift." },
+            { s: "Isol", t: "Shift my destiny? Then I'll use their power to get out of here." },
+            { s: "Isol", t: "I'll show you, who oversee this trial, just how strong my will is." },
+            { s: "Isol", t: "I'm not afraid anymore. These lights will guide me." },
+            { s: "Isol", t: "Now, let's head to the next courtroom!" }
+        ]
+    }
+];
 
-// Hardcode first few for narrative
-STORY_DATA[0].title = "기억의 파편 (Fragments of Memory)";
-STORY_DATA[0].ko = [{s:"이솔", t:"수학여행 버스... 그래, 끔찍한 사고가 났었어."}, {s:"이솔", t:"하지만 눈을 뜬 곳은 차가운 법정 바닥이었다. 내 이름은 '이솔'."}];
-STORY_DATA[0].en = [{s:"Isol", t:"The school trip bus... right, there was a terrible accident."}, {s:"Isol", t:"But I woke up on a cold courthouse floor. My name is 'Isol'."}];
+// Generate placeholders for the rest up to 21
+for (let i = 4; i < 21; i++) {
+    const isEpilogue = (i === 20);
+    STORY_DATA.push({
+        ep: i + 1,
+        title: isEpilogue ? "에필로그: 대역전의 아침 (Epilogue)" : `Episode ${i + 1}`,
+        reqStage: isEpilogue ? 100 : (i * 5),
+        bg: `scene_${i + 1}.png`,
+        ko: Array.from({length: 10}, (_, j) => ({ s: "이솔", t: `에피소드 ${i+1}의 더 깊은 이야기 - 줄거리 ${j+1}... (추후 보강 예정)` })),
+        en: Array.from({length: 10}, (_, j) => ({ s: "Isol", t: `Deeper story of Episode ${i+1} - Line ${j+1}... (To be expanded)` }))
+    });
+}
 
-STORY_DATA[1].title = "거짓된 죄목 (False Charges)";
-STORY_DATA[1].ko = [{s:"이솔", t:"학교 선생님들과 친구들이... 괴물로 변해버렸어!"}, {s:"미지의 목소리", t:"죄인은 침묵하라. 재판을 시작한다."}];
-STORY_DATA[1].en = [{s:"Isol", t:"The teachers and friends... they've turned into monsters!"}, {s:"Unknown Voice", t:"Silence, sinner. The trial begins."}];
-
-STORY_DATA[19].title = "최후의 판결 (The Final Verdict)";
-STORY_DATA[19].ko = [{s:"이솔", t:"이 모든 게 나를 가두기 위한 거짓말이었다니..."}, {s:"이솔", t:"이제 내가 너희를 심판하겠어. 나는 최후의 소녀가 되겠다!"}];
-STORY_DATA[19].en = [{s:"Isol", t:"To think all of this was a lie to trap me..."}, {s:"Isol", t:"Now I will judge you. I will be the Last Girl!"}];
-
-STORY_DATA[20].title = "에필로그: 대역전의 종소리 (Epilogue)";
-STORY_DATA[20].ko = [{s:"이솔", t:"결국 이 재판의 끝에 서게 되었네."}, {s:"이솔", t:"부서진 세계는 사라지고, 이제 진정한 아침이 밝아올 거야."}];
-STORY_DATA[20].en = [{s:"Isol", t:"I've finally reached the end of this trial."}, {s:"Isol", t:"The broken world fades, and a true morning will dawn."}];
+// Epic Ending specific text
+STORY_DATA[20].ko = [
+    { s: "이솔", t: "결국... 이 모든 시련의 끝에 도달했네." },
+    { s: "이솔", t: "부서진 법정, 괴물 같은 배심원들... 이제 다 지겨워." },
+    { s: "이솔", t: "당신들이 나를 유죄라고 하든, 무죄라고 하든 중요하지 않아." },
+    { s: "이솔", t: "내 삶의 무게는 오직 나만이 결정할 수 있으니까." },
+    { s: "이솔", t: "보여? 저기서 해가 뜨고 있어. 진짜 세상의 아침이." },
+    { s: "이솔", t: "기억의 조각들이 하나로 맞춰지고 있어. 난 살아야 해. 꼭." },
+    { s: "이솔", t: "이제 이 지옥 같은 법정을 파괴하겠어. 내 미래를 위해서!" },
+    { s: "이솔", t: "안녕, 나의 악몽이여. 이제 더 이상 너에게 지지 않아." },
+    { s: "이솔", t: "자, 이제 눈을 뜰 시간이야." },
+    { s: "이솔", t: "(이솔이 눈을 뜨자, 벚꽃 흩날리는 옥상의 풍경이 펼쳐진다.)" }
+];
+STORY_DATA[20].en = [
+    { s: "Isol", t: "Finally... I've reached the end of all these trials." },
+    { s: "Isol", t: "The broken courtroom, the monstrous jurors... I'm tired of it all." },
+    { s: "Isol", t: "Whether you call me guilty or innocent, it doesn't matter anymore." },
+    { s: "Isol", t: "Because only I can decide the weight of my own life." },
+    { s: "Isol", t: "See? The sun is rising over there. The dawn of the real world." },
+    { s: "Isol", t: "The fragments of memory are falling into place. I must live. No matter what." },
+    { s: "Isol", t: "Now, I will destroy this hellish courtroom. For my future!" },
+    { s: "Isol", t: "Goodbye, my nightmare. I won't lose to you anymore." },
+    { s: "Isol", t: "Now, it's time to wake up." },
+    { s: "Isol", t: "(As Isol opens her eyes, the cherry blossom-filled rooftop reveals itself.)" }
+];
 
 let storyStep = 0; 
 let isTyping = false;
@@ -3425,11 +3545,14 @@ window.checkRouletteSynergy = function() {
             });
         }
         if (window.playSFX) window.playSFX('verdictPair');
-        if (window.showSystemNotice) window.showSystemNotice('\u2728 ONE PAIR!');
+        if (window.showSystemNotice) {
+            const marble = MARBLE_TYPES.find(m => m.type === type);
+            window.showSystemNotice(`✨ ONE PAIR: ${marble.name} BUFF!`);
+        }
     } else {
         if (window.player) window.player.stats.cooldownMult *= 0.85;
         if (window.playSFX) window.playSFX('verdictStraight');
-        if (window.showSystemNotice) window.showSystemNotice('\uD83C\uDCCF STRAIGHT!');
+        if (window.showSystemNotice) window.showSystemNotice('🃏 ALL-ROUND STRAIGHT!');
     }
 };
 
