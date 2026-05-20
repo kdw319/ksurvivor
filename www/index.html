@@ -898,6 +898,34 @@ let items = [];
 let spotlight = null;
 let spotlightSpawnTimer = 0;
 
+const STORY_DATA = Array.from({length: 20}, (_, i) => ({
+    ep: i + 1,
+    title: `Episode ${i + 1}`,
+    reqStage: i === 0 ? 0 : i * 5, // Ep 1 open initially, then every 5 stages
+    bg: `scene_${i + 1}.png`,
+    ko: [
+        { s: "이솔", t: `(이것은 에피소드 ${i + 1}의 스토리입니다.)` },
+        { s: "미지의 목소리", t: "생존을 증명하라..." }
+    ],
+    en: [
+        { s: "Isol", t: `(This is the story of Episode ${i + 1}.)` },
+        { s: "Unknown Voice", t: "Prove your survival..." }
+    ]
+}));
+
+// Hardcode first few for narrative
+STORY_DATA[0].title = "기억의 파편 (Fragments of Memory)";
+STORY_DATA[0].ko = [{s:"이솔", t:"수학여행 버스... 그래, 끔찍한 사고가 났었어."}, {s:"이솔", t:"하지만 눈을 뜬 곳은 차가운 법정 바닥이었다. 내 이름은 '이솔'."}];
+STORY_DATA[0].en = [{s:"Isol", t:"The school trip bus... right, there was a terrible accident."}, {s:"Isol", t:"But I woke up on a cold courthouse floor. My name is 'Isol'."}];
+
+STORY_DATA[1].title = "거짓된 죄목 (False Charges)";
+STORY_DATA[1].ko = [{s:"이솔", t:"학교 선생님들과 친구들이... 괴물로 변해버렸어!"}, {s:"미지의 목소리", t:"죄인은 침묵하라. 재판을 시작한다."}];
+STORY_DATA[1].en = [{s:"Isol", t:"The teachers and friends... they've turned into monsters!"}, {s:"Unknown Voice", t:"Silence, sinner. The trial begins."}];
+
+STORY_DATA[19].title = "최후의 판결 (The Final Verdict)";
+STORY_DATA[19].ko = [{s:"이솔", t:"이 모든 게 나를 가두기 위한 거짓말이었다니..."}, {s:"이솔", t:"이제 내가 너희를 심판하겠어. 나는 최후의 소녀가 되겠다!"}];
+STORY_DATA[19].en = [{s:"Isol", t:"To think all of this was a lie to trap me..."}, {s:"Isol", t:"Now I will judge you. I will be the Last Girl!"}];
+
 let storyStep = 0; 
 let isTyping = false;
 let lobbyCharY = 0; 
@@ -2029,6 +2057,7 @@ function renderStoryList() {
     });
 }
 
+function openAchieve() {
     let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('achieveUI'); 
     if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden'); 
     renderAchieveList();
