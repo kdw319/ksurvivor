@@ -247,9 +247,21 @@
         .achieve-card.unlocked .achieve-icon { opacity: 1; text-shadow: 0 0 10px #f1c40f; }
 
         #storyUI { background: #000; z-index: 50; }
-        .typewriter-text { font-size: 1.5rem; line-height: 2; color: #fff; min-height: 120px; text-align: center; }
-        .skip-btn { position: absolute; top: 70px; right: 10px; background: none; border: 1px solid #555; color: #aaa; cursor: pointer; padding: 10px; border-radius: 4px; }
-        .skip-btn:hover { background: #333; }
+        #storyBg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; transition: background-image 0.5s; }
+        #storyDialogContainer { position: absolute; bottom: 0; left: 0; width: 100%; height: 35%; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; box-sizing: border-box; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 80%, rgba(0,0,0,0) 100%); pointer-events: none; }
+        #storyDialogBox { background: rgba(20, 20, 25, 0.85); border: 3px solid #b89947; border-radius: 12px; width: 90%; max-width: 1000px; padding: 30px; position: relative; pointer-events: auto; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        #storySpeaker { position: absolute; top: -25px; left: -10px; background: #c23616; color: white; padding: 5px 20px; font-weight: bold; font-size: 1.2rem; border: 2px solid #b89947; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
+        .typewriter-text { font-size: 1.3rem; line-height: 1.8; color: #fff; min-height: 80px; text-align: left; text-shadow: 1px 1px 2px #000; }
+        .skip-btn { position: absolute; top: 150px; right: 10px; background: rgba(0,0,0,0.5); border: 1px solid #555; color: #aaa; cursor: pointer; padding: 10px 20px; border-radius: 4px; font-weight: bold; z-index: 55; }
+        .skip-btn:hover { background: rgba(0,0,0,0.8); border-color: #b89947; color: #fff; }
+        
+        #storyListUI .panel { max-width: 800px; }
+        .story-list-item { background: rgba(0,0,0,0.6); border: 1px solid #555; padding: 15px; margin-bottom: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s; }
+        .story-list-item.unlocked { border-left: 4px solid #feca57; }
+        .story-list-item.unlocked:hover { background: rgba(254, 202, 87, 0.2); border-color: #feca57; transform: translateX(5px); }
+        .story-list-item.locked { opacity: 0.5; cursor: not-allowed; }
+        .story-badge { background: #ff4757; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; position: absolute; top: -5px; right: -5px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
         #flashOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 10000; }
         
@@ -535,13 +547,26 @@
         </div>
     </div>
 
+    <div id="storyListUI" class="overlay hidden">
+        <div class="panel" style="max-width: 800px;">
+            <h2 id="storyListTitle" style="color: #a29bfe;">기록 보관소 (Story)</h2>
+            <p id="storyListDesc" style="color: #ccc; margin-bottom: 20px;">잃어버린 기억의 파편을 열람합니다.</p>
+            <div id="storyListContainer" style="display:flex; flex-direction:column; gap:10px; margin: 20px 0; max-height: 50vh; overflow-y: auto; padding-right: 10px;"></div>
+            <button id="storyListCloseBtn" class="btn" onclick="window.closeStoryList()" style="margin-top: 20px;">닫기</button>
+        </div>
+    </div>
+
     <div id="storyUI" class="overlay hidden" style="pointer-events: auto;">
-        <div class="panel" style="background: transparent; border: none; box-shadow: none; max-width: 800px;">
-            <div id="storyText" class="typewriter-text"></div>
-            <button id="storyNextBtn" class="btn primary hidden" onclick="window.nextStoryStep()">다음</button>
+        <div id="storyBg"></div>
+        <div id="storyDialogContainer">
+            <div id="storyDialogBox" onclick="window.nextStoryStep()">
+                <div id="storySpeaker">이솔</div>
+                <div id="storyText" class="typewriter-text"></div>
+                <button id="storyNextBtn" class="btn primary hidden" style="position: absolute; bottom: 20px; right: 20px;">다음 ❯</button>
+            </div>
         </div>
         <button id="storyLangBtn" class="btn" style="position: absolute; top: 30px; left: 30px; font-size: 24px; padding: 15px 25px; background: rgba(0,0,0,0.7); color: #fff; border: 2px solid #b89947; border-radius: 10px; cursor: pointer; pointer-events: auto; z-index: 100;" onclick="event.stopPropagation(); window.toggleLanguage()">🌐 KO</button>
-        <button id="storySkipBtn" class="btn skip-btn" onclick="window.skipStory()">Skip</button>
+        <button id="storySkipBtn" class="btn skip-btn" onclick="window.skipStory()">Skip ❯❯</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -873,6 +898,34 @@ let items = [];
 let spotlight = null;
 let spotlightSpawnTimer = 0;
 
+const STORY_DATA = Array.from({length: 20}, (_, i) => ({
+    ep: i + 1,
+    title: `Episode ${i + 1}`,
+    reqStage: i === 0 ? 0 : i * 5, // Ep 1 open initially, then every 5 stages
+    bg: `scene_${i + 1}.png`,
+    ko: [
+        { s: "이솔", t: `(이것은 에피소드 ${i + 1}의 스토리입니다.)` },
+        { s: "미지의 목소리", t: "생존을 증명하라..." }
+    ],
+    en: [
+        { s: "Isol", t: `(This is the story of Episode ${i + 1}.)` },
+        { s: "Unknown Voice", t: "Prove your survival..." }
+    ]
+}));
+
+// Hardcode first few for narrative
+STORY_DATA[0].title = "기억의 파편 (Fragments of Memory)";
+STORY_DATA[0].ko = [{s:"이솔", t:"수학여행 버스... 그래, 끔찍한 사고가 났었어."}, {s:"이솔", t:"하지만 눈을 뜬 곳은 차가운 법정 바닥이었다. 내 이름은 '이솔'."}];
+STORY_DATA[0].en = [{s:"Isol", t:"The school trip bus... right, there was a terrible accident."}, {s:"Isol", t:"But I woke up on a cold courthouse floor. My name is 'Isol'."}];
+
+STORY_DATA[1].title = "거짓된 죄목 (False Charges)";
+STORY_DATA[1].ko = [{s:"이솔", t:"학교 선생님들과 친구들이... 괴물로 변해버렸어!"}, {s:"미지의 목소리", t:"죄인은 침묵하라. 재판을 시작한다."}];
+STORY_DATA[1].en = [{s:"Isol", t:"The teachers and friends... they've turned into monsters!"}, {s:"Unknown Voice", t:"Silence, sinner. The trial begins."}];
+
+STORY_DATA[19].title = "최후의 판결 (The Final Verdict)";
+STORY_DATA[19].ko = [{s:"이솔", t:"이 모든 게 나를 가두기 위한 거짓말이었다니..."}, {s:"이솔", t:"이제 내가 너희를 심판하겠어. 나는 최후의 소녀가 되겠다!"}];
+STORY_DATA[19].en = [{s:"Isol", t:"To think all of this was a lie to trap me..."}, {s:"Isol", t:"Now I will judge you. I will be the Last Girl!"}];
+
 let storyStep = 0; 
 let isTyping = false;
 let lobbyCharY = 0; 
@@ -1018,11 +1071,11 @@ function playSFX(type) {
         osc2.start(now); osc2.stop(now + 0.1);
     }
     else if(type === 'verdictUse') {
-        // 마법 스킬 사용음 (빠른 주파수 상승과 잔향 느낌)
+        // 마법 스킬 사용음 (빠른 주파수 상승과 잔향 느낌) - Volume Boosted
         osc.type = 'sine'; 
         osc.frequency.setValueAtTime(400 * pitch, now); 
         osc.frequency.exponentialRampToValueAtTime(1200 * pitch, now + 0.3);
-        gain.gain.setValueAtTime(0.2, now); 
+        gain.gain.setValueAtTime(0.8, now); 
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); 
         osc.start(now); osc.stop(now + 0.3);
 
@@ -1032,18 +1085,18 @@ function playSFX(type) {
         osc2.type = 'triangle'; 
         osc2.frequency.setValueAtTime(800 * pitch, now + 0.1); 
         osc2.frequency.exponentialRampToValueAtTime(2000 * pitch, now + 0.4);
-        gain2.gain.setValueAtTime(0.1, now + 0.1); 
+        gain2.gain.setValueAtTime(0.5, now + 0.1); 
         gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.4); 
         osc2.start(now + 0.1); osc2.stop(now + 0.4);
     }
     else if(type === 'verdictJackpot') {
-        // 잭팟: 웅장한 아르페지오 (C 메이저 코드)
+        // 잭팟: 웅장한 아르페지오 (C 메이저 코드) - Volume Boosted
         osc.type = 'square'; 
         osc.frequency.setValueAtTime(523.25, now); // C5
         osc.frequency.setValueAtTime(659.25, now + 0.15); // E5
         osc.frequency.setValueAtTime(783.99, now + 0.3); // G5
         osc.frequency.setValueAtTime(1046.50, now + 0.45); // C6
-        gain.gain.setValueAtTime(0.15, now); 
+        gain.gain.setValueAtTime(0.6, now); 
         gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2); 
         osc.start(now); osc.stop(now + 1.2);
 
@@ -1054,26 +1107,26 @@ function playSFX(type) {
         osc2.frequency.setValueAtTime(1046.50, now); 
         osc2.frequency.setValueAtTime(1318.51, now + 0.15); 
         osc2.frequency.setValueAtTime(2093.00, now + 0.3); 
-        gain2.gain.setValueAtTime(0.15, now); 
+        gain2.gain.setValueAtTime(0.6, now); 
         gain2.gain.exponentialRampToValueAtTime(0.01, now + 1.5); 
         osc2.start(now); osc2.stop(now + 1.5);
     }
     else if(type === 'verdictPair') {
-        // 원페어: 청아한 차임벨
+        // 원페어: 청아한 차임벨 - Volume Boosted
         osc.type = 'sine'; 
         osc.frequency.setValueAtTime(880, now); // A5
         osc.frequency.setValueAtTime(1108.73, now + 0.1); // C#6
-        gain.gain.setValueAtTime(0.2, now); 
+        gain.gain.setValueAtTime(0.7, now); 
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6); 
         osc.start(now); osc.stop(now + 0.6);
     }
     else if(type === 'verdictStraight') {
-        // 스트레이트: 신비로운 하행음
+        // 스트레이트: 신비로운 하행음 - Volume Boosted
         osc.type = 'triangle'; 
         osc.frequency.setValueAtTime(1318.51, now); // E6
         osc.frequency.setValueAtTime(1046.50, now + 0.1); // C6
         osc.frequency.setValueAtTime(880, now + 0.2); // A5
-        gain.gain.setValueAtTime(0.15, now); 
+        gain.gain.setValueAtTime(0.6, now); 
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8); 
         osc.start(now); osc.stop(now + 0.8);
     }
@@ -1617,12 +1670,25 @@ function toggleGameSpeed() {
     }
 }
 
-function startStory() {
+function startStory(epIndex) {
+    if(epIndex === undefined) {
+        // Find latest unlocked story
+        epIndex = 0;
+        for(let i=0; i<STORY_DATA.length; i++) {
+            if(maxStageReached >= STORY_DATA[i].reqStage || STORY_DATA[i].reqStage === 0) epIndex = i;
+            else break;
+        }
+    }
+    
+    currentStoryEp = epIndex;
     window.gameState = 'story'; 
     let ui = document.getElementById('storyUI');
     if (ui) ui.classList.remove('hidden');
     
-    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => { 
+    let bgEl = document.getElementById('storyBg');
+    if (bgEl) bgEl.style.backgroundImage = `url('./assets/${STORY_DATA[currentStoryEp].bg}')`;
+
+    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar', 'storyListUI'].forEach(id => { 
         let el = document.getElementById(id); 
         if (el) el.classList.add('hidden'); 
     });
@@ -1632,8 +1698,10 @@ function startStory() {
 }
 
 function playStoryStep() {
-    const lang = I18N[currentLang];
-    if (storyStep >= lang.storyLines.length) { 
+    const epData = STORY_DATA[currentStoryEp];
+    const lines = currentLang === 'ko' ? epData.ko : epData.en;
+    
+    if (storyStep >= lines.length) { 
         skipStory(); 
         return; 
     }
@@ -1641,16 +1709,19 @@ function playStoryStep() {
     let nextBtn = document.getElementById('storyNextBtn');
     if (nextBtn) nextBtn.classList.add('hidden');
     
+    const speakerEl = document.getElementById('storySpeaker');
+    if (speakerEl) speakerEl.innerText = lines[storyStep].s;
+
     const textEl = document.getElementById('storyText'); 
     if (textEl) {
-        textEl.innerHTML = lang.storyLines[storyStep].split('').map(char => `<span style="opacity:0; display:inline-block;">${char === ' ' ? '&nbsp;' : char}</span>`).join('');
+        textEl.innerHTML = lines[storyStep].t.split('').map(char => `<span style="opacity:0; display:inline-block;">${char === ' ' ? '&nbsp;' : char}</span>`).join('');
         anime({ 
             targets: '#storyText span', 
             opacity: [0, 1], 
-            translateY: [-10, 0], 
-            easing: 'easeOutExpo', 
-            duration: 300, 
-            delay: anime.stagger(50), 
+            translateY: [-5, 0], 
+            easing: 'easeOutQuad', 
+            duration: 150, 
+            delay: anime.stagger(30), 
             complete: () => { 
                 isTyping = false; 
                 if (nextBtn) nextBtn.classList.remove('hidden'); 
@@ -1673,6 +1744,7 @@ function nextStoryStep() {
     } 
     else { 
         storyStep++; 
+        playSFX('exp');
         playStoryStep(); 
     }
 }
@@ -1695,7 +1767,7 @@ function returnToLobby() {
     window.gameState = 'lobby'; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
     ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
     let orbPocketUI = document.getElementById('orbPocketUI');
-    if (orbPocketUI) {
+    if (orbPocketUI && player && player.marblePocket) {
         orbPocketUI.innerHTML = player.marblePocket.map(t => {
             const data = MARBLE_TYPES.find(m => t === m.type);
             return `<span style="text-shadow: 0 0 10px ${data.glow};">${data.icon}</span>`;
@@ -1935,6 +2007,53 @@ function renderClosetList() {
                 currentOutfitId = tempId;
             }
         }, 0);
+    });
+}
+
+function openStoryList() {
+    initAudio(); playSFX('levelup');
+    let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('storyListUI'); 
+    if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden');
+    let badge = document.getElementById('storyBadge'); if (badge) badge.classList.add('hidden'); // Clear badge when opened
+    renderStoryList();
+}
+
+function closeStoryList() {
+    let ui = document.getElementById('storyListUI'); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); 
+    if (ui) ui.classList.add('hidden'); if (title) title.classList.remove('hidden'); if (bbar) bbar.classList.remove('hidden'); 
+}
+
+function renderStoryList() {
+    const list = document.getElementById('storyListContainer');
+    if(!list) return;
+    list.innerHTML = '';
+    
+    // Check if any new stories were unlocked
+    let hasNew = false;
+
+    STORY_DATA.forEach((data, index) => {
+        let isUnlocked = maxStageReached >= data.reqStage || data.reqStage === 0;
+        let isLatest = isUnlocked && (index === STORY_DATA.length - 1 || maxStageReached < STORY_DATA[index+1].reqStage);
+        
+        if (isLatest) hasNew = true;
+
+        let div = document.createElement('div');
+        div.className = `story-list-item ${isUnlocked ? 'unlocked' : 'locked'}`;
+        div.innerHTML = `
+            <div style="flex:1;">
+                <div style="font-weight:bold; color:${isUnlocked ? '#feca57' : '#aaa'}; font-size:1.1rem; margin-bottom:5px;">EP ${data.ep}. ${data.title}</div>
+                <div style="font-size:0.9rem; color:#888;">${isUnlocked ? '해금됨' : `해금 조건: 스테이지 ${data.reqStage} 도달`}</div>
+            </div>
+            ${isUnlocked ? '<div style="font-size:24px;">📖</div>' : '<div style="font-size:24px; opacity:0.3;">🔒</div>'}
+        `;
+        
+        if (isUnlocked) {
+            div.onclick = () => {
+                closeStoryList();
+                startStory(index);
+            };
+        }
+        list.appendChild(div);
     });
 }
 
@@ -2792,6 +2911,7 @@ class FieldItem {
 window.addEventListener('keydown', e => {
     keys[e.key.toLowerCase()] = true;
     if(e.key === ' ' && window.gameState === 'playing') {
+        initAudio();
         if(window.useVerdictRoulette) window.useVerdictRoulette();
     }
     if(e.key === 'Escape' && window.gameState === 'playing') togglePause();
@@ -3054,6 +3174,36 @@ function gameLoop(timestamp) {
         if(window.gameState !== 'lobby' && window.gameState !== 'story') {
             drawBackground(ctx, false);
             
+            // --- DYNAMIC SPOTLIGHT LIGHTING (REVISED) ---
+            ctx.save();
+            ctx.fillStyle = 'rgba(10, 15, 25, 0.7)'; // Darken map with a night tone
+            ctx.fillRect(0, 0, gameWidth, gameHeight);
+            
+            if (player) {
+                // Add a streetlamp-like warm glow over the dark map
+                ctx.globalCompositeOperation = 'lighter';
+                let playerScreenX = gameWidth / 2; 
+                let playerScreenY = gameHeight / 2;
+                
+                let sx = 0, sy = 0;
+                if(screenShake > 0) {
+                    sx = (Math.random() - 0.5) * screenShake;
+                    sy = (Math.random() - 0.5) * screenShake;
+                }
+                
+                let gradient = ctx.createRadialGradient(playerScreenX + sx, playerScreenY + sy, 20, playerScreenX + sx, playerScreenY + sy, 350);
+                gradient.addColorStop(0, 'rgba(255, 240, 180, 0.5)'); // Warm yellow-white core
+                gradient.addColorStop(0.4, 'rgba(255, 200, 100, 0.2)'); // Soft yellow mid
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); // Fades out completely
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(playerScreenX + sx, playerScreenY + sy, 350, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+            // ----------------------------------
+            
             ctx.save();
             if(screenShake > 0) {
                 let sx = (Math.random() - 0.5) * screenShake;
@@ -3162,14 +3312,15 @@ window.toggleFullscreen = function() {
     }
 };
 
-Object.assign(window, { showSystemNotice, currentLang,  toggleFullscreen,  gameState, 
+Object.assign(window, { playSFX, showSystemNotice, currentLang,  toggleFullscreen,  gameState, 
     toggleLanguage, changeVolume, toggleGameSpeed, startStory, playStoryStep,
     nextStoryStep, skipStory, togglePause, returnToLobby, startGame, triggerStageClear,
     nextStage, resetStage, triggerLevelUp, openGacha, closeGacha, rollGacha,
     openUpgrade, closeUpgrade, doUpgrade, renderUpgradeList, openSaveLoad, closeSaveLoad,
     renderSaveSlots, saveToSlot, loadFromSlot, openCloset, closeCloset, equipOutfit,
     renderClosetList, openAchieve, closeAchieve, renderAchieveList,
-    openTutorial, closeTutorial, nextTutorialPage, prevTutorialPage, renderTutorialPage
+    openTutorial, closeTutorial, nextTutorialPage, prevTutorialPage, renderTutorialPage,
+    openStoryList, closeStoryList, renderStoryList
 });
 
 // 게임 부팅
