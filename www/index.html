@@ -792,7 +792,7 @@ const I18N = {
         tut_p3_t: "가챠 및 무기", tut_p3_d: "가챠를 통해 특수 무기를 해금하세요. 해금된 무기는 게임 중 레벨업 풀에 1.5배 확률로 등장합니다!",
         tut_p4_t: "리듬 대쉬", tut_p4_d: "화면 하단의 리듬 바가 노란색 중앙에 올 때 대쉬(SHIFT)를 쓰면 쿨타임 없이 연속 대쉬가 가능합니다!",
         tut_p5_t: "심판의 룰렛", tut_p5_d: "몬스터 50마리를 처치하면 게이지가 찹니다. 스페이스바를 눌러 버프(+5%)를 획득하세요. 같은 종류 3개가 모이면 강력한 시너지(JACKPOT 등)가 발동합니다!",
-        orb_get: "⚖️ 심판의 구슬 획득!", orb_fury: "분노의 심판 (공격력)", orb_life: "생명의 심판 (체력)", orb_wind: "신속의 심판 (이동속도)",
+        orb_get: "⚖️ 심판의 구슬 획득!", orb_fury: "Justice Red (공격력)", orb_life: "Judgment Yellow (공격속도)", orb_wind: "Mercy Green (이동속도)",
         syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)"
     },
     en: {
@@ -3490,10 +3490,10 @@ window.useVerdictRoulette = function() {
     
     const types = ['red', 'yellow', 'green'];
     const result = types[Math.floor(Math.random() * types.length)];
-    const namesEN = { red: 'ATK', yellow: 'HP', green: 'SPD' };
+    const marbleData = MARBLE_TYPES.find(m => m.type === result);
     
-    // 🎭 STEP 1: SPOTLIGHT NOTICE
-    const noticeText = window.currentLang === 'ko' ? '[' + namesEN[result] + ' \uAD6C\uC2AC \uD68D\uB4DD!]' : '[' + namesEN[result] + ' ORB GAINED!]';
+    // 🎭 STEP 1: SPOTLIGHT NOTICE with LORE NAME
+    const noticeText = window.currentLang === 'ko' ? `[\uC2EC\uD310: ${marbleData.name}]` : `[Verdict: ${marbleData.name}]`;
     
     if (window.showSystemNotice) {
         window.showSystemNotice(noticeText);
