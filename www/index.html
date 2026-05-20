@@ -3055,6 +3055,36 @@ function gameLoop(timestamp) {
         if(window.gameState !== 'lobby' && window.gameState !== 'story') {
             drawBackground(ctx, false);
             
+            // --- DYNAMIC SPOTLIGHT LIGHTING ---
+            ctx.save();
+            ctx.fillStyle = 'rgba(0, 0, 10, 0.5)'; // Darken map with a slight cool tone
+            ctx.fillRect(0, 0, gameWidth, gameHeight);
+            
+            if (player) {
+                // Carve out a light hole around the player
+                ctx.globalCompositeOperation = 'destination-out';
+                let playerScreenX = gameWidth / 2; // Player is always centered on screen
+                let playerScreenY = gameHeight / 2;
+                
+                // Screen shake offset calculation
+                let sx = 0, sy = 0;
+                if(screenShake > 0) {
+                    sx = (Math.random() - 0.5) * screenShake;
+                    sy = (Math.random() - 0.5) * screenShake;
+                }
+                
+                let gradient = ctx.createRadialGradient(playerScreenX + sx, playerScreenY + sy, 50, playerScreenX + sx, playerScreenY + sy, 350);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 1)'); // Full light in center
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)'); // Fades out
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(playerScreenX + sx, playerScreenY + sy, 350, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+            // ----------------------------------
+            
             ctx.save();
             if(screenShake > 0) {
                 let sx = (Math.random() - 0.5) * screenShake;
