@@ -413,6 +413,7 @@
     </div>
     <div id="lobbyBottomBar" class="hidden">
         <button id="btnStartLobby" class="btn primary" style="font-size: 1.2rem; padding: 15px 30px;" onclick="window.startGame()">출격하기</button>
+        <button id="btnStoryLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #6c5ce7; color: white; position: relative;" onclick="window.openStoryList()">기록 보관소 <span id="storyBadge" class="story-badge hidden">N</span></button>
         <button id="btnUpgradeLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #e1b12c;" onclick="window.openUpgrade()">능력치 강화</button>
         <button id="btnClosetLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #10ac84; color: white;" onclick="window.openCloset()">옷장 (스킨)</button>
         <button id="btnAchieveLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #f39c12; color: white;" onclick="window.openAchieve()">도전과제</button>
@@ -1575,6 +1576,18 @@ function toggleLanguage() {
     setTxt('langBtn', lang.langBtn); 
     setHtml('lobbyTitleText', `${lang.title}<br><span id="lobbySubtitle" style="font-size:1.2rem; color:#ccc;">${lang.subtitle}</span>`);
     setTxt('btnStartLobby', lang.btnStart); 
+    
+    // Story Button Translation keeping the badge
+    let storyBtn = document.getElementById('btnStoryLobby');
+    if (storyBtn) {
+        let badgeHtml = '<span id="storyBadge" class="story-badge hidden">N</span>';
+        let badgeEl = document.getElementById('storyBadge');
+        if (badgeEl && !badgeEl.classList.contains('hidden')) {
+             badgeHtml = '<span id="storyBadge" class="story-badge">N</span>';
+        }
+        storyBtn.innerHTML = `${lang.btnStoryLobby} ${badgeHtml}`;
+    }
+    
     setTxt('btnGachaLobby', lang.btnGacha); 
     setTxt('btnDataLobby', lang.btnData); 
     setTxt('btnUpgradeLobby', lang.btnUpgrade);
@@ -3175,15 +3188,15 @@ function gameLoop(timestamp) {
         if(window.gameState !== 'lobby' && window.gameState !== 'story') {
             drawBackground(ctx, false);
             
-            // --- DYNAMIC SPOTLIGHT LIGHTING (REVISED TO DARK OVERLAY) ---
+            // --- DYNAMIC SPOTLIGHT LIGHTING (WARM STREETLAMP) ---
             ctx.save();
             ctx.globalCompositeOperation = 'source-over';
-            ctx.fillStyle = 'rgba(0, 0, 5, 0.85)'; // Heavy dark overlay to dim the map significantly
+            ctx.fillStyle = 'rgba(5, 5, 10, 0.7)'; // Darken map to create night atmosphere
             ctx.fillRect(0, 0, gameWidth, gameHeight);
             
             if (player) {
-                // Carve out the light for the player using destination-out to reveal the original map beneath
-                ctx.globalCompositeOperation = 'destination-out';
+                // Add a warm yellow glow around the player using additive blending
+                ctx.globalCompositeOperation = 'lighter';
                 let playerScreenX = gameWidth / 2; 
                 let playerScreenY = gameHeight / 2;
                 
@@ -3193,10 +3206,10 @@ function gameLoop(timestamp) {
                     sy = (Math.random() - 0.5) * screenShake;
                 }
                 
-                let gradient = ctx.createRadialGradient(playerScreenX + sx, playerScreenY + sy, 10, playerScreenX + sx, playerScreenY + sy, 350);
-                gradient.addColorStop(0, 'rgba(255, 255, 255, 1)'); // Fully transparent hole in the center
-                gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.6)'); // Soft fade
-                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)'); // Blends into the dark overlay
+                let gradient = ctx.createRadialGradient(playerScreenX + sx, playerScreenY + sy, 20, playerScreenX + sx, playerScreenY + sy, 350);
+                gradient.addColorStop(0, 'rgba(255, 230, 150, 0.6)'); // Warm yellow-white core
+                gradient.addColorStop(0.4, 'rgba(200, 150, 50, 0.2)'); // Soft yellow/orange mid
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); // Fades out into the dark
                 
                 ctx.fillStyle = gradient;
                 ctx.beginPath();
