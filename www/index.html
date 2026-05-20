@@ -1767,7 +1767,7 @@ function returnToLobby() {
     window.gameState = 'lobby'; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
     ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
     let orbPocketUI = document.getElementById('orbPocketUI');
-    if (orbPocketUI) {
+    if (orbPocketUI && player && player.marblePocket) {
         orbPocketUI.innerHTML = player.marblePocket.map(t => {
             const data = MARBLE_TYPES.find(m => t === m.type);
             return `<span style="text-shadow: 0 0 10px ${data.glow};">${data.icon}</span>`;
