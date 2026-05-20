@@ -248,7 +248,7 @@
 
         #storyUI { background: #000; z-index: 50; }
         .typewriter-text { font-size: 1.5rem; line-height: 2; color: #fff; min-height: 120px; text-align: center; }
-        .skip-btn { position: absolute; top: 70px; right: 10px; background: none; border: 1px solid #555; color: #aaa; cursor: pointer; padding: 10px; border-radius: 4px; }
+        .skip-btn { position: absolute; top: 150px; right: 10px; background: none; border: 1px solid #555; color: #aaa; cursor: pointer; padding: 10px; border-radius: 4px; }
         .skip-btn:hover { background: #333; }
 
         #flashOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 10000; }
@@ -2792,6 +2792,7 @@ class FieldItem {
 window.addEventListener('keydown', e => {
     keys[e.key.toLowerCase()] = true;
     if(e.key === ' ' && window.gameState === 'playing') {
+        initAudio();
         if(window.useVerdictRoulette) window.useVerdictRoulette();
     }
     if(e.key === 'Escape' && window.gameState === 'playing') togglePause();
