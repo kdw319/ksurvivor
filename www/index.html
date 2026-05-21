@@ -860,7 +860,7 @@ let stageKills = 0; window.orbStacks = { red: 0, yellow: 0, green: 0 };
 let stageMarblesDropped = 0;
 let verdictOrbs = []; // Current orbs on field
 const MAX_MARBLES_PER_STAGE = 6;
-const MARBLE_TYPES = [
+window.MARBLE_TYPES = [
     { type: 'red', color: '#ff4757', glow: 'rgba(255, 71, 87, 0.5)', icon: '🔴', name: 'Justice Red (ATK)' },
     { type: 'yellow', color: '#f1c40f', glow: 'rgba(241, 196, 15, 0.5)', icon: '🟡', name: 'Judgment Yellow (ATK SPD)' },
     { type: 'green', color: '#2ed573', glow: 'rgba(46, 213, 115, 0.5)', icon: '🟢', name: 'Mercy Green (SPD)' }
@@ -3518,7 +3518,7 @@ window.useVerdictRoulette = function() {
     
     const types = ['red', 'yellow', 'green'];
     const result = types[Math.floor(Math.random() * types.length)];
-    const marbleData = MARBLE_TYPES.find(m => m.type === result);
+    const marbleData = window.MARBLE_TYPES.find(m => m.type === result);
     
     // 🎭 STEP 1: SPOTLIGHT NOTICE with LORE NAME
     const noticeText = window.currentLang === 'ko' ? `[\uC2EC\uD310: ${marbleData.name}]` : `[Verdict: ${marbleData.name}]`;
