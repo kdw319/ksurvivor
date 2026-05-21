@@ -2057,12 +2057,12 @@ function rollGacha() {
 function openUpgrade() { updateLobbyCurrency(); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('upgradeUI'); if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden'); renderUpgradeList(); }
 function closeUpgrade() { let ui = document.getElementById('upgradeUI'); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); if (ui) ui.classList.add('hidden'); if (title) title.classList.remove('hidden'); if (bbar) bbar.classList.remove('hidden'); }
 
-function doUpgrade(statKey) { let cost = 1; if(playerBadges >= cost && permanentStats[statKey] < 10) { initAudio(); playSFX('levelup'); playerBadges -= cost; permanentStats[statKey]++; updateLobbyCurrency(); renderUpgradeList(); } }
+function doUpgrade(statKey) { let cost = 1; if(playerBadges >= cost && permanentStats[statKey] < 100) { initAudio(); playSFX('levelup'); playerBadges -= cost; permanentStats[statKey]++; updateLobbyCurrency(); renderUpgradeList(); if(player) player.recalculateStats(); } }
 
 function renderUpgradeList() {
     const list = document.getElementById('upgradeList'); if(!list) return; list.innerHTML = ''; const lang = I18N[currentLang];
     const statsInfo = [ { key:'damage', name:lang.upg_dmg, unit:'%' }, { key:'cooldown', name:lang.upg_cool, unit:'%' }, { key:'speed', name:lang.upg_spd, unit:'%' }, { key:'maxHp', name:lang.upg_hp, unit:'HP' } ];
-    statsInfo.forEach(s => { let lv = permanentStats[s.key]; let cost = 1; let isMax = lv >= 10; let btnHtml = isMax ? `<button class="btn" disabled>${lang.btnMax}</button>` : `<button class="btn primary" onclick="doUpgrade('${s.key}')">Lv.UP (${cost})</button>`; list.innerHTML += `<div class="slot-item"><div style="flex:1;"><strong>${s.name}</strong> <span style="color:#2ed573;">Lv.${lv}</span></div>${btnHtml}</div>`; });
+    statsInfo.forEach(s => { let lv = permanentStats[s.key]; let cost = 1; let isMax = lv >= 100; let btnHtml = isMax ? `<button class="btn" disabled>${lang.btnMax}</button>` : `<button class="btn primary" onclick="doUpgrade('${s.key}')">Lv.UP (${cost})</button>`; list.innerHTML += `<div class="slot-item"><div style="flex:1;"><strong>${s.name}</strong> <span style="color:#2ed573;">Lv.${lv}</span></div>${btnHtml}</div>`; });
 }
 
 function openSaveLoad() { updateLobbyCurrency(); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('saveLoadUI'); if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden'); renderSaveSlots(); }
