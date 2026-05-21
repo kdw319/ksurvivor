@@ -1,0 +1,12 @@
+"AppBuild"
+{
+	"AppID" "4353510"
+	"Desc" "Build for Lastgirl Survivor"
+	"ContentRoot" "..\..\dist_pc\Lastgirl Survivor-win32-x64"
+	"BuildOutput" "..\..\steam_build_output"
+	"SetLive" "Stage"
+	"Depots"
+	{
+		"4353511" "depot_build_4353511.vdf"
+	}
+}
