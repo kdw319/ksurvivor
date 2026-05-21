@@ -746,39 +746,18 @@ const GameSettings = {
     }
 };
 
-const I18N = {
+window.I18N = {
     ko: {
         langBtn: "🌐 KO", title: "Last Girl Survivor", subtitle: "대역전의 종소리",
-        btnStart: "출격하기", btnGacha: "픽업 가챠", btnData: "데이터 센터", btnUpgrade: "능력치 강화",        btnClosetLobby: "옷장 (스킨)", closetTitle: "옷장 (Closet)", closetDesc: "스테이지를 클리어하고 새로운 의상을 해금하세요.",
-        btnAchieveLobby: "도전과제", achieveTitle: "도전과제 (Achievements)", achieveDesc: "특정 조건을 만족하여 칭호를 획득하세요.",
+        btnStart: "출격하기", btnGacha: "픽업 가챠", btnData: "데이터 센터", btnUpgrade: "능력치 강화",
+        btnClosetLobby: "옷장 (스킨)", btnStoryLobby: "기록 보관소", btnAchieveLobby: "도전과제",
+        closetTitle: "옷장 (Closet)", closetDesc: "스테이지를 클리어하고 새로운 의상을 해금하세요.",
+        achieveTitle: "도전과제 (Achievements)", achieveDesc: "특정 조건을 만족하여 칭호를 획득하세요.",
         outfitEquipped: "착용 중", outfitEquipBtn: "착용하기", outfitReq: "해금: STAGE",
         speech: ["빨리 시작하자!", "가챠 돌릴 시간이야!", "대역전의 종소리가 울린다!", "지각하겠어!"],
-        storyLines: [ "수학여행 중 끔찍한 교통사고를 당했다. 분명 그게 마지막 기억이었는데...", "눈을 떠보니 차가운 법정 바닥이었다. 내 이름은 '윤이솔'. 어째서인지 이곳에 홀로 남겨졌다.", "사고는 조작된 기억일 뿐일까? 이 기이한 재판소의 진실이 나를 기다리고 있다.", "기억의 조각을 되찾고 나를 가둔 이들에게 복수하기 위해, 나는 최후의 소녀가 되겠다!" ],
         storyNext: "다음 (Click)", storySkip: "Skip",
-        w_chalk: { name: "분필", desc: "가장 가까운 적에게 투사체를 던집니다.", stat: "공격력" },
-        w_textbook: { name: "교과서", desc: "주변을 맴도는 마법의 교과서.", stat: "쿨타임" },
-        w_recorder: { name: "리코더", desc: "전방을 향해 넓게 휘두릅니다.", stat: "공격력" },
-        w_compass: { name: "컴퍼스", desc: "적을 관통하는 컴퍼스를 투척합니다.", stat: "이동속도" },
-        w_gymClothes: { name: "체육복", desc: "최대 체력이 증가하고 서서히 회복합니다.", stat: "" },
-        w_eraser: { name: "지우개", desc: "주변의 적들을 지워버리듯 밀쳐내며 타격합니다.", stat: "쿨타임" },
-        w_triangle: { name: "삼각자", desc: "날카로운 삼각자가 날아가 적을 찌릅니다.", stat: "공격력" },
-        w_lunchbox: { name: "도시락", desc: "맛있는 도시락 폭탄을 던져 광역 피해를 줍니다.", stat: "공격속도" },
-        w_magicMic: { name: "마이크", desc: "강력한 음파로 적들을 관통합니다.", stat: "공격력" },
-        w_smartPhone: { name: "스마트폰", desc: "주변에 플래시 폭발을 일으킵니다.", stat: "쿨타임" },
-        w_laserPointer: { name: "레이저 포인터", desc: "빛의 속도로 적을 관통합니다.", stat: "공격력" },
-        w_energyDrink: { name: "에너지 드링크", desc: "주변에 강력한 에너지를 분출합니다.", stat: "이동속도" },
-        w_studentID: { name: "학생증", desc: "플레이어 주변을 넓게 방어합니다.", stat: "" },
-        w_backpack: { name: "책가방", desc: "거대한 가방을 던져 압살합니다.", stat: "공격력" },
-        w_tablet: { name: "태블릿", desc: "넓은 반경을 데이터 파동으로 타격합니다.", stat: "쿨타임" },
-        w_gamingMouse: { name: "게이밍 마우스", desc: "광클의 힘으로 공격 속도가 대폭 상승합니다.", stat: "공격속도" },
-        syn_study: { name: "🔥 학구열 (분필+교과서)", desc: "분필이 적에게 적중 시 폭발합니다." },
-        syn_music: { name: "🎶 음악과 수학 (리코더+컴퍼스)", desc: "리코더 휘두를 때 미니 컴퍼스를 발사합니다." },
-        syn_cyber: { name: "⚡ 사이버 전사 (스마트폰+레이저)", desc: "스마트폰 폭발 시 4방향으로 레이저 발사." },
-        syn_caffeine: { name: "☕ 카페인 중독 (책가방+드링크)", desc: "책가방 적중 시 에너지 폭발." },
-        syn_idol: { name: "✨ 아이돌 무대 (마이크+체육복)", desc: "마이크 타격 시 일정 확률로 체력 회복 또는 이속 버프." },
-        syn_digital: { name: "🛡️ 디지털 방어 (태블릿+학생증)", desc: "학생증 반경 증가 및 타격 시 쿨감 버프." },
-        syn_proGamer: { name: "🎮 프로게이머 (스마트폰+마우스)", desc: "스마트폰 타격 시 쿨타임 대신 공격속도 비례 데미지, 공격속도 증가." },
-        statDmg: "공격력", statCool: "쿨타임", statSpd: "이동속도", progress: "진행도",
+        storyListTitle: "기록 보관소 (Story)", storyListDesc: "잃어버린 기억의 파편을 열람합니다.", storyListClose: "닫기",
+        statDmg: "공격력", statCool: "쿨타임", statAtkSpd: "공격속도", statSpd: "이동속도", progress: "진행도",
         gachaTitle: "특수 무기 픽업", gachaOwnedText: "보유 뱃지: ", gachaUnitText: "개", gachaDesc: "다양한 특수 무기를 해금하여<br>레벨업 풀에 추가합니다. (해금 무기는 등장 확률 1.5배!)", gachaRollBtn: "1회 뽑기 (10 뱃지)", gachaCloseBtn: "닫기", gachaResCloseBtn: "확인", gachaNoBadge: "뱃지가 부족합니다!",
         gachaResTitleNew: "🎉 신규 무기 해금! 🎉", gachaResMsgNew: "이제 인게임 레벨업 시 등장합니다.", gachaResTitleDup: "중복 무기 획득", gachaResMsgDup: "중복 보상으로 뱃지 5개가 환급되었습니다.",
         saveTitle: "데이터 센터", saveDesc: "메타 프로그레션(재화, 해금 무기, 영구 스탯)을 보존합니다.", saveCloseBtn: "닫기", saveEmpty: "빈 데이터 슬롯", saveBadges: "보유 뱃지: ", saveWeapons: "해금 무기: ", saveBtn: "저장", loadBtn: "로드", saveUnit: "개", saveType: "종",
@@ -793,42 +772,36 @@ const I18N = {
         tut_p4_t: "리듬 대쉬", tut_p4_d: "화면 하단의 리듬 바가 노란색 중앙에 올 때 대쉬(SHIFT)를 쓰면 쿨타임 없이 연속 대쉬가 가능합니다!",
         tut_p5_t: "심판의 룰렛", tut_p5_d: "몬스터 50마리를 처치하면 게이지가 찹니다. 스페이스바를 눌러 버프(+5%)를 획득하세요. 같은 종류 3개가 모이면 강력한 시너지(JACKPOT 등)가 발동합니다!",
         orb_get: "⚖️ 심판의 구슬 획득!", orb_fury: "Justice Red (공격력)", orb_life: "Judgment Yellow (공격속도)", orb_wind: "Mercy Green (이동속도)",
-        syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)"
+        syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)",
+        verdictPrefix: "심판: ",
+        w_chalk: { n: "분필", d: "가장 가까운 적에게 투사체를 던집니다." },
+        w_textbook: { n: "교과서", d: "주변을 맴도는 마법의 교과서." },
+        w_recorder: { n: "리코더", d: "전방을 향해 넓게 휘두릅니다." },
+        w_compass: { n: "컴퍼스", d: "적을 관통하는 컴퍼스를 투척합니다." },
+        w_gymClothes: { n: "체육복", d: "최대 체력이 증가하고 서서히 회복합니다." },
+        w_eraser: { n: "지우개", d: "주변의 적들을 지워버리듯 밀쳐내며 타격합니다." },
+        w_triangle: { n: "삼각자", d: "날카로운 삼각자가 날아가 적을 찌릅니다." },
+        w_lunchbox: { n: "도시락", d: "맛있는 도시락 폭탄을 던져 광역 피해를 줍니다." },
+        w_magicMic: { n: "마이크", d: "강력한 음파로 적들을 관통합니다." },
+        w_smartPhone: { n: "스마트폰", d: "주변에 플래시 폭발을 일으킵니다." },
+        w_laserPointer: { n: "레이저 포인터", d: "빛의 속도로 적을 관통합니다." },
+        w_energyDrink: { n: "에너지 드링크", d: "주변에 강력한 에너지를 분출합니다." },
+        w_studentID: { n: "학생증", d: "플레이어 주변을 넓게 방어합니다." },
+        w_backpack: { n: "책가방", d: "거대한 가방을 던져 압살합니다." },
+        w_tablet: { n: "태블릿", d: "넓은 반경을 데이터 파동으로 타격합니다." },
+        w_gamingMouse: { n: "게이밍 마우스", d: "공격 속도가 대폭 상승합니다." }
     },
     en: {
         langBtn: "🌐 EN", title: "Last Girl Survivor", subtitle: "Bell of Turnabout",
         btnStart: "Sortie", btnGacha: "Pickup Gacha", btnData: "Data Center", btnUpgrade: "Upgrade",
-        btnClosetLobby: "Closet (Skins)", closetTitle: "Closet", closetDesc: "Unlock new outfits as you clear stages.",
-        btnAchieveLobby: "Achievements", achieveTitle: "Achievements", achieveDesc: "Meet specific conditions to earn titles.",
+        btnClosetLobby: "Closet (Skins)", btnStoryLobby: "Chronicles", btnAchieveLobby: "Achievements",
+        closetTitle: "Closet", closetDesc: "Unlock new outfits as you clear stages.",
+        achieveTitle: "Achievements", achieveDesc: "Meet specific conditions to earn titles.",
         outfitEquipped: "Equipped", outfitEquipBtn: "Equip", outfitReq: "Req: STAGE",
         speech: ["Let's go!", "Gacha time!", "The bell tolls!", "I'm late!"],
-        storyLines: [ "I was in a terrible car accident during the school trip. At least, that's what I remember...", "But I woke up on a cold courthouse floor. My name is 'Yoon Isul'. Why am I all alone here?", "Was the accident just a fabricated memory? The truth of this trial awaits.", "To reclaim my past and take revenge, I will become the Last Girl!" ],
         storyNext: "Next (Click)", storySkip: "Skip",
-        w_chalk: { name: "Chalk", desc: "Throws chalk at the nearest enemy.", stat: "ATK" },
-        w_textbook: { name: "Textbook", desc: "A magic textbook orbiting you.", stat: "Cooldown" },
-        w_recorder: { name: "Recorder", desc: "Swings a recorder forward.", stat: "ATK" },
-        w_compass: { name: "Compass", desc: "Throws a piercing compass.", stat: "SPD" },
-        w_gymClothes: { name: "Gym Clothes", desc: "Increases Max HP and regens over time.", stat: "" },
-        w_eraser: { name: "Eraser", desc: "Strikes and knocks back nearby enemies.", stat: "Cooldown" },
-        w_triangle: { name: "Triangle Ruler", desc: "Fires a sharp triangle ruler at enemies.", stat: "ATK" },
-        w_lunchbox: { name: "Lunchbox", desc: "Throws a lunchbox bomb for AOE damage.", stat: "Atk Speed" },
-        w_magicMic: { name: "Mic", desc: "Pierces enemies with soundwaves.", stat: "ATK" },
-        w_smartPhone: { name: "Smartphone", desc: "Causes flash explosions around you.", stat: "Cooldown" },
-        w_laserPointer: { name: "Laser Pointer", desc: "Pierces enemies at the speed of light.", stat: "ATK" },
-        w_energyDrink: { name: "Energy Drink", desc: "Erupts powerful energy explosions around you.", stat: "SPD" },
-        w_studentID: { name: "Student ID", desc: "Defends a wide area around the player.", stat: "" },
-        w_backpack: { name: "Backpack", desc: "Throws a massive, heavy backpack.", stat: "ATK" },
-        w_tablet: { name: "Tablet", desc: "Strikes a wide radius with data waves.", stat: "Cooldown" },
-        w_gamingMouse: { name: "Gaming Mouse", desc: "Boosts attack speed with clicking power.", stat: "Atk Speed" },
-        syn_study: { name: "🔥 Study Maniac", desc: "Chalk explodes on hit." },
-        syn_music: { name: "🎶 Math & Music", desc: "Fire mini-compasses when swinging." },
-        syn_cyber: { name: "⚡ Cyber Warrior", desc: "Smartphone explosion fires lasers in 4 directions." },
-        syn_caffeine: { name: "☕ Caffeine Addict", desc: "Backpack explosion on hit." },
-        syn_idol: { name: "✨ Idol Stage", desc: "Mic heals or buffs speed on hit." },
-        syn_digital: { name: "🛡️ Digital Defense", desc: "Increased ID radius and cooldown buff on hit." },
-        syn_proGamer: { name: "🎮 Pro Gamer", desc: "Increased damage based on attack speed." },
-        syn_lunchBreak: { name: "🍱 Lunch Break", desc: "Lunchbox explosion radius doubled and boosts speed." },
-        statDmg: "ATK", statCool: "Cooldown", statSpd: "SPD", progress: "Progress",
+        storyListTitle: "Chronicles (Story)", storyListDesc: "Retrieve lost fragments of memories.", storyListClose: "Close",
+        statDmg: "ATK", statCool: "Cooldown", statAtkSpd: "ATK SPD", statSpd: "SPD", progress: "Progress",
         gachaTitle: "Special Weapon Pickup", gachaOwnedText: "Owned Badges: ", gachaUnitText: "", gachaDesc: "Unlock special weapons and add them to the level-up pool. (Unlocked weapons have 1.5x appearance rate!)", gachaRollBtn: "1 Roll (10 Badges)", gachaCloseBtn: "Close", gachaResCloseBtn: "Confirm", gachaNoBadge: "Not enough badges!",
         gachaResTitleNew: "🎉 New Weapon Unlocked! 🎉", gachaResMsgNew: "Will now appear in the level-up pool.", gachaResTitleDup: "Duplicate Weapon", gachaResMsgDup: "5 badges have been refunded for duplicate.",
         saveTitle: "Data Center", saveDesc: "Safely preserve meta-progression (currency, weapons, stats).", saveCloseBtn: "Close", saveEmpty: "Empty Data Slot", saveBadges: "Badges: ", saveWeapons: "Unlocked Weapons: ", saveBtn: "Save", loadBtn: "Load", saveUnit: "", saveType: "",
@@ -842,8 +815,25 @@ const I18N = {
         tut_p3_t: "Gacha", tut_p3_d: "Unlock special weapons via Gacha. Unlocked weapons appear in the level-up pool with 1.5x weight!",
         tut_p4_t: "Rhythm Dash", tut_p4_d: "Dash (SHIFT) when the rhythm bar reaches the yellow center to dash continuously without cooldown!",
         tut_p5_t: "Verdict Roulette", tut_p5_d: "Defeat 50 monsters to fill the gauge. Press Space to gain a random buff (+5%). Get 3 of a kind for a massive synergy (JACKPOT)!",
-        orb_get: "⚖️ Verdict Orb Acquired!", orb_fury: "Verdict of Fury (ATK)", orb_life: "Verdict of Life (HP)", orb_wind: "Verdict of Wind (SPD)",
-        syn_triple: "Transcendent Synergy (25%)", syn_double: "Resonance Synergy (15%)", syn_mix: "Harmonious Verdict (10%)"
+        orb_get: "⚖️ Verdict Orb Acquired!", orb_fury: "Justice Red (ATK)", orb_life: "Judgment Yellow (ATK SPD)", orb_wind: "Mercy Green (SPD)",
+        syn_triple: "Transcendent Synergy (25%)", syn_double: "Resonance Synergy (15%)", syn_mix: "Harmonious Verdict (10%)",
+        verdictPrefix: "Verdict: ",
+        w_chalk: { n: "Chalk", d: "Throws chalk at the nearest enemy." },
+        w_textbook: { n: "Textbook", d: "A magic textbook orbiting you." },
+        w_recorder: { n: "Recorder", d: "Swings a recorder forward." },
+        w_compass: { n: "Compass", d: "Throws a piercing compass." },
+        w_gymClothes: { n: "Gym Clothes", d: "Increases Max HP and regens over time." },
+        w_eraser: { n: "Eraser", d: "Strikes and knocks back nearby enemies." },
+        w_triangle: { n: "Triangle Ruler", d: "Fires a sharp triangle ruler at enemies." },
+        w_lunchbox: { n: "Lunchbox", d: "Throws a lunchbox bomb for AOE damage." },
+        w_magicMic: { n: "Mic", d: "Pierces enemies with soundwaves." },
+        w_smartPhone: { n: "Smartphone", d: "Causes flash explosions around you." },
+        w_laserPointer: { n: "Laser Pointer", d: "Pierces enemies at the speed of light." },
+        w_energyDrink: { n: "Energy Drink", d: "Erupts powerful energy explosions around you." },
+        w_studentID: { n: "Student ID", d: "Defends a wide area around the player." },
+        w_backpack: { n: "Backpack", d: "Throws a massive, heavy backpack." },
+        w_tablet: { n: "Tablet", d: "Strikes a wide radius with data waves." },
+        w_gamingMouse: { n: "Gaming Mouse", d: "Boosts attack speed with clicking power." }
     }
 };
 
@@ -901,9 +891,9 @@ let items = [];
 let spotlight = null;
 let spotlightSpawnTimer = 0;
 
-const STORY_DATA = [
+window.STORY_DATA = [
     {
-        ep: 1, title: "기억의 파편 (Fragments of Memory)", reqStage: 0, bg: "scene_1.png",
+        ep: 1, titleKo: "기억의 파편", titleEn: "Fragments of Memory", reqStage: 0, bg: "scene_1.png",
         ko: [
             { s: "이솔", t: "수학여행 버스... 그래, 분명 끔찍한 사고가 났었어." },
             { s: "이솔", t: "온통 비명소리뿐이었는데... 정신을 차려보니 여기네." },
@@ -930,7 +920,7 @@ const STORY_DATA = [
         ]
     },
     {
-        ep: 2, title: "거짓된 죄목 (False Charges)", reqStage: 5, bg: "scene_2.png",
+        ep: 2, titleKo: "거짓된 죄목", titleEn: "False Charges", reqStage: 5, bg: "scene_2.png",
         ko: [
             { s: "이솔", t: "복도가 끝없이 이어져 있어. 선생님... 친구들... 다 어디 간 거지?" },
             { s: "이솔", t: "저기 누군가 있어! ...아냐, 저건 사람이 아냐." },
@@ -957,7 +947,7 @@ const STORY_DATA = [
         ]
     },
     {
-        ep: 3, title: "기록의 미로 (Labyrinth of Records)", reqStage: 10, bg: "scene_3.png",
+        ep: 3, titleKo: "기록의 미로", titleEn: "Labyrinth of Records", reqStage: 10, bg: "scene_3.png",
         ko: [
             { s: "이솔", t: "이곳은 도서관인가? 아니, 문서고 같아." },
             { s: "이솔", t: "내 이름이 적힌 서류들이... 산더미처럼 쌓여 있어." },
@@ -984,7 +974,7 @@ const STORY_DATA = [
         ]
     },
     {
-        ep: 4, title: "각성의 불꽃 (Spark of Awakening)", reqStage: 15, bg: "scene_4.png",
+        ep: 4, titleKo: "각성의 불꽃", titleEn: "Spark of Awakening", reqStage: 15, bg: "scene_4.png",
         ko: [
             { s: "이솔", t: "몸이 무거워... 하지만 힘이 느껴져." },
             { s: "이솔", t: "이 구슬들, 공중에 떠다니는 저 빛나는 것들..." },
@@ -1015,9 +1005,12 @@ const STORY_DATA = [
 // Generate placeholders for the rest up to 21
 for (let i = 4; i < 21; i++) {
     const isEpilogue = (i === 20);
+    const titleKo = isEpilogue ? "에필로그: 대역전의 아침" : `제 ${i+1}장: 기록된 진실`;
+    const titleEn = isEpilogue ? "Epilogue: Dawn of Turnabout" : `Chapter ${i+1}: Recorded Truth`;
     STORY_DATA.push({
         ep: i + 1,
-        title: isEpilogue ? "에필로그: 대역전의 아침 (Epilogue)" : `Episode ${i + 1}`,
+        titleKo: titleKo,
+        titleEn: titleEn,
         reqStage: isEpilogue ? 100 : (i * 5),
         bg: `scene_${i + 1}.png`,
         ko: Array.from({length: 10}, (_, j) => ({ s: "이솔", t: `에피소드 ${i+1}의 더 깊은 이야기 - 줄거리 ${j+1}... (추후 보강 예정)` })),
@@ -1756,42 +1749,40 @@ function toggleLanguage() {
     }
     setTxt('lblStatDmg', lang.statDmg); 
     setTxt('lblStatCool', lang.statCool); 
+    setTxt('lblStatAtkSpd', lang.statAtkSpd);
     setTxt('lblStatSpd', lang.statSpd);
 
     let stageDispUI = document.getElementById('stageDispUI');
     if (stageDispUI && window.gameState === 'playing') {
-        
-    let vUi = document.getElementById('verdictUI');
-    if (vUi) vUi.remove();
-    let themeIndex = (currentStage - 1) % GameSettings.maps.length;
+        let themeIndex = (currentStage - 1) % GameSettings.maps.length;
         let mapId = GameSettings.maps[themeIndex].id;
         stageDispUI.innerText = `STAGE ${currentStage} : ${lang[mapId]}`;
     }
 
-    ['chalk', 'textbook', 'recorder', 'compass', 'gymClothes'].forEach(id => { 
-        GameSettings.weapons[id].name = lang[`w_${id}`].name; 
-        GameSettings.weapons[id].desc = lang[`w_${id}`].desc; 
-        GameSettings.weapons[id].statBonus.label = lang[`w_${id}`].stat; 
+    // Update all weapons (Basic + Special)
+    const allWeaponIds = Object.keys(GameSettings.weapons).concat(Object.keys(GameSettings.specialWeapons));
+    allWeaponIds.forEach(id => {
+        const w = GameSettings.weapons[id] || GameSettings.specialWeapons[id];
+        const l = lang[`w_${id}`];
+        if (w && l) {
+            w.name = l.n;
+            w.desc = l.d;
+            if (w.statBonus) w.statBonus.label = lang[`stat${w.statBonus.type.charAt(0).toUpperCase() + w.statBonus.type.slice(1).replace('Mult','')}`] || '';
+        }
     });
     
-    ['magicMic', 'smartPhone', 'laserPointer', 'energyDrink', 'studentID', 'backpack', 'tablet'].forEach(id => { 
-        GameSettings.specialWeapons[id].name = lang[`w_${id}`].name; 
-        GameSettings.specialWeapons[id].desc = lang[`w_${id}`].desc; 
-        GameSettings.specialWeapons[id].statBonus.label = lang[`w_${id}`].stat; 
+    // Special case for labels that don't follow the pattern
+    if (GameSettings.weapons.lunchbox.statBonus) GameSettings.weapons.lunchbox.statBonus.label = lang.statAtkSpd;
+    if (GameSettings.specialWeapons.gamingMouse.statBonus) GameSettings.specialWeapons.gamingMouse.statBonus.label = lang.statAtkSpd;
+
+    Object.keys(GameSettings.synergies).forEach(id => {
+        const s = GameSettings.synergies[id];
+        const l = lang[`syn_${id}`] || lang[id]; // fallback
+        if (s && l) {
+            s.name = l.name;
+            s.desc = l.desc;
+        }
     });
-    
-    GameSettings.synergies.studyManiac.name = lang.syn_study.name; 
-    GameSettings.synergies.studyManiac.desc = lang.syn_study.desc;
-    GameSettings.synergies.musicMath.name = lang.syn_music.name; 
-    GameSettings.synergies.musicMath.desc = lang.syn_music.desc;
-    GameSettings.synergies.cyberWarrior.name = lang.syn_cyber.name;
-    GameSettings.synergies.cyberWarrior.desc = lang.syn_cyber.desc;
-    GameSettings.synergies.caffeineAddict.name = lang.syn_caffeine.name;
-    GameSettings.synergies.caffeineAddict.desc = lang.syn_caffeine.desc;
-    GameSettings.synergies.idolStage.name = lang.syn_idol.name;
-    GameSettings.synergies.idolStage.desc = lang.syn_idol.desc;
-    GameSettings.synergies.digitalDefense.name = lang.syn_digital.name;
-    GameSettings.synergies.digitalDefense.desc = lang.syn_digital.desc;
     
     if(player) updateInventoryUI();
     if(document.getElementById('upgradeUI') && !document.getElementById('upgradeUI').classList.contains('hidden')) renderUpgradeList();
@@ -2203,12 +2194,15 @@ function renderStoryList() {
         
         if (isLatest) hasNew = true;
 
+        let title = currentLang === 'ko' ? (data.titleKo || data.title) : (data.titleEn || data.title);
+        let statusText = isUnlocked ? (currentLang === 'ko' ? "해금됨" : "Unlocked") : (currentLang === 'ko' ? `해금 조건: 스테이지 ${data.reqStage} 도달` : `Req: Stage ${data.reqStage}`);
+
         let div = document.createElement('div');
         div.className = `story-list-item ${isUnlocked ? 'unlocked' : 'locked'}`;
         div.innerHTML = `
             <div style="flex:1;">
-                <div style="font-weight:bold; color:${isUnlocked ? '#feca57' : '#aaa'}; font-size:1.1rem; margin-bottom:5px;">EP ${data.ep}. ${data.title}</div>
-                <div style="font-size:0.9rem; color:#888;">${isUnlocked ? '해금됨' : `해금 조건: 스테이지 ${data.reqStage} 도달`}</div>
+                <div style="font-weight:bold; color:${isUnlocked ? '#feca57' : '#aaa'}; font-size:1.1rem; margin-bottom:5px;">EP ${data.ep}. ${title}</div>
+                <div style="font-size:0.9rem; color:#888;">${statusText}</div>
             </div>
             ${isUnlocked ? '<div style="font-size:24px;">📖</div>' : '<div style="font-size:24px; opacity:0.3;">🔒</div>'}
         `;
@@ -2761,7 +2755,10 @@ class Player {
 
     playAnim(stateName) { this.animState = stateName; this.animTimer = 0.2 / this.stats.atkSpdMult; }
     recalculateStats() {
-        this.stats.damageMult = 1.0 + (permanentStats.damage * 0.05); this.stats.cooldownMult = 1.0 - (permanentStats.cooldown * 0.02); this.stats.speedMult = 1.0 + (permanentStats.speed * 0.05);
+        this.stats.damageMult = 1.0 + (permanentStats.damage * 0.0125); 
+        this.stats.cooldownMult = 1.0 - (permanentStats.cooldown * 0.005); 
+        this.stats.speedMult = 1.0 + (permanentStats.speed * 0.0125);
+        this.stats.maxHp = this.baseMaxHp * (1.0 + (permanentStats.maxHp * 0.0125));
         this.stats.atkSpdMult = 1.0;
         
         if (window.orbStacks) {
@@ -3508,7 +3505,7 @@ window.MAX_GAUGE = 50;
 window.useVerdictRoulette = function() {
     if (window.verdictGauge < window.MAX_GAUGE) {
         if (window.showSystemNotice) {
-            window.showSystemNotice(window.currentLang === 'ko' ? '\uC2EC\uD310\uC758 \uD798\uC774 \uBD80\uC871\uD569\uB2C8\uB2E4!' : 'Not enough power!');
+            window.showSystemNotice(window.currentLang === 'ko' ? '심판의 힘이 부족합니다!' : 'Not enough power!');
         }
         return;
     }
@@ -3519,9 +3516,11 @@ window.useVerdictRoulette = function() {
     const types = ['red', 'yellow', 'green'];
     const result = types[Math.floor(Math.random() * types.length)];
     const marbleData = window.MARBLE_TYPES.find(m => m.type === result);
+    const lang = I18N[currentLang];
     
-    // 🎭 STEP 1: SPOTLIGHT NOTICE with LORE NAME
-    const noticeText = window.currentLang === 'ko' ? `[\uC2EC\uD310: ${marbleData.name}]` : `[Verdict: ${marbleData.name}]`;
+    // 🎭 STEP 1: SPOTLIGHT NOTICE with LOCALIZED NAMES
+    const localizedName = lang[`orb_${marbleData.type === 'red' ? 'fury' : (marbleData.type === 'yellow' ? 'life' : 'wind')}`];
+    const noticeText = `${lang.verdictPrefix}${localizedName}`;
     
     if (window.showSystemNotice) {
         window.showSystemNotice(noticeText);
