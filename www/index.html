@@ -1679,7 +1679,8 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
 function toggleLanguage() {
     initAudio();
     currentLang = currentLang === 'ko' ? 'en' : 'ko';
-    const lang = I18N[currentLang];
+    window.currentLang = currentLang;
+    const lang = window.I18N[currentLang];
     
     const setTxt = (id, text) => { let e = document.getElementById(id); if(e) e.innerText = text; };
     const setHtml = (id, html) => { let e = document.getElementById(id); if(e) e.innerHTML = html; };
@@ -1733,6 +1734,11 @@ function toggleLanguage() {
     setTxt('upgradeUIDesc', lang.upgradeDesc); 
     setTxt('upgradeUICloseBtn', lang.saveCloseBtn); 
     setTxt('upgUIOwnedText', lang.gachaOwnedText);
+
+    // [STORY LIST UI LOCALIZATION]
+    setTxt('storyListTitle', lang.storyListTitle);
+    setTxt('storyListDesc', lang.storyListDesc);
+    setTxt('storyListCloseBtn', lang.storyListClose);
     
     // 이전에 누락되었던 텍스트 설정 복원
     setTxt('lblPauseVol', lang.pauseVolLbl);
@@ -3516,7 +3522,7 @@ window.useVerdictRoulette = function() {
     const types = ['red', 'yellow', 'green'];
     const result = types[Math.floor(Math.random() * types.length)];
     const marbleData = window.MARBLE_TYPES.find(m => m.type === result);
-    const lang = I18N[currentLang];
+    const lang = window.I18N[window.currentLang];
     
     // 🎭 STEP 1: SPOTLIGHT NOTICE with LOCALIZED NAMES
     const localizedName = lang[`orb_${marbleData.type === 'red' ? 'fury' : (marbleData.type === 'yellow' ? 'life' : 'wind')}`];
