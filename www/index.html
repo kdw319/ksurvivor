@@ -735,14 +735,14 @@ const GameSettings = {
         gamingMouse: { name: "게이밍 마우스", icon: "🖱️", desc: "광클의 힘으로 공격 속도가 대폭 상승합니다.", damage: 10, cooldown: 1.0, speed: 0, color: '#333', statBonus: { type: 'atkSpdMult', value: 0.1, label: '공격속도' } }
     },
     synergies: {
-        studyManiac: { id: 'studyManiac', name: "🔥 학구열 (분필+교과서)", icon: "🔥", req: ['chalk', 'textbook'], desc: "분필이 적에게 적중 시 폭발합니다." },
-        musicMath: { id: 'musicMath', name: "🎶 음악과 수학 (리코더+컴퍼스)", icon: "🎶", req: ['recorder', 'compass'], desc: "리코더 휘두를 때 미니 컴퍼스를 발사합니다." },
-        cyberWarrior: { id: 'cyberWarrior', name: "⚡ 사이버 전사 (스마트폰+레이저)", icon: "⚡", req: ['smartPhone', 'laserPointer'], desc: "스마트폰 폭발 시 4방향으로 레이저 발사." },
-        caffeineAddict: { id: 'caffeineAddict', name: "☕ 카페인 중독 (책가방+드링크)", icon: "☕", req: ['backpack', 'energyDrink'], desc: "책가방 적중 시 에너지 폭발." },
-        idolStage: { id: 'idolStage', name: "✨ 아이돌 무대 (마이크+체육복)", icon: "✨", req: ['magicMic', 'gymClothes'], desc: "마이크 타격 시 일정 확률로 체력 회복 또는 이속 버프." },
-        digitalDefense: { id: 'digitalDefense', name: "🛡️ 디지털 방어 (태블릿+학생증)", icon: "🛡️", req: ['tablet', 'studentID'], desc: "학생증 반경 증가 및 타격 시 쿨감 버프." },
-        proGamer: { id: 'proGamer', name: "🎮 프로게이머 (스마트폰+마우스)", icon: "🎮", req: ['smartPhone', 'gamingMouse'], desc: "스마트폰 타격 시 쿨타임 대신 공격속도 비례 데미지, 공격속도 증가." },
-        lunchBreak: { id: 'lunchBreak', name: "🍱 점심시간 (도시락+체육복)", icon: "🍱", req: ['lunchbox', 'gymClothes'], desc: "도시락 폭발 범위가 2배로 증가하고 공격속도가 상승합니다." }
+        studyManiac: { id: 'studyManiac', name: "🔥 학구열 (분필+교과서)", enName: "🔥 Academic Passion (Chalk+Textbook)", icon: "🔥", req: ['chalk', 'textbook'], desc: "분필이 적에게 적중 시 폭발합니다." },
+        musicMath: { id: 'musicMath', name: "🎶 음악과 수학 (리코더+컴퍼스)", enName: "🎶 Music & Math (Recorder+Compass)", icon: "🎶", req: ['recorder', 'compass'], desc: "리코더 휘두를 때 미니 컴퍼스를 발사합니다." },
+        cyberWarrior: { id: 'cyberWarrior', name: "⚡ 사이버 전사 (스마트폰+레이저)", enName: "⚡ Cyber Warrior (Smartphone+Laser)", icon: "⚡", req: ['smartPhone', 'laserPointer'], desc: "스마트폰 폭발 시 4방향으로 레이저 발사." },
+        caffeineAddict: { id: 'caffeineAddict', name: "☕ 카페인 중독 (책가방+드링크)", enName: "☕ Caffeine Addict (Backpack+Drink)", icon: "☕", req: ['backpack', 'energyDrink'], desc: "책가방 적중 시 에너지 폭발." },
+        idolStage: { id: 'idolStage', name: "✨ 아이돌 무대 (마이크+체육복)", enName: "✨ Idol Stage (Mic+GymClothes)", icon: "✨", req: ['magicMic', 'gymClothes'], desc: "마이크 타격 시 일정 확률로 체력 회복 또는 이속 버프." },
+        digitalDefense: { id: 'digitalDefense', name: "🛡️ 디지털 방어 (태블릿+학생증)", enName: "🛡️ Digital Defense (Tablet+ID)", icon: "🛡️", req: ['tablet', 'studentID'], desc: "학생증 반경 증가 및 타격 시 쿨감 버프." },
+        proGamer: { id: 'proGamer', name: "🎮 프로게이머 (스마트폰+마우스)", enName: "🎮 Pro Gamer (Smartphone+Mouse)", icon: "🎮", req: ['smartPhone', 'gamingMouse'], desc: "스마트폰 타격 시 쿨타임 대신 공격속도 비례 데미지, 공격속도 증가." },
+        lunchBreak: { id: 'lunchBreak', name: "🍱 점심시간 (도시락+체육복)", enName: "🍱 Lunch Break (Lunchbox+GymClothes)", icon: "🍱", req: ['lunchbox', 'gymClothes'], desc: "도시락 폭발 범위가 2배로 증가하고 공격속도가 상승합니다." }
     }
 };
 
@@ -1760,7 +1760,7 @@ function toggleLanguage() {
     setTxt('deathUIBtn', lang.deathBtn);
     setTxt('clearUITitle', lang.clearTitle);
     setTxt('clearUIDesc', lang.clearDesc);
-    setHtml('clearUIRewardLbl', `${lang.clearReward}<span id="clearRewardDisp">${document.getElementById('clearRewardDisp')?.innerText || '0'}</span>개`);
+    setHtml('clearUIRewardLbl', `${lang.clearReward}<span id="clearRewardDisp">${document.getElementById('clearRewardDisp')?.innerText || '0'}</span>${lang.badgeUnit}`);
     setTxt('clearUINextBtn', lang.clearNextBtn);
     setTxt('clearUIExitBtn', lang.clearExitBtn);
 
@@ -2943,8 +2943,8 @@ class Player {
                 this.activeSynergies[key] = true; 
                 updated = true;
                 const lang = window.I18N[window.currentLang];
-                const synLangName = (lang[`syn_${key}`] ? lang[`syn_${key}`].name : syn.name);
-                showSystemNotice(`🔥 ${synLangName} ${lang.noticeSynergy}`);
+                const synName = (window.currentLang === 'ko' ? syn.name : (syn.enName || syn.name));
+                showSystemNotice(`🔥 ${synName} ${lang.noticeSynergy}`);
             } 
         }
         if (updated) {
@@ -3549,7 +3549,6 @@ window.useVerdictRoulette = function() {
     const types = ['red', 'yellow', 'green'];
     const result = types[Math.floor(Math.random() * types.length)];
     const marbleData = window.MARBLE_TYPES.find(m => m.type === result);
-    const lang = window.I18N[window.currentLang];
     
     // 🎭 STEP 1: SPOTLIGHT NOTICE with LOCALIZED NAMES
     const localizedName = lang[`orb_${marbleData.type === 'red' ? 'fury' : (marbleData.type === 'yellow' ? 'life' : 'wind')}`];
@@ -3584,6 +3583,7 @@ window.checkRouletteSynergy = function() {
     if (inv.length < 3) return;
     const counts = { red: 0, yellow: 0, green: 0 };
     inv.forEach(i => counts[i]++);
+    const lang = window.I18N[window.currentLang];
     
     if (counts.red === 3 || counts.yellow === 3 || counts.green === 3) {
         const type = inv[0];
@@ -3593,7 +3593,7 @@ window.checkRouletteSynergy = function() {
             window.player.recalculateStats();
         }
         if (window.playSFX) window.playSFX('verdictJackpot');
-        if (window.showSystemNotice) window.showSystemNotice('\uD83C\uDF89 TRIPLE JACKPOT!');
+        if (window.showSystemNotice) window.showSystemNotice(`🎉 ${lang.syn_triple}`);
     } else if (counts.red === 2 || counts.yellow === 2 || counts.green === 2) {
         const type = Object.keys(counts).find(k => counts[k] === 2);
         window.verdictBuffs[type] += 0.05;
@@ -3605,14 +3605,11 @@ window.checkRouletteSynergy = function() {
             });
         }
         if (window.playSFX) window.playSFX('verdictPair');
-        if (window.showSystemNotice) {
-            const marble = MARBLE_TYPES.find(m => m.type === type);
-            window.showSystemNotice(`✨ ONE PAIR: ${marble.name} BUFF!`);
-        }
+        if (window.showSystemNotice) window.showSystemNotice(`✨ ${lang.syn_double}`);
     } else {
         if (window.player) window.player.stats.cooldownMult *= 0.85;
         if (window.playSFX) window.playSFX('verdictStraight');
-        if (window.showSystemNotice) window.showSystemNotice('🃏 ALL-ROUND STRAIGHT!');
+        if (window.showSystemNotice) window.showSystemNotice(`🃏 ${lang.syn_mix}`);
     }
 };
 
@@ -3621,7 +3618,7 @@ window.updateVerdictUI = function() {
     if (!ui) {
         ui = document.createElement('div');
         ui.id = 'verdictUI';
-        ui.style.cssText = 'position:absolute; bottom:55px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; z-index:9999; pointer-events:none; opacity: 0.3;';
+        ui.style.cssText = 'position:absolute; bottom:70px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; z-index:9999; pointer-events:none; opacity: 1.0;';
         
         const style = document.createElement('style');
         style.innerHTML = `
