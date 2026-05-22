@@ -307,7 +307,7 @@
         .aos-build #statsPanel { top: 180px !important; right: 150px !important; }
        
         .aos-build #systemNoticeList { top: 350px !important; right: 150px !important; }
-        .aos-build #verdictUI { bottom: 130px !important; opacity: 1 !important; } /* Push Verdict UI up slightly for safety */
+        .aos-build #verdictUI { bottom: 130px !important; opacity: 0.5 !important; } /* Push Verdict UI up slightly for safety */
         
         /* Lobby specific safety box */
         .aos-build #lobbyTopBar { top: 120px !important; padding: 0 120px !important; }
@@ -3618,7 +3618,7 @@ window.updateVerdictUI = function() {
     if (!ui) {
         ui = document.createElement('div');
         ui.id = 'verdictUI';
-        ui.style.cssText = 'position:absolute; bottom:70px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; z-index:9999; pointer-events:none; opacity: 1.0;';
+        ui.style.cssText = 'position:absolute; bottom:70px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; z-index:9999; pointer-events:none; opacity: 0.5;';
         
         const style = document.createElement('style');
         style.innerHTML = `
