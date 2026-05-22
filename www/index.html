@@ -774,6 +774,9 @@ window.I18N = {
         orb_get: "⚖️ 심판의 구슬 획득!", orb_fury: "Justice Red (공격력)", orb_life: "Judgment Yellow (공격속도)", orb_wind: "Mercy Green (이동속도)",
         syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)",
         verdictPrefix: "심판: ",
+        deathTitle: "사망했습니다...", deathBtn: "로비로 돌아가기",
+        clearTitle: "스테이지 클리어!", clearDesc: "다음 스테이지로 진입합니다. (현재 스테이지 무기 및 레벨은 초기화됩니다)", clearReward: "획득한 뱃지: ", clearNextBtn: "다음 스테이지", clearExitBtn: "로비로 귀환",
+        noticeSave: "슬롯 저장 완료", noticeLoad: "슬롯 로드 완료!", noticeSynergy: "발동!", noticePowerShort: "심판의 힘이 부족합니다!", noticeObjection: "진실 규명!! (광역 소탕)", noticePerfectDash: "퍼펙트 대쉬!", noticeSpotlight: "⚠️ 스포트라이트 발생!", noticeAchievement: "🏆 업적 달성: ",
         w_chalk: { n: "분필", d: "가장 가까운 적에게 투사체를 던집니다." },
         w_textbook: { n: "교과서", d: "주변을 맴도는 마법의 교과서." },
         w_recorder: { n: "리코더", d: "전방을 향해 넓게 휘두릅니다." },
@@ -816,8 +819,11 @@ window.I18N = {
         tut_p4_t: "Rhythm Dash", tut_p4_d: "Dash (SHIFT) when the rhythm bar reaches the yellow center to dash continuously without cooldown!",
         tut_p5_t: "Verdict Roulette", tut_p5_d: "Defeat 50 monsters to fill the gauge. Press Space to gain a random buff (+5%). Get 3 of a kind for a massive synergy (JACKPOT)!",
         orb_get: "⚖️ Verdict Orb Acquired!", orb_fury: "Justice Red (ATK)", orb_life: "Judgment Yellow (ATK SPD)", orb_wind: "Mercy Green (SPD)",
-        syn_triple: "Transcendent Synergy (25%)", syn_double: "Resonance Synergy (15%)", syn_mix: "Harmonious Verdict (10%)",
+        syn_triple: "Transcendent Synergy (25%)", syn_double: "Resonance Synergy (15%)", syn_mix: "Harmonious Judgment (10%)",
         verdictPrefix: "Verdict: ",
+        deathTitle: "You have fallen...", deathBtn: "Return to Lobby",
+        clearTitle: "Stage Cleared!", clearDesc: "Entering next stage. (Current weapons and level will be reset)", clearReward: "Badges Earned: ", clearNextBtn: "Next Stage", clearExitBtn: "Return to Lobby",
+        noticeSave: "Slot Saved", noticeLoad: "Slot Loaded!", noticeSynergy: "Activated!", noticePowerShort: "Not enough power!", noticeObjection: "OBJECTION!!", noticePerfectDash: "PERFECT DASH!", noticeSpotlight: "⚠️ SPOTLIGHT!", noticeAchievement: "🏆 Achievement: ",
         w_chalk: { n: "Chalk", d: "Throws chalk at the nearest enemy." },
         w_textbook: { n: "Textbook", d: "A magic textbook orbiting you." },
         w_recorder: { n: "Recorder", d: "Swings a recorder forward." },
@@ -1749,6 +1755,15 @@ function toggleLanguage() {
     setTxt('pauseUIExitBtn', lang.pauseExit);
     setTxt('levelUpTitle', lang.levelUpTitle);
 
+    // [New: Death & Clear UI Localization]
+    setTxt('deathUITitle', lang.deathTitle);
+    setTxt('deathUIBtn', lang.deathBtn);
+    setTxt('clearUITitle', lang.clearTitle);
+    setTxt('clearUIDesc', lang.clearDesc);
+    setHtml('clearUIRewardLbl', `${lang.clearReward}<span id="clearRewardDisp">${document.getElementById('clearRewardDisp')?.innerText || '0'}</span>개`);
+    setTxt('clearUINextBtn', lang.clearNextBtn);
+    setTxt('clearUIExitBtn', lang.clearExitBtn);
+
     let hdCenter = document.getElementById('hudCenter');
     if (hdCenter) {
         hdCenter.innerHTML = `${lang.progress}: <span id="progressDisp">${document.getElementById('progressDisp')?.innerText || '0'}</span>%`;
@@ -2092,7 +2107,8 @@ function saveToSlot(i) {
     };
     localStorage.setItem('op_save_slot_' + i, JSON.stringify(saveData));
     renderSaveSlots();
-    showSystemNotice(`[로컬 저장소] 슬롯 ${i+1} 저장 완료`);
+    const lang = window.I18N[window.currentLang];
+    showSystemNotice(`[SLOT ${i+1}] ${lang.noticeSave}`);
 }
 
 function loadFromSlot(i) {
@@ -2103,14 +2119,20 @@ function loadFromSlot(i) {
         playerBadges = data.playerBadges || 0; 
         unlockedWeapons = data.unlockedWeapons || []; 
         permanentStats = data.permanentStats || {damage:0, cooldown:0, speed:0, maxHp:0}; 
-        currentStage = data.currentStage || 1; 
-        maxStageReached = data.maxStageReached || 1;
+        
+        // Reset story and stage progress to start from the beginning
+        currentStage = 1; 
+        window.storyStep = 0;
+        window.isEpilogueTriggered = false;
+
+        maxStageReached = data.maxStageReached || 1; 
         currentOutfitId = data.currentOutfitId || 'default1';
         statsTracking = data.statsTracking || { totalKills: 0, totalBadges: 0 };
         achievements = data.achievements || { kills: false, stage5: false, rich: false };
         
         updateLobbyCurrency(); 
-        showSystemNotice(`데이터 센터: 슬롯 ${i+1} 로드 완료!`); 
+        const lang = window.I18N[window.currentLang];
+        showSystemNotice(`[SLOT ${i+1}] ${lang.noticeLoad}`); 
         closeSaveLoad(); 
     }
 }
@@ -2920,7 +2942,9 @@ class Player {
             if(!this.activeSynergies[key] && syn.req.every(r => owned.includes(r))) { 
                 this.activeSynergies[key] = true; 
                 updated = true;
-                showSystemNotice(`🔥 ${syn.name} 발동!`);
+                const lang = window.I18N[window.currentLang];
+                const synLangName = (lang[`syn_${key}`] ? lang[`syn_${key}`].name : syn.name);
+                showSystemNotice(`🔥 ${synLangName} ${lang.noticeSynergy}`);
             } 
         }
         if (updated) {
@@ -3279,7 +3303,8 @@ function gameLoop(timestamp) {
                 spotlightSpawnTimer -= dt;
                 if (spotlightSpawnTimer <= 0 && !spotlight) {
                     spotlight = new Spotlight(player.x + (Math.random()-0.5)*200, player.y + (Math.random()-0.5)*200);
-                    showSystemNotice(currentLang === 'ko' ? "⚠️ 스포트라이트 발생!" : "⚠️ SPOTLIGHT!");
+                    const lang = window.I18N[window.currentLang];
+                    showSystemNotice(lang.noticeSpotlight);
                     playSFX('levelup');
                     spotlightSpawnTimer = GameSettings.spotlight.spawnInterval;
                 }
@@ -3510,9 +3535,10 @@ window.verdictBuffs = { red: 0, yellow: 0, green: 0 };
 window.MAX_GAUGE = 50;
 
 window.useVerdictRoulette = function() {
+    const lang = window.I18N[window.currentLang];
     if (window.verdictGauge < window.MAX_GAUGE) {
         if (window.showSystemNotice) {
-            window.showSystemNotice(window.currentLang === 'ko' ? '심판의 힘이 부족합니다!' : 'Not enough power!');
+            window.showSystemNotice(lang.noticePowerShort);
         }
         return;
     }
