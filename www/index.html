@@ -543,7 +543,7 @@
             <p id="clearUIDesc">다음 스테이지로 진입합니다. (현재 스테이지 무기 및 레벨은 초기화됩니다)</p>
             <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; margin: 20px 0;">
                 <span style="font-size: 24px;">🏅</span>
-                <div id="clearUIRewardLbl" style="font-size: 18px; color: #ffb142; margin-top: 10px;">획득한 뱃지: <span id="clearRewardDisp">0</span>개</div>
+                <div id="clearUIRewardLbl" style="font-size: 18px; color: #ffb142; margin-top: 10px;">획득한 뱃지: <span id="clearRewardDisp">0</span></div>
             </div>
             <button id="clearUINextBtn" class="btn primary" onclick="window.nextStage()">다음 스테이지</button>
             <button id="clearUIExitBtn" class="btn" onclick="window.returnToLobby()">로비로 귀환</button>
@@ -1760,7 +1760,7 @@ function toggleLanguage() {
     setTxt('deathUIBtn', lang.deathBtn);
     setTxt('clearUITitle', lang.clearTitle);
     setTxt('clearUIDesc', lang.clearDesc);
-    setHtml('clearUIRewardLbl', `${lang.clearReward}<span id="clearRewardDisp">${document.getElementById('clearRewardDisp')?.innerText || '0'}</span>${lang.badgeUnit}`);
+    setHtml('clearUIRewardLbl', `${lang.clearReward}<span id="clearRewardDisp">${document.getElementById('clearRewardDisp')?.innerText || '0'}</span>`);
     setTxt('clearUINextBtn', lang.clearNextBtn);
     setTxt('clearUIExitBtn', lang.clearExitBtn);
 
@@ -2037,8 +2037,11 @@ function triggerLevelUp() {
         let wData = getWeaponSettings(id); let existing = player.weapons.find(w => w.id === id); let nextLv = existing ? existing.level + 1 : 1; let isPremium = GameSettings.specialWeapons[id] !== undefined;
         let statTextHTML = '';
         if(wData.statBonus && wData.statBonus.type !== 'none') {
+            let lang = window.I18N[window.currentLang];
+            let labelKey = wData.statBonus.label.replace('공격력','Dmg').replace('쿨타임','Cool').replace('공격속도','AtkSpd').replace('이동속도','Spd').replace('최대체력','Hp');
+            let label = lang[`stat${labelKey}`] || wData.statBonus.label;
             let sign = wData.statBonus.value > 0 ? '+' : ''; let valPercent = Math.round(wData.statBonus.value * 100);
-            statTextHTML = `<div style="color:#2ed573; font-weight:bold; margin-top:10px; font-size:0.9rem;">[${wData.statBonus.label} ${sign}${valPercent}%]</div>`;
+            statTextHTML = `<div style="color:#2ed573; font-weight:bold; margin-top:10px; font-size:0.9rem;">${label} ${sign}${valPercent}%</div>`;
         }
         let card = document.createElement('div'); card.className = `choice-card ${isPremium ? 'premium' : ''}`;
         card.innerHTML = `<div class="choice-icon">${wData.icon}</div><div class="choice-title" style="${isPremium ? 'color:#ff9ff3;' : ''}">${wData.name} <br><span style="color:#2ed573">Lv.${nextLv}</span></div><div class="choice-desc">${wData.desc}</div>${statTextHTML}`;
