@@ -532,21 +532,21 @@
 
     <div id="gameOverUI" class="overlay hidden">
         <div class="panel">
-            <h1 style="color: #ff4757;">사망했습니다...</h1>
-            <button class="btn" onclick="window.returnToLobby()">로비로 돌아가기</button>
+            <h1 id="deathUITitle" style="color: #ff4757;">사망했습니다...</h1>
+            <button id="deathUIBtn" class="btn" onclick="window.returnToLobby()">로비로 돌아가기</button>
         </div>
     </div>
 
     <div id="stageClearUI" class="overlay hidden">
         <div class="panel">
-            <h1 style="color: #2ed573;">스테이지 클리어!</h1>
-            <p>다음 스테이지로 진입합니다. (현재 스테이지 무기 및 레벨은 초기화됩니다)</p>
+            <h1 id="clearUITitle" style="color: #2ed573;">스테이지 클리어!</h1>
+            <p id="clearUIDesc">다음 스테이지로 진입합니다. (현재 스테이지 무기 및 레벨은 초기화됩니다)</p>
             <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; margin: 20px 0;">
                 <span style="font-size: 24px;">🏅</span>
-                <div style="font-size: 18px; color: #ffb142; margin-top: 10px;">획득한 뱃지: <span id="clearRewardDisp">0</span>개</div>
+                <div id="clearUIRewardLbl" style="font-size: 18px; color: #ffb142; margin-top: 10px;">획득한 뱃지: <span id="clearRewardDisp">0</span>개</div>
             </div>
-            <button class="btn primary" onclick="window.nextStage()">다음 스테이지</button>
-            <button class="btn" onclick="window.returnToLobby()">로비로 귀환</button>
+            <button id="clearUINextBtn" class="btn primary" onclick="window.nextStage()">다음 스테이지</button>
+            <button id="clearUIExitBtn" class="btn" onclick="window.returnToLobby()">로비로 귀환</button>
         </div>
     </div>
 
@@ -1419,7 +1419,7 @@ function giveWeapon(id) {
         player.weapons.push(new Weapon(id)); 
     }
     
-    if(!existing && id === 'gymClothes') { 
+    if(id === 'gymClothes') { 
         player.maxHp += GameSettings.weapons.gymClothes.maxHpBonus; 
         player.hp += GameSettings.weapons.gymClothes.maxHpBonus; 
     }
@@ -1981,7 +1981,8 @@ function triggerStageClear() {
 
 function nextStage() { 
     currentStage++; let clearUI = document.getElementById('stageClearUI'); if (clearUI) clearUI.classList.add('hidden'); 
-    resetStage(true); lastTime = performance.now(); window.gameState = 'playing'; isPaused = false; 
+    window.gameState = 'playing';
+    resetStage(true); lastTime = performance.now(); isPaused = false; 
 }
 
 function resetStage(fullReset = false) {
