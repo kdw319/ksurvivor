@@ -1986,7 +1986,8 @@ function resetStage(fullReset = false) {
     let theme = GameSettings.maps[themeIndex];
     
     // [Stage Asset Integration] 해당 스테이지의 전용 바닥 에셋이 로드되었다면 우선 사용
-    const stageImgKey = 'stage' + currentStage + '_floor';
+    const loopStage = ((currentStage - 1) % 10) + 1;
+    const stageImgKey = 'stage' + loopStage + '_floor';
     if (loadedImages[stageImgKey] && loadedImages[stageImgKey].complete && loadedImages[stageImgKey].naturalWidth > 0) {
         currentBgPattern = ctx.createPattern(loadedImages[stageImgKey], 'repeat');
         currentTileSize = loadedImages[stageImgKey].naturalWidth;
