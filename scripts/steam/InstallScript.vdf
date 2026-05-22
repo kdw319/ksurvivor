@@ -1,0 +1,12 @@
+"InstallScript"
+{
+	"ShellOperations"
+	{
+		"DesktopShortcut"
+		{
+			"Target"		"%INSTALLDIR%\\Lastgirl.exe"
+			"Icon"			"%INSTALLDIR%\\Lastgirl.exe"
+			"Description"	"Last Girl Survivor"
+		}
+	}
+}
