@@ -14,6 +14,7 @@
             user-select: none; -webkit-user-select: none;
             touch-action: none; 
             image-rendering: pixelated; 
+            cursor: url('assets/pencil-cursor.png') 0 32, auto;
         }
 
         #gameContainer {
@@ -708,11 +709,125 @@ const GameSettings = {
     rhythm: { beatInterval: 1.5, perfectWindow: 0.15, perfectDamage: 300 },
     spotlight: { spawnInterval: 40.0, reqTime: 10.0, penalty: 0.5, startRadius: 600, endRadius: 180 },
     maps: [
-        { id: 'map1', bg: '#1a110c', line: '#0d0805', type: 'grid', lineWidth: 2 },
-        { id: 'map2', bg: '#242b33', line: '#1a1f24', type: 'tile', decor: 'blood', lineWidth: 1 },
-        { id: 'map3', bg: '#5d4d33', line: '#3d3221', type: 'court', lineWidth: 4 },
-        { id: 'map4', bg: '#4d1616', line: '#2d0d0d', type: 'dirt', lineWidth: 2 },
-        { id: 'map5', bg: '#1e272e', line: '#0a0d0f', type: 'street', lineWidth: 5 }
+        // Stage 1-10: 낡은 재판소 (Old Courthouse) - 시작과 혼란
+        { id: 'map1', name: "Stage 1: The First Verdict" },
+        { id: 'map1', name: "Stage 2: Echoes of Justice" },
+        { id: 'map1', name: "Stage 3: Silent Witnesses" },
+        { id: 'map1', name: "Stage 4: Cold Gavel" },
+        { id: 'map1', name: "Stage 5: Shadowed Bench" },
+        { id: 'map1', name: "Stage 6: Broken Scales" },
+        { id: 'map1', name: "Stage 7: Dusty Evidence" },
+        { id: 'map1', name: "Stage 8: The Jury's Fear" },
+        { id: 'map1', name: "Stage 9: Final Deliberation" },
+        { id: 'map1', name: "Stage 10: Courthouse Siege" },
+
+        // Stage 11-20: 피 묻은 보건실 (Bloody Infirmary) - 고립과 치료
+        { id: 'map2', name: "Stage 11: Sterile Silence" },
+        { id: 'map2', name: "Stage 12: Crimson Bandage" },
+        { id: 'map2', name: "Stage 13: Emergency Exit" },
+        { id: 'map2', name: "Stage 14: Surgical Precision" },
+        { id: 'map2', name: "Stage 15: Phantom Pain" },
+        { id: 'map2', name: "Stage 16: Infected Trust" },
+        { id: 'map2', name: "Stage 17: Bedside Vigil" },
+        { id: 'map2', name: "Stage 18: Clinical Trial" },
+        { id: 'map2', name: "Stage 19: ICU Nightmares" },
+        { id: 'map2', name: "Stage 20: Infirmary Breakthrough" },
+
+        // Stage 21-30: 폐쇄된 체육관 (Abandoned Gym) - 투지
+        { id: 'map3', name: "Stage 21: Cold Gymnasium" },
+        { id: 'map3', name: "Stage 22: Steel Perseverance" },
+        { id: 'map3', name: "Stage 23: Hard Work's Price" },
+        { id: 'map3', name: "Stage 24: Unbroken Spirit" },
+        { id: 'map3', name: "Stage 25: Iron Will" },
+        { id: 'map3', name: "Stage 26: Echoes of Effort" },
+        { id: 'map3', name: "Stage 27: Sweat and Tears" },
+        { id: 'map3', name: "Stage 28: Victory's Shadow" },
+        { id: 'map3', name: "Stage 29: Final Training" },
+        { id: 'map3', name: "Stage 30: Gym Overrun" },
+
+        // Stage 31-40: 붉은 운동장 (Red Playground) - 도주와 생존
+        { id: 'map4', name: "Stage 31: Crimson Field" },
+        { id: 'map4', name: "Stage 32: Running for Life" },
+        { id: 'map4', name: "Stage 33: Playground Panic" },
+        { id: 'map4', name: "Stage 34: Sand and Blood" },
+        { id: 'map4', name: "Stage 35: Horizon of Trial" },
+        { id: 'map4', name: "Stage 36: Sunset Survival" },
+        { id: 'map4', name: "Stage 37: Bleeding Tracks" },
+        { id: 'map4', name: "Stage 38: Open Field Trap" },
+        { id: 'map4', name: "Stage 39: Last Sprint" },
+        { id: 'map4', name: "Stage 40: Stadium Showdown" },
+
+        // Stage 41-50: 밤의 신주쿠 거리 (Night Shinjuku) - 도시의 악몽
+        { id: 'map5', name: "Stage 41: Neon Abyss" },
+        { id: 'map5', name: "Stage 42: Rain-soaked Alley" },
+        { id: 'map5', name: "Stage 43: City of Silence" },
+        { id: 'map5', name: "Stage 44: Midnight Metro" },
+        { id: 'map5', name: "Stage 45: Glitchy Billboard" },
+        { id: 'map5', name: "Stage 46: Electric Pulse" },
+        { id: 'map5', name: "Stage 47: Shinjuku Nightmare" },
+        { id: 'map5', name: "Stage 48: Concrete Jungle" },
+        { id: 'map5', name: "Stage 49: Terminal Velocity" },
+        { id: 'map5', name: "Stage 50: Sky-high Duel" },
+
+        // Stage 51-60: Deep Courthouse (Courthouse II) - 진실의 심연
+        { id: 'map1', name: "Stage 51: Hall of Mirrors" },
+        { id: 'map1', name: "Stage 52: Distorted Laws" },
+        { id: 'map1', name: "Stage 53: Eternal Testimony" },
+        { id: 'map1', name: "Stage 54: The High Court" },
+        { id: 'map1', name: "Stage 55: Verdict of Truth" },
+        { id: 'map1', name: "Stage 56: Shattered Gavel" },
+        { id: 'map1', name: "Stage 57: Final Appeal" },
+        { id: 'map1', name: "Stage 58: Judge of Souls" },
+        { id: 'map1', name: "Stage 59: The Great Defense" },
+        { id: 'map1', name: "Stage 60: Supreme Ruling" },
+
+        // Stage 61-70: Infected Clinic (Infirmary II) - 치유할 수 없는 상처
+        { id: 'map2', name: "Stage 61: Necrotic Ward" },
+        { id: 'map2', name: "Stage 62: Laboratory of Fear" },
+        { id: 'map2', name: "Stage 63: Endless Corridor" },
+        { id: 'map2', name: "Stage 64: Last Prescription" },
+        { id: 'map2', name: "Stage 65: Surgery of Fate" },
+        { id: 'map2', name: "Stage 66: Mortal Remedy" },
+        { id: 'map2', name: "Stage 67: Trauma Center" },
+        { id: 'map2', name: "Stage 68: Life Support" },
+        { id: 'map2', name: "Stage 69: Vital Signs" },
+        { id: 'map2', name: "Stage 70: Terminal Ward" },
+
+        // Stage 71-80: Arena of Trials (Gym II) - 영웅의 시련
+        { id: 'map3', name: "Stage 71: Champion's Tomb" },
+        { id: 'map3', name: "Stage 72: Coliseum of Pain" },
+        { id: 'map3', name: "Stage 73: Burning Spirit" },
+        { id: 'map3', name: "Stage 74: Zenith of Effort" },
+        { id: 'map3', name: "Stage 75: Apex of Power" },
+        { id: 'map3', name: "Stage 76: Unyielding Might" },
+        { id: 'map3', name: "Stage 77: Path of the Brave" },
+        { id: 'map3', name: "Stage 78: Glaring Trophy" },
+        { id: 'map3', name: "Stage 79: Last Stand" },
+        { id: 'map3', name: "Stage 80: Colossal Victory" },
+
+        // Stage 81-90: Field of Dawn (Playground II) - 새벽의 지평선
+        { id: 'map4', name: "Stage 81: Morning Mist" },
+        { id: 'map4', name: "Stage 82: Rising Tides" },
+        { id: 'map4', name: "Stage 83: Field of Remembrance" },
+        { id: 'map4', name: "Stage 84: Horizon's Edge" },
+        { id: 'map4', name: "Stage 85: Trial of Light" },
+        { id: 'map4', name: "Stage 86: Golden Sunset" },
+        { id: 'map4', name: "Stage 87: Eternal Field" },
+        { id: 'map4', name: "Stage 88: Path of Redemption" },
+        { id: 'map4', name: "Stage 89: Towards the Sun" },
+        { id: 'map4', name: "Stage 90: Daybreak's Promise" },
+
+        // Stage 91-100: Final Shinjuku (Shinjuku II) - 마지막 저항
+        { id: 'map5', name: "Stage 91: Cyber Purgatory" },
+        { id: 'map5', name: "Stage 92: Digital Rain" },
+        { id: 'map5', name: "Stage 93: Data Overload" },
+        { id: 'map5', name: "Stage 94: Ghost in the Machine" },
+        { id: 'map5', name: "Stage 95: Neon Sanctuary" },
+        { id: 'map5', name: "Stage 96: Last Connection" },
+        { id: 'map5', name: "Stage 97: Terminal Station" },
+        { id: 'map5', name: "Stage 98: Final Protocol" },
+        { id: 'map5', name: "Stage 99: Edge of Tomorrow" },
+        { id: 'map5', name: "Stage 100: The Final Verdict" }
     ],
     weapons: {
         chalk: { name: "분필", icon: "✏️", desc: "가장 가까운 적에게 투사체를 던집니다.", damage: 20, cooldown: 1.0, speed: 400, color: '#fff', statBonus: { type: 'damageMult', value: 0.05, label: '공격력' } },
