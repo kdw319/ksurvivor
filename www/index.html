@@ -1895,8 +1895,8 @@ function toggleLanguage() {
     let stageDispUI = document.getElementById('stageDispUI');
     if (stageDispUI && window.gameState === 'playing') {
         let themeIndex = (currentStage - 1) % GameSettings.maps.length;
-        let mapId = GameSettings.maps[themeIndex].id;
-        stageDispUI.innerText = `STAGE ${currentStage} : ${lang[mapId]}`;
+        let mapData = GameSettings.maps[themeIndex];
+        stageDispUI.innerText = mapData.name;
     }
 
     // Update all weapons (Basic + Special)
