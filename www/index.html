@@ -2214,11 +2214,13 @@ function renderSaveSlots() {
     const lang = window.I18N[window.currentLang];
     for(let i=0; i<5; i++) { 
         let rawData = localStorage.getItem('op_save_slot_' + i);
-        let data = rawData ? JSON.parse(rawData) : null;
-        let isEmpty = !data; 
-        let infoText = isEmpty ? lang.saveEmpty : `${lang.saveBadges}<span style="color:#ffb142;font-weight:bold">${data.playerBadges}${lang.saveUnit}</span> | ${lang.saveWeapons}${data.unlockedWeapons.length}${lang.saveType}<br><span style="font-size:12px;color:#888;">${new Date(data.timestamp).toLocaleString()}</span>`; 
+        let data = null;
+        try { data = rawData ? JSON.parse(rawData) : null; } catch(e) { data = null; }
         
-        let delBtnHtml = !isEmpty ? `<button class="btn" style="background:#ff4757; color:#fff; padding: 8px 15px;" onclick="deleteSlot(${i})">${lang.delBtn}</button>` : '';
+        let isEmpty = !data || !data.timestamp; 
+        let infoText = isEmpty ? `<span style="color:#666">${lang.saveEmpty}</span>` : `${lang.saveBadges}<span style="color:#ffb142;font-weight:bold">${data.playerBadges}${lang.saveUnit}</span> | ${lang.saveWeapons}${data.unlockedWeapons.length}${lang.saveType}<br><span style="font-size:12px;color:#888;">${new Date(data.timestamp).toLocaleString()}</span>`; 
+        
+        let delBtnHtml = !isEmpty ? `<button class="btn" style="background:#ff4757; color:#fff; padding: 8px 15px;" onclick="deleteSlot(${i})">${lang.delBtn || (window.currentLang === 'ko' ? '삭제' : 'DELETE')}</button>` : '';
         slotList.innerHTML += `<div class="slot-item"><div style="font-weight:bold; color:#00d2d3; font-size:18px; width:70px;">SLOT ${i+1}</div><div class="slot-info" style="flex:1; padding:0 20px;">${infoText}</div><div class="slot-actions">${delBtnHtml}<button class="btn" style="background:#0984e3; color:#fff;" onclick="saveToSlot(${i})">${lang.saveBtn}</button><button class="btn primary" onclick="loadFromSlot(${i})">${lang.loadBtn}</button></div></div>`; 
     }
 }
@@ -3803,6 +3805,23 @@ window.updateVerdictUI = function() {
         const slot = document.getElementById('vo-slot-' + i);
         if (slot) {
             const type = window.verdictInventory[i];
+            slot.className = 'r-slot'; // reset classes
+            if (type) {
+                slot.classList.add(type);
+            }
+        }
+    }
+    
+    if (ui) {
+        ui.style.display = (window.gameState === 'playing' || window.gameState === 'levelup' || window.gameState === 'clear') ? 'flex' : 'none';
+    }
+};
+
+setInterval(() => { if (window.updateVerdictUI) window.updateVerdictUI(); }, 100);
+</script>
+</body>
+</html>
+ry[i];
             slot.className = 'r-slot'; // reset classes
             if (type) {
                 slot.classList.add(type);
