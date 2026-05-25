@@ -700,6 +700,14 @@ const OUTFITS = [
     { id: 'stage100', name: "대역전의 전설", enName: "Legend", reqStage: 100, colors: { cSkin: '#ffeaa7', cHair: '#ff4757', cHairShadow: '#ff6b81', cDress: '#eccc68', cDressDark: '#ffa502', cEye: '#2ed573' } }
 ];
 
+const THEME_STYLES = {
+    map1: { bg: '#1a110c', line: '#0d0805', type: 'grid', lineWidth: 2 },
+    map2: { bg: '#242b33', line: '#1a1f24', type: 'tile', decor: 'blood', lineWidth: 1 },
+    map3: { bg: '#5d4d33', line: '#3d3221', type: 'court', lineWidth: 4 },
+    map4: { bg: '#4d1616', line: '#2d0d0d', type: 'dirt', lineWidth: 2 },
+    map5: { bg: '#1e272e', line: '#0a0d0f', type: 'street', lineWidth: 5 }
+};
+
 const GameSettings = {
     player: { baseSpeed: 180, baseHp: 100, pickupRange: 80, dashSpeedMultiplier: 3.5, dashDuration: 0.25, dashCooldown: 2.0, baseDmgFactor: 10, baseCoolFactor: 1.0 },
     stage: { maxTime: 90, midBossTime: 45, finalBossTime: 90, enemyHpScale: 1.15, enemyDmgScale: 1.05 },
@@ -2134,6 +2142,31 @@ function resetStage(fullReset = false) {
     
     let themeIndex = (currentStage - 1) % GameSettings.maps.length;
     let theme = GameSettings.maps[themeIndex];
+    
+    // [Stage Background Initialization]
+    // 1. Start with Procedural Fallback based on THEME_STYLES
+    const style = THEME_STYLES[theme.id] || THEME_STYLES.map1;
+    currentBgPattern = generateMapPattern(style);
+    currentTileSize = 200;
+
+    // 2. Try to apply Image-based Floor if available
+    const loopStage = ((currentStage - 1) % 10) + 1;
+    const stageImgKey = 'stage' + loopStage + '_floor';
+    const floorImg = loadedImages[stageImgKey];
+    
+    const applyFloorImage = (img) => {
+        if (img && img.naturalWidth > 0) {
+            currentBgPattern = ctx.createPattern(img, 'repeat');
+            currentTileSize = img.naturalWidth;
+        }
+    };
+
+    if (floorImg && floorImg.complete) {
+        applyFloorImage(floorImg);
+    } else if (floorImg) {
+        floorImg.onload = () => applyFloorImage(floorImg);
+    }
+
     let stageDispUI = document.getElementById('stageDispUI');
     if(stageDispUI) { 
         stageDispUI.innerText = window.currentLang === 'ko' ? theme.nameKo : theme.nameEn; 
