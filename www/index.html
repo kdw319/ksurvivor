@@ -2209,7 +2209,7 @@ function renderUpgradeList() {
 function openSaveLoad() { updateLobbyCurrency(); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('saveLoadUI'); if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden'); renderSaveSlots(); }
 function closeSaveLoad() { let ui = document.getElementById('saveLoadUI'); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); if (ui) ui.classList.add('hidden'); if (title) title.classList.remove('hidden'); if (bbar) bbar.classList.remove('hidden'); }
 
-function renderSaveSlots() {
+window.renderSaveSlots = function() {
     const slotList = document.getElementById('slotList'); if(!slotList) return; slotList.innerHTML = ''; 
     const lang = window.I18N[window.currentLang];
     for(let i=0; i<5; i++) { 
@@ -2220,12 +2220,12 @@ function renderSaveSlots() {
         let isEmpty = !data || !data.timestamp; 
         let infoText = isEmpty ? `<span style="color:#666">${lang.saveEmpty}</span>` : `${lang.saveBadges}<span style="color:#ffb142;font-weight:bold">${data.playerBadges}${lang.saveUnit}</span> | ${lang.saveWeapons}${data.unlockedWeapons.length}${lang.saveType}<br><span style="font-size:12px;color:#888;">${new Date(data.timestamp).toLocaleString()}</span>`; 
         
-        let delBtnHtml = !isEmpty ? `<button class="btn" style="background:#ff4757; color:#fff; padding: 8px 15px;" onclick="deleteSlot(${i})">${lang.delBtn || (window.currentLang === 'ko' ? '삭제' : 'DELETE')}</button>` : '';
-        slotList.innerHTML += `<div class="slot-item"><div style="font-weight:bold; color:#00d2d3; font-size:18px; width:70px;">SLOT ${i+1}</div><div class="slot-info" style="flex:1; padding:0 20px;">${infoText}</div><div class="slot-actions">${delBtnHtml}<button class="btn" style="background:#0984e3; color:#fff;" onclick="saveToSlot(${i})">${lang.saveBtn}</button><button class="btn primary" onclick="loadFromSlot(${i})">${lang.loadBtn}</button></div></div>`; 
+        let delBtnHtml = !isEmpty ? `<button class="btn" style="background:#ff4757; color:#fff; padding: 8px 15px;" onclick="window.deleteSlot(${i})">${lang.delBtn || (window.currentLang === 'ko' ? '삭제' : 'DELETE')}</button>` : '';
+        slotList.innerHTML += `<div class="slot-item"><div style="font-weight:bold; color:#00d2d3; font-size:18px; width:70px;">SLOT ${i+1}</div><div class="slot-info" style="flex:1; padding:0 20px;">${infoText}</div><div class="slot-actions">${delBtnHtml}<button class="btn" style="background:#0984e3; color:#fff;" onclick="window.saveToSlot(${i})">${lang.saveBtn}</button><button class="btn primary" onclick="window.loadFromSlot(${i})">${lang.loadBtn}</button></div></div>`; 
     }
-}
+};
 
-function saveToSlot(i) {
+window.saveToSlot = function(i) {
     const lang = window.I18N[window.currentLang];
     let existing = localStorage.getItem('op_save_slot_' + i);
     if (existing) {
@@ -2245,19 +2245,19 @@ function saveToSlot(i) {
         timestamp: new Date().toISOString() 
     };
     localStorage.setItem('op_save_slot_' + i, JSON.stringify(saveData));
-    renderSaveSlots();
+    window.renderSaveSlots();
     showSystemNotice(`[SLOT ${i+1}] ${lang.noticeSave}`);
-}
+};
 
-function deleteSlot(i) {
+window.deleteSlot = function(i) {
     const lang = window.I18N[window.currentLang];
-    if (!confirm(lang.warnDelete)) return;
+    if (!confirm(lang.warnDelete || (window.currentLang === 'ko' ? '삭제하시겠습니까?' : 'Delete?'))) return;
     localStorage.removeItem('op_save_slot_' + i);
-    renderSaveSlots();
-    showSystemNotice(`[SLOT ${i+1}] ${lang.noticeDelete}`);
-}
+    window.renderSaveSlots();
+    showSystemNotice(`[SLOT ${i+1}] ${lang.noticeDelete || 'Deleted'}`);
+};
 
-function loadFromSlot(i) {
+window.loadFromSlot = function(i) {
     initAudio(); playSFX('gacha');
     let rawData = localStorage.getItem('op_save_slot_' + i);
     const lang = window.I18N[window.currentLang];
@@ -2268,7 +2268,6 @@ function loadFromSlot(i) {
         unlockedWeapons = data.unlockedWeapons || []; 
         permanentStats = data.permanentStats || {damage:0, cooldown:0, speed:0, maxHp:0}; 
         
-        // Reset story and stage progress to start from the beginning
         currentStage = 1; 
         window.storyStep = 0;
         window.isEpilogueTriggered = false;
@@ -2282,13 +2281,12 @@ function loadFromSlot(i) {
         showSystemNotice(`[SLOT ${i+1}] ${lang.noticeLoad}`); 
         closeSaveLoad(); 
     } else {
-        // [New: Start from Stage 1 if slot is empty]
         currentStage = 1;
         window.storyStep = 0;
         showSystemNotice(lang.loadEmpty);
         closeSaveLoad();
     }
-}
+};
 
 function openCloset() {
     let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('closetUI'); 
@@ -3805,23 +3803,6 @@ window.updateVerdictUI = function() {
         const slot = document.getElementById('vo-slot-' + i);
         if (slot) {
             const type = window.verdictInventory[i];
-            slot.className = 'r-slot'; // reset classes
-            if (type) {
-                slot.classList.add(type);
-            }
-        }
-    }
-    
-    if (ui) {
-        ui.style.display = (window.gameState === 'playing' || window.gameState === 'levelup' || window.gameState === 'clear') ? 'flex' : 'none';
-    }
-};
-
-setInterval(() => { if (window.updateVerdictUI) window.updateVerdictUI(); }, 100);
-</script>
-</body>
-</html>
-ry[i];
             slot.className = 'r-slot'; // reset classes
             if (type) {
                 slot.classList.add(type);
