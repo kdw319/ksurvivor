@@ -2156,6 +2156,7 @@ function startGame() {
 
 function triggerStageClear() {
     if(window.gameState === 'clear') return; window.gameState = 'clear'; 
+    let lvUI = document.getElementById('levelUpUI'); if (lvUI) lvUI.classList.add('hidden');
     let reward = (currentStage % 5 === 0) ? GameSettings.economy.clearRewardBoss : GameSettings.economy.clearRewardBase; playerBadges += reward;
     
     maxStageReached = Math.max(maxStageReached, currentStage + 1);
