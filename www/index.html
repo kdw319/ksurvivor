@@ -564,6 +564,16 @@
         </div>
     </div>
 
+    <div id="confirmUI" class="overlay hidden">
+        <div class="panel">
+            <p id="confirmMsg" style="font-size: 1.2rem; margin-bottom: 30px; color: #fff;"></p>
+            <div style="display: flex; gap: 20px; justify-content: center;">
+                <button id="confirmYesBtn" class="btn primary" style="min-width: 120px;">YES</button>
+                <button id="confirmNoBtn" class="btn" style="min-width: 120px;">NO</button>
+            </div>
+        </div>
+    </div>
+
     <div id="storyUI" class="overlay hidden" style="pointer-events: auto;">
         <div id="storyBg"></div>
         <div id="storyDialogContainer">
@@ -943,6 +953,7 @@ window.I18N = {
         warnDelete: "Are you sure you want to delete this data?",
         noticeDelete: "Data Deleted",
         loadEmpty: "Slot is empty. Starting a new game from Stage 1.",
+        btnYes: "YES", btnNo: "NO",
         upgradeTitle: "Permanent Upgrades", upgradeDesc: "Permanently boost your base stats with acquired badges.", upg_dmg: "Base ATK Boost", upg_cool: "Base Cooldown Reduction", upg_spd: "Base Speed Boost", upg_hp: "Base Max HP Boost", btnMax: "MAX",
         pauseVolLbl: "Volume 🔊",
         statsTitle: "Stats", btnPause: "Pause (ESC)", pauseTitle: "Paused", pauseResume: "Resume Game", pauseExit: "Return to Lobby", levelUpTitle: "Level UP!",
