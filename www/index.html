@@ -455,6 +455,8 @@
         <button id="btnUpgradeLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #e1b12c;" onclick="window.openUpgrade()">능력치 강화</button>
         <button id="btnClosetLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #10ac84; color: white;" onclick="window.openCloset()">옷장 (스킨)</button>
         <button id="btnAchieveLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #f39c12; color: white;" onclick="window.openAchieve()">도전과제</button>
+        <button id="btnArtShopLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #f1c40f; color: #000;" onclick="window.openArtShop()">아티팩트 상점</button>
+        <button id="btnArtInvLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #9b59b6; color: white;" onclick="window.openArtInv()">아티팩트</button>
         <button id="btnGachaLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px;" onclick="window.openGacha()">픽업 가챠</button>
         <button id="btnDataLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #0984e3; color: white;" onclick="window.openSaveLoad()">데이터 센터</button>
         <button id="btnExitLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #d63031; color: white; display: none;" onclick="window.openExitConfirm()">게임 종료</button>
@@ -621,6 +623,63 @@
         <button id="storySkipBtn" class="btn skip-btn" onclick="window.skipStory()">Skip ❯❯</button>
     </div>
 
+    <!-- 🏺 ARTIFACT SYSTEM UI -->
+    <div id="artShopUI" class="overlay hidden">
+        <div class="panel" style="max-width: 800px; border-color: #f1c40f;">
+            <h2 id="artShopTitle" style="color: #f1c40f;">아티팩트 상점</h2>
+            <p><span id="artShopOwnedText">보유 뱃지: </span><span id="artShopBadgeDisp" style="color:#ffb142; font-weight:bold;">0</span></p>
+            <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px; margin: 20px 0; display: flex; flex-direction: column; gap: 10px;">
+                <div style="font-size: 40px; margin-bottom: 10px;">🏺 ⚖️ 📜 💎</div>
+                <div style="display:flex; justify-content:center; gap:15px; font-size: 14px;">
+                    <span style="color:#bdc3c7">R: 50%</span>
+                    <span style="color:#3498db">SR: 30%</span>
+                    <span style="color:#9b59b6">SSR: 15%</span>
+                    <span style="color:#f1c40f">UR: 5%</span>
+                </div>
+            </div>
+            <div style="display:flex; justify-content:center; gap:10px;">
+                <button id="artPull1Btn" class="btn primary" onclick="window.rollArtGacha(1)">1회 소환 (10)</button>
+                <button id="artPull10Btn" class="btn primary" style="background:#f1c40f; color:#000;" onclick="window.rollArtGacha(10)">10회 소환 (100)</button>
+            </div>
+            <button class="btn" onclick="window.closeArtShop()">닫기</button>
+        </div>
+    </div>
+
+    <div id="artInvUI" class="overlay hidden">
+        <div class="panel" style="max-width: 900px; border-color: #9b59b6;">
+            <h2 id="artInvTitle" style="color: #9b59b6;">아티팩트 보관함</h2>
+            <div id="artEquipSlots" style="display:flex; justify-content:center; gap:20px; margin-bottom:20px; padding:15px; background:rgba(0,0,0,0.3); border-radius:10px;">
+                <!-- 3 Slots will be rendered here -->
+            </div>
+            <div id="artList" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px; max-height:40vh; overflow-y:auto; padding:10px; background:rgba(0,0,0,0.2); border-radius:8px;"></div>
+            <button class="btn" onclick="window.closeArtInv()" style="margin-top:20px;">닫기</button>
+        </div>
+    </div>
+
+    <div id="artResultUI" class="overlay hidden" style="z-index: 10001;">
+        <div class="panel" style="max-width: 600px; background: radial-gradient(circle, #2c3e50 0%, #000 100%);">
+            <h2 id="artResultTitle">소환 결과</h2>
+            <div id="artResultContainer" style="display:flex; flex-wrap:wrap; justify-content:center; gap:15px; margin:20px 0; max-height:50vh; overflow-y:auto;"></div>
+            <button class="btn primary" onclick="document.getElementById('artResultUI').classList.add('hidden')">확인</button>
+        </div>
+    </div>
+
+    <!-- 🎮 ACTIVE SKILL SLOTS -->
+    <div id="activeSkillSlots" style="position:absolute; bottom:190px; right:115px; display:flex; flex-direction:column; gap:10px; z-index:10;">
+        <div id="skillSlot0" style="width:50px; height:50px; background:rgba(0,0,0,0.5); border:2px solid #555; display:flex; justify-content:center; align-items:center; font-size:24px; opacity:0.5; position:relative;">
+            <span style="position:absolute; bottom:-5px; right:-5px; font-size:10px; background:#000; color:#fff; padding:2px;">Q</span>
+            <div class="cooldown-overlay" style="position:absolute; bottom:0; left:0; width:100%; height:0%; background:rgba(0,0,0,0.7);"></div>
+        </div>
+        <div id="skillSlot1" style="width:50px; height:50px; background:rgba(0,0,0,0.5); border:2px solid #555; display:flex; justify-content:center; align-items:center; font-size:24px; opacity:0.5; position:relative;">
+            <span style="position:absolute; bottom:-5px; right:-5px; font-size:10px; background:#000; color:#fff; padding:2px;">W</span>
+            <div class="cooldown-overlay" style="position:absolute; bottom:0; left:0; width:100%; height:0%; background:rgba(0,0,0,0.7);"></div>
+        </div>
+        <div id="skillSlot2" style="width:50px; height:50px; background:rgba(0,0,0,0.5); border:2px solid #555; display:flex; justify-content:center; align-items:center; font-size:24px; opacity:0.5; position:relative;">
+            <span style="position:absolute; bottom:-5px; right:-5px; font-size:10px; background:#000; color:#fff; padding:2px;">E</span>
+            <div class="cooldown-overlay" style="position:absolute; bottom:0; left:0; width:100%; height:0%; background:rgba(0,0,0,0.7);"></div>
+        </div>
+    </div>
+
     <canvas id="gameCanvas"></canvas>
 
 </div>
@@ -670,6 +729,273 @@ function loadAssets() {
     }
 }
 loadAssets();
+
+// ==========================================
+// 🏺 ARTIFACT SYSTEM DATA & LOGIC
+// ==========================================
+window.ownedArtifacts = [];
+window.equippedArtifacts = [null, null, null]; // 3 Slots
+window.ARTIFACT_DATA = {
+    // R (10): Stat Boosts
+    art_r_1: { id: 'art_r_1', rarity: 'R', nameKo: "부러진 펜", nameEn: "Broken Pen", descKo: "공격력 +5%", descEn: "ATK +5%", icon: "🖋️", type: 'passive', stats: { damageMult: 0.05 } },
+    art_r_2: { id: 'art_r_2', rarity: 'R', nameKo: "먼지 쌓인 지우개", nameEn: "Dusty Eraser", descKo: "최대 체력 +5%", descEn: "Max HP +5%", icon: "🧽", type: 'passive', stats: { maxHpMult: 0.05 } },
+    art_r_3: { id: 'art_r_3', rarity: 'R', nameKo: "찢어진 교과서", nameEn: "Torn Textbook", descKo: "쿨타임 -5%", descEn: "Cooldown -5%", icon: "📖", type: 'passive', stats: { cooldownMult: -0.05 } },
+    art_r_4: { id: 'art_r_4', rarity: 'R', nameKo: "체육용 호루라기", nameEn: "Gym Whistle", descKo: "이동속도 +5%", descEn: "SPD +5%", icon: " whistle", icon: "📢", type: 'passive', stats: { speedMult: 0.05 } },
+    art_r_5: { id: 'art_r_5', rarity: 'R', nameKo: "떨어진 단추", nameEn: "Loose Button", descKo: "공격속도 +5%", descEn: "ATK SPD +5%", icon: "🔘", type: 'passive', stats: { atkSpdMult: 0.05 } },
+    art_r_6: { id: 'art_r_6', rarity: 'R', nameKo: "차가운 우유", nameEn: "Cold Milk", descKo: "최대 체력 +10%", descEn: "Max HP +10%", icon: "🥛", type: 'passive', stats: { maxHpMult: 0.1 } },
+    art_r_7: { id: 'art_r_7', rarity: 'R', nameKo: "낡은 열쇠고리", nameEn: "Old Keychain", descKo: "습득 범위 +10%", descEn: "Pickup Range +10%", icon: "🔑", type: 'passive', stats: { pickupMult: 0.1 } },
+    art_r_8: { id: 'art_r_8', rarity: 'R', nameKo: "잉크 병", nameEn: "Ink Bottle", descKo: "투사체 속도 +10%", descEn: "Proj Speed +10%", icon: "🧪", type: 'passive', stats: { projSpeedMult: 0.1 } },
+    art_r_9: { id: 'art_r_9', rarity: 'R', nameKo: "이름표", nameEn: "Name Tag", descKo: "경험치 획득 +5%", descEn: "EXP Gain +5%", icon: "🏷️", type: 'passive', stats: { expMult: 0.05 } },
+    art_r_10: { id: 'art_r_10', rarity: 'R', nameKo: "옷핀", nameEn: "Safety Pin", descKo: "방어력 +5%", descEn: "Defense +5%", icon: "🧷", type: 'passive', stats: { defense: 0.05 } },
+
+    // SR (10): Better Stats + Passive Effects
+    art_sr_1: { id: 'art_sr_1', rarity: 'SR', nameKo: "반장 배지", nameEn: "President Badge", descKo: "공격력 +10%", descEn: "ATK +10%", icon: "🥇", type: 'passive', stats: { damageMult: 0.1 } },
+    art_sr_2: { id: 'art_sr_2', rarity: 'SR', nameKo: "보건실 파스", nameEn: "Nurse's Patch", descKo: "10초마다 2 HP 회복", descEn: "Heal 2 HP every 10s", icon: "🩹", type: 'passive_auto', interval: 10, effect: 'heal', value: 2 },
+    art_sr_3: { id: 'art_sr_3', rarity: 'SR', nameKo: "육상부 운동화", nameEn: "Ace Shoes", descKo: "이동속도 +15%", descEn: "SPD +15%", icon: "👟", type: 'passive', stats: { speedMult: 0.15 } },
+    art_sr_4: { id: 'art_sr_4', rarity: 'SR', nameKo: "황금 컴퍼스", nameEn: "Golden Compass", descKo: "투사체 수 +1", descEn: "Projectile Count +1", icon: "🧭", type: 'passive', stats: { projCount: 1 } },
+    art_sr_5: { id: 'art_sr_5', rarity: 'SR', nameKo: "도서관 대출증", nameEn: "Library Pass", descKo: "쿨타임 -10%", descEn: "Cooldown -10%", icon: "💳", type: 'passive', stats: { cooldownMult: -0.1 } },
+    art_sr_6: { id: 'art_sr_6', rarity: 'SR', nameKo: "훈련용 목검", nameEn: "Wooden Sword", descKo: "넉백 +20%", descEn: "Knockback +20%", icon: "🎋", type: 'passive', stats: { knockback: 0.2 } },
+    art_sr_7: { id: 'art_sr_7', rarity: 'SR', nameKo: "구슬 조각", nameEn: "Orb Fragment", descKo: "심판 게이지 획득 +10%", descEn: "Verdict Gain +10%", icon: "💠", type: 'passive', stats: { verdictMult: 0.1 } },
+    art_sr_8: { id: 'art_sr_8', rarity: 'SR', nameKo: "고농축 카페인", nameEn: "Caffeine Pill", descKo: "공격속도 +15%", descEn: "ATK SPD +15%", icon: "💊", type: 'passive', stats: { atkSpdMult: 0.15 } },
+    art_sr_9: { id: 'art_sr_9', rarity: 'SR', nameKo: "거울 파편", nameEn: "Mirror Shard", descKo: "피격 시 10% 확률로 회피", descEn: "10% Chance to Dodge", icon: "🪞", type: 'passive', stats: { dodge: 0.1 } },
+    art_sr_10: { id: 'art_sr_10', rarity: 'SR', nameKo: "낡은 녹음기", nameEn: "Old Recorder", descKo: "스킬 범위 +20%", descEn: "Skill Range +20%", icon: "📼", type: 'passive', stats: { rangeMult: 0.2 } },
+
+    // SSR (5): Active Skills
+    art_ssr_1: { id: 'art_ssr_1', rarity: 'SSR', nameKo: "정의의 저울", nameEn: "Justice Scale", descKo: "액티브: 5초간 가한 피해의 10% 흡혈", descEn: "Active: 10% Life Steal for 5s", icon: "⚖️", type: 'active', cooldown: 40, duration: 5, effect: 'lifesteal' },
+    art_ssr_2: { id: 'art_ssr_2', rarity: 'SSR', nameKo: "네온 심장", nameEn: "Neon Heart", descKo: "액티브: 8초간 공격/이동속도 +50%", descEn: "Active: +50% Atk/Mov SPD for 8s", icon: "💖", type: 'active', cooldown: 50, duration: 8, effect: 'overdrive' },
+    art_ssr_3: { id: 'art_ssr_3', rarity: 'SSR', nameKo: "검게 물든 의사봉", nameEn: "Black Gavel", descKo: "액티브: 화면 내 모든 적 3초간 기절", descEn: "Active: Stun all screen enemies (3s)", icon: "🔨", type: 'active', cooldown: 60, duration: 3, effect: 'stunAll' },
+    art_ssr_4: { id: 'art_ssr_4', rarity: 'SSR', nameKo: "멸균된 메스", nameEn: "Sterile Scalpel", descKo: "액티브: 전방에 강력한 레이저 발사", descEn: "Active: Fire powerful frontal laser", icon: "🗡️", type: 'active', cooldown: 30, effect: 'laser' },
+    art_ssr_5: { id: 'art_ssr_5', rarity: 'SSR', nameKo: "유령의 졸업장", nameEn: "Ghost Diploma", descKo: "액티브: 화면 내 모든 보석 자석 흡수", descEn: "Active: Pull all screen EXP gems", icon: "📜", type: 'active', cooldown: 45, effect: 'vacuum' },
+
+    // UR (5): Ultimate Skills
+    art_ur_1: { id: 'art_ur_1', rarity: 'UR', nameKo: "지배자의 왕관", nameEn: "Sovereign Crown", descKo: "액티브: 5초간 무적 및 소형몹 소탕", descEn: "Active: Invincible (5s) + Wipe Mobs", icon: "👑", type: 'active', cooldown: 120, duration: 5, effect: 'sovereign' },
+    art_ur_2: { id: 'art_ur_2', rarity: 'UR', nameKo: "종말의 시계", nameEn: "Clock of End", descKo: "액티브: 4초간 시간 정지", descEn: "Active: Freeze Time (4s)", icon: "⏳", type: 'active', cooldown: 90, duration: 4, effect: 'timeStop' },
+    art_ur_3: { id: 'art_ur_3', rarity: 'UR', nameKo: "심판의 소용돌이", nameEn: "Verdict Vortex", descKo: "액티브: 즉시 구슬 3개 획득 (트리플)", descEn: "Active: Gain 3 same Verdict Orbs", icon: "🌀", type: 'active', cooldown: 100, effect: 'jackpot' },
+    art_ur_4: { id: 'art_ur_4', rarity: 'UR', nameKo: "구원의 날개", nameEn: "Redemption Wings", descKo: "액티브: 10초간 비행 및 자동 공격", descEn: "Active: Flight + Auto Attack (10s)", icon: "🪽", type: 'active', cooldown: 150, duration: 10, effect: 'ascension' },
+    art_ur_5: { id: 'art_ur_5', rarity: 'UR', nameKo: "이솔의 잃어버린 기억", nameEn: "Isol's Memory", descKo: "액티브: 체력 완전 회복 및 대폭발", descEn: "Active: Full Heal + Mega Explosion", icon: "💎", type: 'active', cooldown: 180, effect: 'turnabout' }
+};
+
+window.artCooldowns = [0, 0, 0];
+
+window.openArtShop = function() {
+    updateLobbyCurrency();
+    document.getElementById('artShopBadgeDisp').innerText = playerBadges;
+    document.getElementById('artShopUI').classList.remove('hidden');
+    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => document.getElementById(id).classList.add('hidden'));
+};
+
+window.closeArtShop = function() {
+    document.getElementById('artShopUI').classList.add('hidden');
+    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+};
+
+window.rollArtGacha = function(count) {
+    const cost = count === 1 ? 10 : 100;
+    const lang = window.I18N[window.currentLang];
+    if (playerBadges < cost) {
+        showSystemNotice(lang.gachaNoBadge);
+        return;
+    }
+    playerBadges -= cost;
+    updateLobbyCurrency();
+    playSFX('gacha');
+
+    const results = [];
+    for (let i = 0; i < count; i++) {
+        const r = Math.random() * 100;
+        let rarity = 'R';
+        if (r < 5) rarity = 'UR';
+        else if (r < 20) rarity = 'SSR';
+        else if (r < 50) rarity = 'SR';
+        
+        const pool = Object.values(window.ARTIFACT_DATA).filter(a => a.rarity === rarity);
+        const art = pool[Math.floor(Math.random() * pool.length)];
+        results.push(art);
+        
+        if (!window.ownedArtifacts.includes(art.id)) {
+            window.ownedArtifacts.push(art.id);
+        }
+    }
+
+    window.showArtResults(results);
+};
+
+window.showArtResults = function(results) {
+    const container = document.getElementById('artResultContainer');
+    container.innerHTML = '';
+    results.forEach(art => {
+        const rarityColor = art.rarity === 'UR' ? '#f1c40f' : (art.rarity === 'SSR' ? '#9b59b6' : (art.rarity === 'SR' ? '#3498db' : '#bdc3c7'));
+        const div = document.createElement('div');
+        div.className = 'choice-card';
+        div.style.borderColor = rarityColor;
+        div.innerHTML = `
+            <div style="color:${rarityColor}; font-weight:bold;">${art.rarity}</div>
+            <div class="choice-icon">${art.icon}</div>
+            <div class="choice-title" style="font-size:12px;">${window.currentLang === 'ko' ? art.nameKo : art.nameEn}</div>
+        `;
+        container.appendChild(div);
+    });
+    document.getElementById('artResultUI').classList.remove('hidden');
+};
+
+window.openArtInv = function() {
+    document.getElementById('artInvUI').classList.remove('hidden');
+    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    window.renderArtInv();
+};
+
+window.closeArtInv = function() {
+    document.getElementById('artInvUI').classList.add('hidden');
+    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+};
+
+window.renderArtInv = function() {
+    const lang = window.I18N[window.currentLang];
+    const slotsDiv = document.getElementById('artEquipSlots');
+    slotsDiv.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+        const artId = window.equippedArtifacts[i];
+        const art = artId ? window.ARTIFACT_DATA[artId] : null;
+        const div = document.createElement('div');
+        div.style.cssText = "width:80px; height:100px; border:2px dashed #555; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;";
+        if (art) {
+            const color = art.rarity === 'UR' ? '#f1c40f' : (art.rarity === 'SSR' ? '#9b59b6' : (art.rarity === 'SR' ? '#3498db' : '#bdc3c7'));
+            div.style.borderStyle = "solid";
+            div.style.borderColor = color;
+            div.innerHTML = `<div style="font-size:24px;">${art.icon}</div><div style="font-size:10px; color:#fff;">${lang.art_rarity_r}${art.rarity}</div>`;
+            div.onclick = () => window.unequipArt(i);
+        } else {
+            div.innerHTML = `<div style="font-size:12px; color:#555;">${lang.art_slot} ${i+1}</div>`;
+        }
+        slotsDiv.appendChild(div);
+    }
+
+    const listDiv = document.getElementById('artList');
+    listDiv.innerHTML = '';
+    window.ownedArtifacts.forEach(id => {
+        const art = window.ARTIFACT_DATA[id];
+        const isEquipped = window.equippedArtifacts.includes(id);
+        const color = art.rarity === 'UR' ? '#f1c40f' : (art.rarity === 'SSR' ? '#9b59b6' : (art.rarity === 'SR' ? '#3498db' : '#bdc3c7'));
+        const card = document.createElement('div');
+        card.style.cssText = `background:rgba(0,0,0,0.5); border:2px solid ${color}; padding:10px; border-radius:5px; text-align:center; position:relative; cursor:pointer;`;
+        if (isEquipped) card.style.opacity = "0.4";
+        
+        card.innerHTML = `
+            <div style="font-size:10px; color:${color}; font-weight:bold;">${art.rarity}</div>
+            <div style="font-size:24px; margin:5px 0;">${art.icon}</div>
+            <div style="font-size:11px; font-weight:bold; height:30px;">${window.currentLang === 'ko' ? art.nameKo : art.nameEn}</div>
+            <button class="btn" style="padding:4px 8px; font-size:10px; margin:5px 0 0 0;" ${isEquipped ? 'disabled' : ''}>${isEquipped ? lang.outfitEquipped : lang.art_equip}</button>
+        `;
+        if (!isEquipped) {
+            card.onclick = () => window.equipArt(id);
+        }
+        listDiv.appendChild(card);
+    });
+};
+
+window.equipArt = function(artId) {
+    const emptySlot = window.equippedArtifacts.indexOf(null);
+    if (emptySlot !== -1) {
+        window.equippedArtifacts[emptySlot] = artId;
+        playSFX('levelup');
+        window.renderArtInv();
+        if (window.player) window.player.recalculateStats();
+    } else {
+        showSystemNotice(window.currentLang === 'ko' ? "슬롯이 가득 찼습니다!" : "Slots are full!");
+    }
+};
+
+window.unequipArt = function(slotIdx) {
+    window.equippedArtifacts[slotIdx] = null;
+    playSFX('exp');
+    window.renderArtInv();
+    if (window.player) window.player.recalculateStats();
+};
+
+window.handleActiveSkill = function(slotIdx) {
+    if (window.gameState !== 'playing' || isPaused) return;
+    const artId = window.equippedArtifacts[slotIdx];
+    if (!artId) return;
+    const art = window.ARTIFACT_DATA[artId];
+    if (art.type !== 'active') return;
+    if (window.artCooldowns[slotIdx] > 0) return;
+
+    // Trigger Active Effect
+    playSFX('verdictUse');
+    window.artCooldowns[slotIdx] = art.cooldown;
+    
+    if (art.effect === 'stunAll') {
+        enemies.forEach(e => { e.hitTimer = art.duration; e.speed *= 0.1; setTimeout(() => e.speed /= 0.1, art.duration * 1000); });
+        showSystemNotice("GUILTY! (STUN)");
+    } else if (art.effect === 'vacuum') {
+        expGems.forEach(g => g.isMagnetic = true);
+        showSystemNotice("KNOWLEDGE BURST!");
+    } else if (art.effect === 'timeStop') {
+        const oldMultiplier = gameSpeedMultiplier;
+        gameSpeedMultiplier = 0.1;
+        showSystemNotice("TIME STOP!");
+        setTimeout(() => { gameSpeedMultiplier = oldMultiplier; }, art.duration * 1000);
+    } else if (art.effect === 'turnabout') {
+        player.hp = player.maxHp;
+        projectiles.push(new AreaExplosion(player.x, player.y, 600, 2000, 'rgba(255,255,255,0.9)'));
+        showSystemNotice("TURNABOUT!");
+    } else if (art.effect === 'overdrive') {
+        const oldAtkSpd = player.stats.atkSpdMult;
+        const oldSpd = player.stats.speedMult;
+        player.stats.atkSpdMult += 0.5;
+        player.stats.speedMult += 0.5;
+        showSystemNotice("OVERDRIVE!");
+        setTimeout(() => { player.stats.atkSpdMult -= 0.5; player.stats.speedMult -= 0.5; updateHUD(); }, art.duration * 1000);
+    } else if (art.effect === 'lifesteal') {
+        player.lifeStealActive = true;
+        showSystemNotice("BALANCE (LIFESTEAL)");
+        setTimeout(() => { player.lifeStealActive = false; }, art.duration * 1000);
+    } else if (art.effect === 'laser') {
+        let aimAngle = Math.atan2(player.aimY, player.aimX);
+        projectiles.push(new Projectile(player.x, player.y, Math.cos(aimAngle)*1200, Math.sin(aimAngle)*1200, 500 * player.getDamageMultiplier(), 'laserPointer', '#ff7979', true, 5));
+        showSystemNotice("SURGICAL STRIKE!");
+    } else if (art.effect === 'sovereign') {
+        player.invincibleTimer = art.duration;
+        showSystemNotice("SUPREME RULING!");
+        enemies.forEach(e => { if(e.hp < e.maxHp * 0.3) e.takeDamage(9999); });
+    } else if (art.effect === 'jackpot') {
+        const types = ['red', 'yellow', 'green'];
+        const res = types[Math.floor(Math.random() * types.length)];
+        window.verdictInventory = [res, res, res];
+        window.checkRouletteSynergy();
+        window.updateVerdictUI();
+    } else if (art.effect === 'ascension') {
+        player.isFlying = true;
+        player.invincibleTimer = art.duration;
+        showSystemNotice("ASCENSION!");
+        let timer = 0;
+        let interval = setInterval(() => {
+            if(!player.isFlying) { clearInterval(interval); return; }
+            let ang = Math.random() * Math.PI * 2;
+            projectiles.push(new Projectile(player.x, player.y, Math.cos(ang)*600, Math.sin(ang)*600, 100 * player.getDamageMultiplier(), 'chalk', '#fff', true, 1));
+        }, 200);
+        setTimeout(() => { player.isFlying = false; }, art.duration * 1000);
+    }
+    updateHUD();
+};
+
+window.updateSkillSlotsUI = function() {
+    for(let i=0; i<3; i++) {
+        const slot = document.getElementById('skillSlot' + i);
+        if(!slot) continue;
+        const artId = window.equippedArtifacts[i];
+        const art = artId ? window.ARTIFACT_DATA[artId] : null;
+        if(art && art.type === 'active') {
+            slot.innerHTML = `<span style="position:absolute; bottom:-5px; right:-5px; font-size:10px; background:#000; color:#fff; padding:2px;">${i===0?'Q':(i===1?'W':'E')}</span><div style="font-size:24px;">${art.icon}</div><div class="cooldown-overlay" style="position:absolute; bottom:0; left:0; width:100%; height:0%; background:rgba(0,0,0,0.7);"></div>`;
+            slot.style.opacity = "0.8";
+            slot.style.borderColor = art.rarity === 'UR' ? '#f1c40f' : (art.rarity === 'SSR' ? '#9b59b6' : '#3498db');
+        } else {
+            slot.innerHTML = `<span style="position:absolute; bottom:-5px; right:-5px; font-size:10px; background:#000; color:#fff; padding:2px;">${i===0?'Q':(i===1?'W':'E')}</span>`;
+            slot.style.opacity = "0.5";
+            slot.style.borderColor = "#555";
+        }
+    }
+};
 
 // ==========================================
 // 1. Data Definitions & Meta Progression
@@ -998,6 +1324,10 @@ window.I18N = {
         tut_p3_t: "Gacha", tut_p3_d: "Unlock special weapons via Gacha. Unlocked weapons appear in the level-up pool with 1.5x weight!",
         tut_p4_t: "Rhythm Dash", tut_p4_d: "Dash (SHIFT) when the rhythm bar reaches the yellow center to dash continuously without cooldown!",
         tut_p5_t: "Verdict Roulette", tut_p5_d: "Defeat 50 monsters to fill the gauge. Press Space to gain a random buff (+5%). Get 3 of a kind for a massive synergy (JACKPOT)!",
+        art_shop: "Artifact Shop", art_inv: "Artifacts", art_pull1: "1 Pull (10 Badges)", art_pull10: "10 Pulls (100 Badges)",
+        art_rarity_r: "R", art_rarity_sr: "SR", art_rarity_ssr: "SSR", art_rarity_ur: "UR",
+        art_slot: "Slot", art_equip: "Equip", art_unequip: "Unequip", art_owned: "Owned",
+        art_get: "🎉 Artifact Acquired! 🎉", art_new: "NEW!", art_passive: "Passive", art_active: "Active",
         orb_get: "⚖️ Verdict Orb Acquired!", orb_fury: "Justice Red (ATK)", orb_life: "Judgment Yellow (ATK SPD)", orb_wind: "Mercy Green (SPD)",
         syn_triple: "Transcendent Synergy (25%)", syn_double: "Resonance Synergy (15%)", syn_mix: "Harmonious Judgment (10%)",
         verdictPrefix: "Verdict: ",
@@ -2748,6 +3078,8 @@ window.saveToSlot = function(i) {
             playerBadges: playerBadges, 
             unlockedWeapons: [...unlockedWeapons], 
             permanentStats: {...permanentStats}, 
+            ownedArtifacts: [...window.ownedArtifacts],
+            equippedArtifacts: [...window.equippedArtifacts],
             currentStage: currentStage, 
             maxStageReached: maxStageReached,
             currentOutfitId: currentOutfitId,
@@ -3480,11 +3812,27 @@ class Player {
 
     playAnim(stateName) { this.animState = stateName; this.animTimer = 0.2 / this.stats.atkSpdMult; }
     recalculateStats() {
-        this.stats.damageMult = 1.0 + (permanentStats.damage * 0.05); 
-        this.stats.cooldownMult = 1.0 - (permanentStats.cooldown * 0.005); 
-        this.stats.speedMult = 1.0 + (permanentStats.speed * 0.0125);
-        this.stats.maxHp = this.baseMaxHp * (1.0 + (permanentStats.maxHp * 0.0125));
-        this.stats.atkSpdMult = 1.0;
+        let artDmg = 0, artCool = 0, artSpd = 0, artHp = 0, artAtkSpd = 0;
+        if (window.equippedArtifacts) {
+            window.equippedArtifacts.forEach(id => {
+                if(id) {
+                    const art = window.ARTIFACT_DATA[id];
+                    if(art && art.stats) {
+                        if(art.stats.damageMult) artDmg += art.stats.damageMult;
+                        if(art.stats.cooldownMult) artCool += art.stats.cooldownMult;
+                        if(art.stats.speedMult) artSpd += art.stats.speedMult;
+                        if(art.stats.maxHpMult) artHp += art.stats.maxHpMult;
+                        if(art.stats.atkSpdMult) artAtkSpd += art.stats.atkSpdMult;
+                    }
+                }
+            });
+        }
+
+        this.stats.damageMult = 1.0 + (permanentStats.damage * 0.05) + artDmg; 
+        this.stats.cooldownMult = (1.0 - (permanentStats.cooldown * 0.005)) + artCool; 
+        this.stats.speedMult = 1.0 + (permanentStats.speed * 0.0125) + artSpd;
+        this.stats.maxHp = this.baseMaxHp * (1.0 + (permanentStats.maxHp * 0.0125) + artHp);
+        this.stats.atkSpdMult = 1.0 + artAtkSpd;
         
         if (window.orbStacks) {
             this.stats.damageMult += (window.orbStacks.red * 0.05);
@@ -3584,6 +3932,30 @@ class Player {
         if(hasGym && this.passiveTimer >= GameSettings.weapons.gymClothes.healTick) { this.passiveTimer = 0; this.hp = Math.min(this.maxHp, this.hp + GameSettings.weapons.gymClothes.healAmount * hasGym.level); updateHUD(); }
 
         this.weapons.forEach(w => { if(w.update) w.update(dt); });
+
+        // Artifact Auto Passives
+        this.artTickTimer += dt;
+        if(this.artTickTimer >= 1.0) { 
+            this.artTickTimer = 0;
+            if (window.equippedArtifacts) {
+                window.equippedArtifacts.forEach(id => {
+                    if(id) {
+                        const art = window.ARTIFACT_DATA[id];
+                        if(art && art.type === 'passive_auto') {
+                            if(art.effect === 'heal') {
+                                this.artHealTimer++;
+                                if(this.artHealTimer >= art.interval) {
+                                    this.artHealTimer = 0;
+                                    this.hp = Math.min(this.maxHp, this.hp + art.value);
+                                    updateHUD();
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
         if (this.dashCooldownTimer > 0) updateHUD();
     }
     draw(ctx) {
@@ -4212,7 +4584,9 @@ Object.assign(window, { playSFX, showSystemNotice, currentLang,  toggleFullscree
     renderSaveSlots, saveToSlot, loadFromSlot, openCloset, closeCloset, equipOutfit,
     renderClosetList, openAchieve, closeAchieve, renderAchieveList,
     openTutorial, closeTutorial, nextTutorialPage, prevTutorialPage, renderTutorialPage,
-    openStoryList, closeStoryList, renderStoryList
+    openStoryList, closeStoryList, renderStoryList,
+    openArtShop, closeArtShop, rollArtGacha, openArtInv, closeArtInv, renderArtInv,
+    equipArt, unequipArt, handleActiveSkill, updateSkillSlotsUI
 });
 
 // 게임 부팅
