@@ -1019,6 +1019,7 @@ window.equipArt = function(artId) {
         window.equippedArtifacts[emptySlot] = artId;
         playSFX('levelup');
         window.renderArtInv();
+        if (window.updateSkillSlotsUI) window.updateSkillSlotsUI();
         if (window.player) window.player.recalculateStats();
     } else {
         showSystemNotice(window.currentLang === 'ko' ? "슬롯이 가득 찼습니다!" : "Slots are full!");
@@ -1030,6 +1031,7 @@ window.unequipArt = function(slotIdx) {
     window.equippedArtifacts[slotIdx] = null;
     playSFX('exp');
     window.renderArtInv();
+    if (window.updateSkillSlotsUI) window.updateSkillSlotsUI();
     if (window.player) window.player.recalculateStats();
 };
 
