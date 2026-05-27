@@ -3833,12 +3833,14 @@ class Player {
             window.equippedArtifacts.forEach(id => {
                 if(id) {
                     const art = window.ARTIFACT_DATA[id];
+                    const level = window.ownedArtifacts[id] || 1;
+                    const bonusMult = 1.0 + (level - 1) * 0.1; // +10% stat per level
                     if(art && art.stats) {
-                        if(art.stats.damageMult) artDmg += art.stats.damageMult;
-                        if(art.stats.cooldownMult) artCool += art.stats.cooldownMult;
-                        if(art.stats.speedMult) artSpd += art.stats.speedMult;
-                        if(art.stats.maxHpMult) artHp += art.stats.maxHpMult;
-                        if(art.stats.atkSpdMult) artAtkSpd += art.stats.atkSpdMult;
+                        if(art.stats.damageMult) artDmg += art.stats.damageMult * bonusMult;
+                        if(art.stats.cooldownMult) artCool += art.stats.cooldownMult * bonusMult;
+                        if(art.stats.speedMult) artSpd += art.stats.speedMult * bonusMult;
+                        if(art.stats.maxHpMult) artHp += art.stats.maxHpMult * bonusMult;
+                        if(art.stats.atkSpdMult) artAtkSpd += art.stats.atkSpdMult * bonusMult;
                     }
                 }
             });
