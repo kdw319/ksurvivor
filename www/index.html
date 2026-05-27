@@ -3923,7 +3923,9 @@ class SmartPhoneWeapon extends Weapon {
 class Player {
     constructor() {
         this.x = 0; this.y = 0;
-        this.maxHp = GameSettings.player.baseHp + (permanentStats.maxHp * 10); this.hp = this.maxHp;
+        this.baseMaxHp = GameSettings.player.baseHp; 
+        this.maxHp = this.baseMaxHp + (permanentStats.maxHp * 10); 
+        this.hp = this.maxHp;
         this.stats = { speedMult: 1.0, damageMult: 1.0, cooldownMult: 1.0, atkSpdMult: 1.0 };
         this.baseSpeed = GameSettings.player.baseSpeed; this.radius = 15; this.dirX = 1; this.level = 1; this.exp = 0; this.maxExp = 10;
         this.weapons = []; this.activeSynergies = {}; this.passiveTimer = 0;
@@ -3931,6 +3933,8 @@ class Player {
         this.animState = 'idle'; this.animTimer = 0;
         this.aimX = 1; this.aimY = 0; 
         this.hitTimer = 0;
+        this.artTickTimer = 0; this.artHealTimer = 0;
+        this.recalculateStats();
     }
     
     getDamageMultiplier() {
