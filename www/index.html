@@ -3480,7 +3480,7 @@ class Player {
 
     playAnim(stateName) { this.animState = stateName; this.animTimer = 0.2 / this.stats.atkSpdMult; }
     recalculateStats() {
-        this.stats.damageMult = 1.0 + (permanentStats.damage * 0.0125); 
+        this.stats.damageMult = 1.0 + (permanentStats.damage * 0.05); 
         this.stats.cooldownMult = 1.0 - (permanentStats.cooldown * 0.005); 
         this.stats.speedMult = 1.0 + (permanentStats.speed * 0.0125);
         this.stats.maxHp = this.baseMaxHp * (1.0 + (permanentStats.maxHp * 0.0125));
