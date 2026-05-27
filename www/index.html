@@ -802,6 +802,7 @@ window.ARTIFACT_DATA = {
     art_ur_3: { id: 'art_ur_3', rarity: 'UR', nameKo: "심판의 소용돌이", nameEn: "Verdict Vortex", flavorKo: "운명의 소용돌이가 모든 것을 집어삼킵니다.", flavorEn: "The vortex of fate swallows everything.", descKo: "액티브: 즉시 구슬 3개 획득 (트리플)", descEn: "Active: Gain 3 same Verdict Orbs", icon: "🌀", type: 'active', cooldown: 45, effect: 'jackpot' },
     art_ur_4: { id: 'art_ur_4', rarity: 'UR', nameKo: "구원의 날개", nameEn: "Redemption Wings", flavorKo: "하늘 높이 날아올라, 비극의 굴레를 벗어던지세요.", flavorEn: "Fly high into the sky, shed the cycle of tragedy.", descKo: "액티브: 10초간 비행 및 자동 공격", descEn: "Active: Flight + Auto Attack (10s)", icon: "🪽", type: 'active', cooldown: 45, duration: 10, effect: 'ascension' },
     art_ur_5: { id: 'art_ur_5', rarity: 'UR', nameKo: "이솔의 잃어버린 기억", nameEn: "Isol's Memory", flavorKo: "진실을 마주할 준비가 되셨습니까?", flavorEn: "Are you ready to face the truth?", descKo: "액티브: 체력 완전 회복 및 대폭발", descEn: "Active: Full Heal + Mega Explosion", icon: "💎", type: 'active', cooldown: 45, effect: 'turnabout' }
+};
 
 window.artCooldowns = [0, 0, 0];
 
@@ -3018,7 +3019,8 @@ function startGame() {
     ['hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI', 'activeSkillSlots'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove('hidden'); });
     let synList = document.getElementById('systemNoticeList'); if(synList) synList.innerHTML = ''; 
     resetStage(true); 
-    lastTime = performance.now(); window.gameState = 'playing'; isPaused = false; startBGM(); 
+    lastTime = performance.now(); window.gameState = 'playing'; isPaused = false; startBGM();
+    if(window.updateSkillSlotsUI) window.updateSkillSlotsUI();
 }
 
 function triggerStageClear() {
@@ -3239,6 +3241,8 @@ window.resetPlayerData = function() {
     currentOutfitId = 'default1';
     statsTracking = { totalKills: 0, totalBadges: 0, totalDamage: 0, totalDistance: 0, totalDash: 0, totalRoulette: 0, totalPerfectDash: 0, totalTime: 0, maxCombo: 0, marblesCollected: 0 };
     achievements = { kills: false, stage5: false, rich: false };
+    window.ownedArtifacts = {};
+    window.equippedArtifacts = [null, null, null];
     if(window.player) {
         window.player.weapons = [];
         window.player.recalculateStats();
@@ -3939,13 +3943,13 @@ class Player {
     playAnim(stateName) { this.animState = stateName; this.animTimer = 0.2 / this.stats.atkSpdMult; }
     recalculateStats() {
         let artDmg = 0, artCool = 0, artSpd = 0, artHp = 0, artAtkSpd = 0;
-        if (window.equippedArtifacts) {
+        if (window.equippedArtifacts && Array.isArray(window.equippedArtifacts)) {
             window.equippedArtifacts.forEach(id => {
-                if(id) {
+                if(id && window.ARTIFACT_DATA && window.ARTIFACT_DATA[id]) {
                     const art = window.ARTIFACT_DATA[id];
-                    const level = window.ownedArtifacts[id] || 1;
-                    const bonusMult = 1.0 + (level - 1) * 0.1; // +10% stat per level
-                    if(art && art.stats) {
+                    const level = (window.ownedArtifacts && window.ownedArtifacts[id]) ? window.ownedArtifacts[id] : 1;
+                    const bonusMult = 1.0 + (level - 1) * 0.1;
+                    if(art.stats) {
                         if(art.stats.damageMult) artDmg += art.stats.damageMult * bonusMult;
                         if(art.stats.cooldownMult) artCool += art.stats.cooldownMult * bonusMult;
                         if(art.stats.speedMult) artSpd += art.stats.speedMult * bonusMult;
