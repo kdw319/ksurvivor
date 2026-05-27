@@ -1107,11 +1107,11 @@ window.updateSkillSlotsUI = function() {
         const artId = window.equippedArtifacts[i];
         const art = artId ? window.ARTIFACT_DATA[artId] : null;
         if(art && art.type === 'active') {
-            slot.innerHTML = `<span style="position:absolute; bottom:-5px; right:-5px; font-size:10px; background:#000; color:#fff; padding:2px;">${i===0?'Q':(i===1?'W':'E')}</span><div style="font-size:24px;">${art.icon}</div><div class="cooldown-overlay" style="position:absolute; bottom:0; left:0; width:100%; height:0%; background:rgba(0,0,0,0.7);"></div>`;
+            slot.innerHTML = `<span style="position:absolute; bottom:-5px; right:-5px; font-size:10px; background:#000; color:#fff; padding:2px;">${i+1}</span><div style="font-size:24px;">${art.icon}</div><div class="cooldown-overlay" style="position:absolute; bottom:0; left:0; width:100%; height:0%; background:rgba(0,0,0,0.7);"></div>`;
             slot.style.opacity = "0.8";
             slot.style.borderColor = art.rarity === 'UR' ? '#f1c40f' : (art.rarity === 'SSR' ? '#9b59b6' : '#3498db');
         } else {
-            slot.innerHTML = `<span style="position:absolute; bottom:-5px; right:-5px; font-size:10px; background:#000; color:#fff; padding:2px;">${i===0?'Q':(i===1?'W':'E')}</span>`;
+            slot.innerHTML = `<span style="position:absolute; bottom:-5px; right:-5px; font-size:10px; background:#000; color:#fff; padding:2px;">${i+1}</span>`;
             slot.style.opacity = "0.5";
             slot.style.borderColor = "#555";
         }
@@ -4298,6 +4298,11 @@ window.addEventListener('keydown', e => {
     if(e.key === ' ' && window.gameState === 'playing') {
         initAudio();
         if(window.useVerdictRoulette) window.useVerdictRoulette();
+    }
+    if((e.key === '1' || e.key === '2' || e.key === '3') && window.gameState === 'playing') {
+        initAudio();
+        const idx = e.key === '1' ? 0 : (e.key === '2' ? 1 : 2);
+        if(window.handleActiveSkill) window.handleActiveSkill(idx);
     }
     if(e.key === 'Escape' && window.gameState === 'playing') togglePause();
 });
