@@ -3258,6 +3258,8 @@ window.loadFromSlot = function(i) {
             playerBadges = data.playerBadges || 0; 
             unlockedWeapons = data.unlockedWeapons || []; 
             permanentStats = data.permanentStats || {damage:0, cooldown:0, speed:0, maxHp:0}; 
+            window.ownedArtifacts = data.ownedArtifacts || {};
+            window.equippedArtifacts = data.equippedArtifacts || [null, null, null];
             currentStage = data.currentStage || 1; 
             maxStageReached = data.maxStageReached || 1; 
             currentOutfitId = data.currentOutfitId || 'default1';
@@ -3268,9 +3270,13 @@ window.loadFromSlot = function(i) {
             updateLobbyCurrency(); 
             // [CRITICAL] Sync visuals and stage state with loaded currentStage
             resetStage(); 
+            window.updateSkillSlotsUI();
             showSystemNotice(`[SLOT ${i+1}] ${lang.noticeLoad}`); 
         } else {
             // Empty slot load
+            window.ownedArtifacts = {};
+            window.equippedArtifacts = [null, null, null];
+            window.updateSkillSlotsUI();
             resetStage(); // Back to Stage 1
             showSystemNotice(lang.loadEmpty);
         }
