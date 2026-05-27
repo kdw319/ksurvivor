@@ -306,6 +306,22 @@
         input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #ffb142; cursor: pointer; margin-top: -6px; border: 2px solid #fff; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #555; border-radius: 3px; border: 1px solid #222; }
+
+        /* 🏺 ARTIFACT TOOLTIP */
+        #artTooltip {
+            position: fixed; pointer-events: none; z-index: 10002;
+            width: 280px; background: rgba(10, 10, 15, 0.95);
+            border: 2px solid #b89947; border-radius: 8px; padding: 15px;
+            box-shadow: 0 0 20px rgba(184, 153, 71, 0.3);
+            display: none; flex-direction: column; gap: 8px;
+            backdrop-filter: blur(5px);
+            font-family: 'Noto Sans KR', sans-serif;
+            text-align: left;
+        }
+        .art-tooltip-header { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #444; padding-bottom: 8px; }
+        .art-tooltip-rarity { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+        .art-tooltip-flavor { font-style: italic; color: #aaa; font-size: 11px; line-height: 1.4; margin: 5px 0; border-left: 2px solid #555; padding-left: 8px; }
+        .art-tooltip-effect { color: #2ed573; font-size: 12px; font-weight: bold; margin-top: 5px; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 
@@ -656,6 +672,19 @@
         </div>
     </div>
 
+    <!-- 🏺 ARTIFACT TOOLTIP -->
+    <div id="artTooltip">
+        <div class="art-tooltip-header">
+            <div id="artTooltipIcon" style="font-size: 24px;"></div>
+            <div style="flex:1;">
+                <div id="artTooltipName" style="font-weight: bold; color: #e0d0a0;"></div>
+                <span id="artTooltipRarity" class="art-tooltip-rarity"></span>
+            </div>
+        </div>
+        <div id="artTooltipFlavor" class="art-tooltip-flavor"></div>
+        <div id="artTooltipEffect" class="art-tooltip-effect"></div>
+    </div>
+
     <div id="artResultUI" class="overlay hidden" style="z-index: 10001;">
         <div class="panel" style="max-width: 600px; background: radial-gradient(circle, #2c3e50 0%, #000 100%);">
             <h2 id="artResultTitle">소환 결과</h2>
@@ -737,42 +766,42 @@ window.ownedArtifacts = {}; // { id: level, ... }
 window.equippedArtifacts = [null, null, null]; // 3 Slots
 window.ARTIFACT_DATA = {
     // R (10): Stat Boosts
-    art_r_1: { id: 'art_r_1', rarity: 'R', nameKo: "부러진 펜", nameEn: "Broken Pen", descKo: "공격력 +5%", descEn: "ATK +5%", icon: "🖋️", type: 'passive', stats: { damageMult: 0.05 } },
-    art_r_2: { id: 'art_r_2', rarity: 'R', nameKo: "먼지 쌓인 지우개", nameEn: "Dusty Eraser", descKo: "최대 체력 +5%", descEn: "Max HP +5%", icon: "🧽", type: 'passive', stats: { maxHpMult: 0.05 } },
-    art_r_3: { id: 'art_r_3', rarity: 'R', nameKo: "찢어진 교과서", nameEn: "Torn Textbook", descKo: "쿨타임 -5%", descEn: "Cooldown -5%", icon: "📖", type: 'passive', stats: { cooldownMult: -0.05 } },
-    art_r_4: { id: 'art_r_4', rarity: 'R', nameKo: "체육용 호루라기", nameEn: "Gym Whistle", descKo: "이동속도 +5%", descEn: "SPD +5%", icon: " whistle", icon: "📢", type: 'passive', stats: { speedMult: 0.05 } },
-    art_r_5: { id: 'art_r_5', rarity: 'R', nameKo: "떨어진 단추", nameEn: "Loose Button", descKo: "공격속도 +5%", descEn: "ATK SPD +5%", icon: "🔘", type: 'passive', stats: { atkSpdMult: 0.05 } },
-    art_r_6: { id: 'art_r_6', rarity: 'R', nameKo: "차가운 우유", nameEn: "Cold Milk", descKo: "최대 체력 +10%", descEn: "Max HP +10%", icon: "🥛", type: 'passive', stats: { maxHpMult: 0.1 } },
-    art_r_7: { id: 'art_r_7', rarity: 'R', nameKo: "낡은 열쇠고리", nameEn: "Old Keychain", descKo: "습득 범위 +10%", descEn: "Pickup Range +10%", icon: "🔑", type: 'passive', stats: { pickupMult: 0.1 } },
-    art_r_8: { id: 'art_r_8', rarity: 'R', nameKo: "잉크 병", nameEn: "Ink Bottle", descKo: "투사체 속도 +10%", descEn: "Proj Speed +10%", icon: "🧪", type: 'passive', stats: { projSpeedMult: 0.1 } },
-    art_r_9: { id: 'art_r_9', rarity: 'R', nameKo: "이름표", nameEn: "Name Tag", descKo: "경험치 획득 +5%", descEn: "EXP Gain +5%", icon: "🏷️", type: 'passive', stats: { expMult: 0.05 } },
-    art_r_10: { id: 'art_r_10', rarity: 'R', nameKo: "옷핀", nameEn: "Safety Pin", descKo: "방어력 +5%", descEn: "Defense +5%", icon: "🧷", type: 'passive', stats: { defense: 0.05 } },
+    art_r_1: { id: 'art_r_1', rarity: 'R', nameKo: "부러진 펜", nameEn: "Broken Pen", flavorKo: "한때 정의를 써 내려갔던 펜의 잔해입니다.", flavorEn: "Remains of a pen that once wrote justice.", descKo: "공격력 +5%", descEn: "ATK +5%", icon: "🖋️", type: 'passive', stats: { damageMult: 0.05 } },
+    art_r_2: { id: 'art_r_2', rarity: 'R', nameKo: "먼지 쌓인 지우개", nameEn: "Dusty Eraser", flavorKo: "지우고 싶은 기억이 너무 많았던 걸까요?", flavorEn: "Too many memories to erase?", descKo: "최대 체력 +5%", descEn: "Max HP +5%", icon: "🧽", type: 'passive', stats: { maxHpMult: 0.05 } },
+    art_r_3: { id: 'art_r_3', rarity: 'R', nameKo: "찢어진 교과서", nameEn: "Torn Textbook", flavorKo: "지식의 파편들이 바람에 흩날립니다.", flavorEn: "Fragments of knowledge scatter in the wind.", descKo: "쿨타임 -5%", descEn: "Cooldown -5%", icon: "📖", type: 'passive', stats: { cooldownMult: -0.05 } },
+    art_r_4: { id: 'art_r_4', rarity: 'R', nameKo: "체육용 호루라기", nameEn: "Gym Whistle", flavorKo: "호루라기 소리가 들리면, 모든 것이 시작됩니다.", flavorEn: "When the whistle blows, everything begins.", descKo: "이동속도 +5%", descEn: "SPD +5%", icon: "📢", type: 'passive', stats: { speedMult: 0.05 } },
+    art_r_5: { id: 'art_r_5', rarity: 'R', nameKo: "떨어진 단추", nameEn: "Loose Button", flavorKo: "누군가의 옷에서 떨어진, 평범하지만 소중한 흔적.", flavorEn: "A common but precious trace from someone's clothes.", descKo: "공격속도 +5%", descEn: "ATK SPD +5%", icon: "🔘", type: 'passive', stats: { atkSpdMult: 0.05 } },
+    art_r_6: { id: 'art_r_6', rarity: 'R', nameKo: "차가운 우유", nameEn: "Cold Milk", flavorKo: "차가운 감촉이 정신을 맑게 해줍니다.", flavorEn: "The cold touch clears your mind.", descKo: "최대 체력 +10%", descEn: "Max HP +10%", icon: "🥛", type: 'passive', stats: { maxHpMult: 0.1 } },
+    art_r_7: { id: 'art_r_7', rarity: 'R', nameKo: "낡은 열쇠고리", nameEn: "Old Keychain", flavorKo: "무엇을 열기 위한 열쇠였을까요?", flavorEn: "What was the key meant to open?", descKo: "습득 범위 +10%", descEn: "Pickup Range +10%", icon: "🔑", type: 'passive', stats: { pickupMult: 0.1 } },
+    art_r_8: { id: 'art_r_8', rarity: 'R', nameKo: "잉크 병", nameEn: "Ink Bottle", flavorKo: "검은 잉크 속에는 수많은 진술이 담겨 있습니다.", flavorEn: "Countless statements are contained within the black ink.", descKo: "투사체 속도 +10%", descEn: "Proj Speed +10%", icon: "🧪", type: 'passive', stats: { projSpeedMult: 0.1 } },
+    art_r_9: { id: 'art_r_9', rarity: 'R', nameKo: "이름표", nameEn: "Name Tag", flavorKo: "잊혀져 가는 당신의 정체성을 붙잡아 줍니다.", flavorEn: "Hold onto your fading identity.", descKo: "경험치 획득 +5%", descEn: "EXP Gain +5%", icon: "🏷️", type: 'passive', stats: { expMult: 0.05 } },
+    art_r_10: { id: 'art_r_10', rarity: 'R', nameKo: "옷핀", nameEn: "Safety Pin", flavorKo: "벌어진 상처를 임시방편으로나마 고정합니다.", flavorEn: "Temporarily secures an open wound.", descKo: "방어력 +5%", descEn: "Defense +5%", icon: "🧷", type: 'passive', stats: { defense: 0.05 } },
 
     // SR (10): Better Stats + Passive Effects
-    art_sr_1: { id: 'art_sr_1', rarity: 'SR', nameKo: "반장 배지", nameEn: "President Badge", descKo: "공격력 +10%", descEn: "ATK +10%", icon: "🥇", type: 'passive', stats: { damageMult: 0.1 } },
-    art_sr_2: { id: 'art_sr_2', rarity: 'SR', nameKo: "보건실 파스", nameEn: "Nurse's Patch", descKo: "10초마다 2 HP 회복", descEn: "Heal 2 HP every 10s", icon: "🩹", type: 'passive_auto', interval: 10, effect: 'heal', value: 2 },
-    art_sr_3: { id: 'art_sr_3', rarity: 'SR', nameKo: "육상부 운동화", nameEn: "Ace Shoes", descKo: "이동속도 +15%", descEn: "SPD +15%", icon: "👟", type: 'passive', stats: { speedMult: 0.15 } },
-    art_sr_4: { id: 'art_sr_4', rarity: 'SR', nameKo: "황금 컴퍼스", nameEn: "Golden Compass", descKo: "투사체 수 +1", descEn: "Projectile Count +1", icon: "🧭", type: 'passive', stats: { projCount: 1 } },
-    art_sr_5: { id: 'art_sr_5', rarity: 'SR', nameKo: "도서관 대출증", nameEn: "Library Pass", descKo: "쿨타임 -10%", descEn: "Cooldown -10%", icon: "💳", type: 'passive', stats: { cooldownMult: -0.1 } },
-    art_sr_6: { id: 'art_sr_6', rarity: 'SR', nameKo: "훈련용 목검", nameEn: "Wooden Sword", descKo: "넉백 +20%", descEn: "Knockback +20%", icon: "🎋", type: 'passive', stats: { knockback: 0.2 } },
-    art_sr_7: { id: 'art_sr_7', rarity: 'SR', nameKo: "구슬 조각", nameEn: "Orb Fragment", descKo: "심판 게이지 획득 +10%", descEn: "Verdict Gain +10%", icon: "💠", type: 'passive', stats: { verdictMult: 0.1 } },
-    art_sr_8: { id: 'art_sr_8', rarity: 'SR', nameKo: "고농축 카페인", nameEn: "Caffeine Pill", descKo: "공격속도 +15%", descEn: "ATK SPD +15%", icon: "💊", type: 'passive', stats: { atkSpdMult: 0.15 } },
-    art_sr_9: { id: 'art_sr_9', rarity: 'SR', nameKo: "거울 파편", nameEn: "Mirror Shard", descKo: "피격 시 10% 확률로 회피", descEn: "10% Chance to Dodge", icon: "🪞", type: 'passive', stats: { dodge: 0.1 } },
-    art_sr_10: { id: 'art_sr_10', rarity: 'SR', nameKo: "낡은 녹음기", nameEn: "Old Recorder", descKo: "스킬 범위 +20%", descEn: "Skill Range +20%", icon: "📼", type: 'passive', stats: { rangeMult: 0.2 } },
+    art_sr_1: { id: 'art_sr_1', rarity: 'SR', nameKo: "반장 배지", nameEn: "President Badge", flavorKo: "책임감의 무게가 어깨를 짓누릅니다.", flavorEn: "The weight of responsibility presses on your shoulders.", descKo: "공격력 +10%", descEn: "ATK +10%", icon: "🥇", type: 'passive', stats: { damageMult: 0.1 } },
+    art_sr_2: { id: 'art_sr_2', rarity: 'SR', nameKo: "보건실 파스", nameEn: "Nurse's Patch", flavorKo: "통증을 잠시 잊게 해주는 마법 같은 도구.", flavorEn: "A magical tool that lets you forget pain for a while.", descKo: "10초마다 2 HP 회복", descEn: "Heal 2 HP every 10s", icon: "🩹", type: 'passive_auto', interval: 10, effect: 'heal', value: 2 },
+    art_sr_3: { id: 'art_sr_3', rarity: 'SR', nameKo: "육상부 운동화", nameEn: "Ace Shoes", flavorKo: "누구보다 빠르게, 결승점을 향해.", flavorEn: "Faster than anyone, toward the finish line.", descKo: "이동속도 +15%", descEn: "SPD +15%", icon: "👟", type: 'passive', stats: { speedMult: 0.15 } },
+    art_sr_4: { id: 'art_sr_4', rarity: 'SR', nameKo: "황금 컴퍼스", nameEn: "Golden Compass", flavorKo: "어긋난 원을 바로잡는 황금빛 도구.", flavorEn: "A golden tool to correct distorted circles.", descKo: "투사체 수 +1", descEn: "Projectile Count +1", icon: "🧭", type: 'passive', stats: { projCount: 1 } },
+    art_sr_5: { id: 'art_sr_5', rarity: 'SR', nameKo: "도서관 대출증", nameEn: "Library Pass", flavorKo: "지식에 접근할 권리가 주어졌습니다.", flavorEn: "The right to access knowledge has been granted.", descKo: "쿨타임 -10%", descEn: "Cooldown -10%", icon: "💳", type: 'passive', stats: { cooldownMult: -0.1 } },
+    art_sr_6: { id: 'art_sr_6', rarity: 'SR', nameKo: "훈련용 목검", nameEn: "Wooden Sword", flavorKo: "진짜 검은 아니지만, 의지는 충분합니다.", flavorEn: "Not a real sword, but the will is there.", descKo: "넉백 +20%", descEn: "Knockback +20%", icon: "🎋", type: 'passive', stats: { knockback: 0.2 } },
+    art_sr_7: { id: 'art_sr_7', rarity: 'SR', nameKo: "구슬 조각", nameEn: "Orb Fragment", flavorKo: "심판의 힘이 깃든 파편입니다.", flavorEn: "A fragment imbued with the power of judgment.", descKo: "심판 게이지 획득 +10%", descEn: "Verdict Gain +10%", icon: "💠", type: 'passive', stats: { verdictMult: 0.1 } },
+    art_sr_8: { id: 'art_sr_8', rarity: 'SR', nameKo: "고농축 카페인", nameEn: "Caffeine Pill", flavorKo: "잠을 쫓고 심장 박동을 극대화합니다.", flavorEn: "Drive away sleep and maximize heartbeat.", descKo: "공격속도 +15%", descEn: "ATK SPD +15%", icon: "💊", type: 'passive', stats: { atkSpdMult: 0.15 } },
+    art_sr_9: { id: 'art_sr_9', rarity: 'SR', nameKo: "거울 파편", nameEn: "Mirror Shard", flavorKo: "진실을 비추는 거울은 산산조각 났습니다.", flavorEn: "The mirror reflecting the truth is shattered.", descKo: "피격 시 10% 확률로 회피", descEn: "10% Chance to Dodge", icon: "🪞", type: 'passive', stats: { dodge: 0.1 } },
+    art_sr_10: { id: 'art_sr_10', rarity: 'SR', nameKo: "낡은 녹음기", nameEn: "Old Recorder", flavorKo: "누군가의 마지막 목소리가 담겨 있을지도...", flavorEn: "Might contain someone's final voice...", descKo: "스킬 범위 +20%", descEn: "Skill Range +20%", icon: " cassette", icon: "📼", type: 'passive', stats: { rangeMult: 0.2 } },
 
     // SSR (5): Active Skills
-    art_ssr_1: { id: 'art_ssr_1', rarity: 'SSR', nameKo: "정의의 저울", nameEn: "Justice Scale", descKo: "액티브: 5초간 가한 피해의 10% 흡혈", descEn: "Active: 10% Life Steal for 5s", icon: "⚖️", type: 'active', cooldown: 40, duration: 5, effect: 'lifesteal' },
-    art_ssr_2: { id: 'art_ssr_2', rarity: 'SSR', nameKo: "네온 심장", nameEn: "Neon Heart", descKo: "액티브: 8초간 공격/이동속도 +50%", descEn: "Active: +50% Atk/Mov SPD for 8s", icon: "💖", type: 'active', cooldown: 50, duration: 8, effect: 'overdrive' },
-    art_ssr_3: { id: 'art_ssr_3', rarity: 'SSR', nameKo: "검게 물든 의사봉", nameEn: "Black Gavel", descKo: "액티브: 화면 내 모든 적 3초간 기절", descEn: "Active: Stun all screen enemies (3s)", icon: "🔨", type: 'active', cooldown: 60, duration: 3, effect: 'stunAll' },
-    art_ssr_4: { id: 'art_ssr_4', rarity: 'SSR', nameKo: "멸균된 메스", nameEn: "Sterile Scalpel", descKo: "액티브: 전방에 강력한 레이저 발사", descEn: "Active: Fire powerful frontal laser", icon: "🗡️", type: 'active', cooldown: 30, effect: 'laser' },
-    art_ssr_5: { id: 'art_ssr_5', rarity: 'SSR', nameKo: "유령의 졸업장", nameEn: "Ghost Diploma", descKo: "액티브: 화면 내 모든 보석 자석 흡수", descEn: "Active: Pull all screen EXP gems", icon: "📜", type: 'active', cooldown: 45, effect: 'vacuum' },
+    art_ssr_1: { id: 'art_ssr_1', rarity: 'SSR', nameKo: "정의의 저울", nameEn: "Justice Scale", flavorKo: "균형을 맞추지 못하면, 죽음뿐입니다.", flavorEn: "Failure to balance means death.", descKo: "액티브: 5초간 가한 피해의 10% 흡혈", descEn: "Active: 10% Life Steal for 5s", icon: "⚖️", type: 'active', cooldown: 40, duration: 5, effect: 'lifesteal' },
+    art_ssr_2: { id: 'art_ssr_2', rarity: 'SSR', nameKo: "네온 심장", nameEn: "Neon Heart", flavorKo: "기계처럼 정밀하게, 심장은 뜨겁게.", flavorEn: "Precise like a machine, heart burning hot.", descKo: "액티브: 8초간 공격/이동속도 +50%", descEn: "Active: +50% Atk/Mov SPD for 8s", icon: "💖", type: 'active', cooldown: 50, duration: 8, effect: 'overdrive' },
+    art_ssr_3: { id: 'art_ssr_3', rarity: 'SSR', nameKo: "검게 물든 의사봉", nameEn: "Black Gavel", flavorKo: "심판은 이미 끝났습니다. 이제 형행의 시간입니다.", flavorEn: "Judgment is over. Now is the time for execution.", descKo: "액티브: 화면 내 모든 적 3초간 기절", descEn: "Active: Stun all screen enemies (3s)", icon: "🔨", type: 'active', cooldown: 60, duration: 3, effect: 'stunAll' },
+    art_ssr_4: { id: 'art_ssr_4', rarity: 'SSR', nameKo: "멸균된 메스", nameEn: "Sterile Scalpel", flavorKo: "죄의 근원을 완벽하게 도려냅니다.", flavorEn: "Perfectly excise the root of sin.", descKo: "액티브: 전방에 강력한 레이저 발사", descEn: "Active: Fire powerful frontal laser", icon: "🗡️", type: 'active', cooldown: 30, effect: 'laser' },
+    art_ssr_5: { id: 'art_ssr_5', rarity: 'SSR', nameKo: "유령의 졸업장", nameEn: "Ghost Diploma", flavorKo: "죽음만이 유일한 졸업입니다.", flavorEn: "Only death is the true graduation.", descKo: "액티브: 화면 내 모든 보석 자석 흡수", descEn: "Active: Pull all screen EXP gems", icon: "📜", type: 'active', cooldown: 45, effect: 'vacuum' },
 
     // UR (5): Ultimate Skills
-    art_ur_1: { id: 'art_ur_1', rarity: 'UR', nameKo: "지배자의 왕관", nameEn: "Sovereign Crown", descKo: "액티브: 5초간 무적 및 소형몹 소탕", descEn: "Active: Invincible (5s) + Wipe Mobs", icon: "👑", type: 'active', cooldown: 120, duration: 5, effect: 'sovereign' },
-    art_ur_2: { id: 'art_ur_2', rarity: 'UR', nameKo: "종말의 시계", nameEn: "Clock of End", descKo: "액티브: 4초간 시간 정지", descEn: "Active: Freeze Time (4s)", icon: "⏳", type: 'active', cooldown: 90, duration: 4, effect: 'timeStop' },
-    art_ur_3: { id: 'art_ur_3', rarity: 'UR', nameKo: "심판의 소용돌이", nameEn: "Verdict Vortex", descKo: "액티브: 즉시 구슬 3개 획득 (트리플)", descEn: "Active: Gain 3 same Verdict Orbs", icon: "🌀", type: 'active', cooldown: 100, effect: 'jackpot' },
-    art_ur_4: { id: 'art_ur_4', rarity: 'UR', nameKo: "구원의 날개", nameEn: "Redemption Wings", descKo: "액티브: 10초간 비행 및 자동 공격", descEn: "Active: Flight + Auto Attack (10s)", icon: "🪽", type: 'active', cooldown: 150, duration: 10, effect: 'ascension' },
-    art_ur_5: { id: 'art_ur_5', rarity: 'UR', nameKo: "이솔의 잃어버린 기억", nameEn: "Isol's Memory", descKo: "액티브: 체력 완전 회복 및 대폭발", descEn: "Active: Full Heal + Mega Explosion", icon: "💎", type: 'active', cooldown: 180, effect: 'turnabout' }
+    art_ur_1: { id: 'art_ur_1', rarity: 'UR', nameKo: "지배자의 왕관", nameEn: "Sovereign Crown", flavorKo: "이 법정의 진정한 주인은 누구인가?", flavorEn: "Who is the true master of this court?", descKo: "액티브: 5초간 무적 및 소형몹 소탕", descEn: "Active: Invincible (5s) + Wipe Mobs", icon: "👑", type: 'active', cooldown: 120, duration: 5, effect: 'sovereign' },
+    art_ur_2: { id: 'art_ur_2', rarity: 'UR', nameKo: "종말의 시계", nameEn: "Clock of End", flavorKo: "째깍, 째깍... 당신의 남은 시간이 끝났습니다.", flavorEn: "Tick, tock... your remaining time is up.", descKo: "액티브: 4초간 시간 정지", descEn: "Active: Freeze Time (4s)", icon: "⏳", type: 'active', cooldown: 90, duration: 4, effect: 'timeStop' },
+    art_ur_3: { id: 'art_ur_3', rarity: 'UR', nameKo: "심판의 소용돌이", nameEn: "Verdict Vortex", flavorKo: "운명의 소용돌이가 모든 것을 집어삼킵니다.", flavorEn: "The vortex of fate swallows everything.", descKo: "액티브: 즉시 구슬 3개 획득 (트리플)", descEn: "Active: Gain 3 same Verdict Orbs", icon: "🌀", type: 'active', cooldown: 100, effect: 'jackpot' },
+    art_ur_4: { id: 'art_ur_4', rarity: 'UR', nameKo: "구원의 날개", nameEn: "Redemption Wings", flavorKo: "하늘 높이 날아올라, 비극의 굴레를 벗어던지세요.", flavorEn: "Fly high into the sky, shed the cycle of tragedy.", descKo: "액티브: 10초간 비행 및 자동 공격", descEn: "Active: Flight + Auto Attack (10s)", icon: "🪽", type: 'active', cooldown: 150, duration: 10, effect: 'ascension' },
+    art_ur_5: { id: 'art_ur_5', rarity: 'UR', nameKo: "이솔의 잃어버린 기억", nameEn: "Isol's Memory", flavorKo: "진실을 마주할 준비가 되셨습니까?", flavorEn: "Are you ready to face the truth?", descKo: "액티브: 체력 완전 회복 및 대폭발", descEn: "Active: Full Heal + Mega Explosion", icon: "💎", type: 'active', cooldown: 180, effect: 'turnabout' }
 };
 
 window.artCooldowns = [0, 0, 0];
@@ -839,7 +868,7 @@ window.showArtResults = function(results) {
             <div class="choice-icon">${art.icon}</div>
             <div class="choice-title" style="font-size:12px;">${window.currentLang === 'ko' ? art.nameKo : art.nameEn}</div>
             <div style="color:#2ed573; font-weight:bold; font-size:14px;">+${art.level - 1}</div>
-            ${res.isNew ? `<div style="font-size:10px; color:#ffb142;">${lang.art_new}</div>` : ''}
+            ${res.isNew ? `<div style="font-size:10px; color:#ffb142;">${lang.art_new || 'NEW'}</div>` : ''}
         `;
         container.appendChild(div);
     });
@@ -863,6 +892,70 @@ window.closeArtInv = function() {
     });
 };
 
+window.showArtTooltip = function(artId, event) {
+    const art = window.ARTIFACT_DATA[artId];
+    const level = window.ownedArtifacts[artId] || 1;
+    const tooltip = document.getElementById('artTooltip');
+    if (!art || !tooltip) return;
+
+    const lang = window.currentLang;
+    const rarityColor = art.rarity === 'UR' ? '#f1c40f' : (art.rarity === 'SSR' ? '#9b59b6' : (art.rarity === 'SR' ? '#3498db' : '#bdc3c7'));
+    
+    document.getElementById('artTooltipIcon').innerText = art.icon;
+    document.getElementById('artTooltipName').innerText = (lang === 'ko' ? art.nameKo : art.nameEn) + ` +${level-1}`;
+    
+    const rarityEl = document.getElementById('artTooltipRarity');
+    rarityEl.innerText = art.rarity;
+    rarityEl.style.background = rarityColor;
+    rarityEl.style.color = (art.rarity === 'UR' || art.rarity === 'R') ? '#000' : '#fff';
+
+    document.getElementById('artTooltipFlavor').innerText = lang === 'ko' ? art.flavorKo : art.flavorEn;
+    
+    // Calculate current effects
+    let effectText = "";
+    const bonusMult = 1.0 + (level - 1) * 0.1;
+    
+    if (art.type === 'active') {
+        effectText = lang === 'ko' ? art.descKo : art.descEn;
+        effectText += ` (CD: ${art.cooldown}s)`;
+    } else {
+        const desc = lang === 'ko' ? art.descKo : art.descEn;
+        // Simple regex to find the number and scale it
+        effectText = desc.replace(/([+-]?\d+(\.\d+)?%?)/g, (match) => {
+            if (match.includes('%')) {
+                const val = parseFloat(match);
+                return (val * bonusMult).toFixed(1) + '%';
+            }
+            return match;
+        });
+    }
+    document.getElementById('artTooltipEffect').innerText = effectText;
+
+    tooltip.style.display = 'flex';
+    tooltip.style.borderColor = rarityColor;
+    window.moveArtTooltip(event);
+};
+
+window.moveArtTooltip = function(event) {
+    const tooltip = document.getElementById('artTooltip');
+    if (!tooltip || tooltip.style.display === 'none') return;
+    
+    let x = event.clientX + 15;
+    let y = event.clientY + 15;
+    
+    // Boundary check
+    if (x + 280 > window.innerWidth) x = event.clientX - 295;
+    if (y + 200 > window.innerHeight) y = event.innerHeight - 210;
+    
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+};
+
+window.hideArtTooltip = function() {
+    const tooltip = document.getElementById('artTooltip');
+    if (tooltip) tooltip.style.display = 'none';
+};
+
 window.renderArtInv = function() {
     const lang = window.I18N[window.currentLang];
     const slotsDiv = document.getElementById('artEquipSlots');
@@ -879,6 +972,9 @@ window.renderArtInv = function() {
             div.style.borderColor = color;
             div.innerHTML = `<div style="font-size:24px;">${art.icon}</div><div style="font-size:10px; color:#fff;">${art.rarity} +${level-1}</div>`;
             div.onclick = () => window.unequipArt(i);
+            div.onmouseenter = (e) => window.showArtTooltip(artId, e);
+            div.onmousemove = (e) => window.moveArtTooltip(e);
+            div.onmouseleave = () => window.hideArtTooltip();
         } else {
             div.innerHTML = `<div style="font-size:12px; color:#555;">${lang.art_slot || 'Slot'} ${i+1}</div>`;
         }
@@ -902,8 +998,16 @@ window.renderArtInv = function() {
             <div style="font-size:11px; font-weight:bold; height:30px;">${window.currentLang === 'ko' ? art.nameKo : art.nameEn}</div>
             <button class="btn" style="padding:4px 8px; font-size:10px; margin:5px 0 0 0;" ${isEquipped ? 'disabled' : ''}>${isEquipped ? (lang.outfitEquipped || "Equipped") : (lang.art_equip || "Equip")}</button>
         `;
+        
+        card.onmouseenter = (e) => window.showArtTooltip(id, e);
+        card.onmousemove = (e) => window.moveArtTooltip(e);
+        card.onmouseleave = () => window.hideArtTooltip();
+
         if (!isEquipped) {
-            card.onclick = () => window.equipArt(id);
+            card.onclick = () => {
+                window.hideArtTooltip();
+                window.equipArt(id);
+            };
         }
         listDiv.appendChild(card);
     });
@@ -922,6 +1026,7 @@ window.equipArt = function(artId) {
 };
 
 window.unequipArt = function(slotIdx) {
+    window.hideArtTooltip();
     window.equippedArtifacts[slotIdx] = null;
     playSFX('exp');
     window.renderArtInv();
