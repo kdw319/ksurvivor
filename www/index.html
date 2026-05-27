@@ -3057,6 +3057,8 @@ function resetStage(fullReset = false) {
     if(fullReset) { player = new Player(); player.recalculateStats(); giveWeapon('chalk'); } 
     else { if (player) { player.x = 0; player.y = 0; player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.3); } }
     
+    if(window.updateSkillSlotsUI) window.updateSkillSlotsUI();
+    
     let themeIndex = (currentStage - 1) % GameSettings.maps.length;
     let theme = GameSettings.maps[themeIndex];
     
