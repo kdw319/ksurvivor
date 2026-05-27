@@ -2782,15 +2782,23 @@ function toggleLanguage() {
     setTxt('btnGachaLobby', lang.btnGacha); 
     setTxt('btnDataLobby', lang.btnData); 
     setTxt('btnUpgradeLobby', lang.btnUpgrade);
+    setTxt('btnClosetLobby', lang.btnClosetLobby);
+    setTxt('btnAchieveLobby', lang.btnAchieveLobby);
     setTxt('btnArtShopLobby', lang.art_shop);
     setTxt('btnArtInvLobby', lang.art_inv);
     
+    setTxt('closetUITitle', lang.closetTitle);
+    setTxt('achieveUITitle', lang.achieveTitle);
     setTxt('artShopTitle', lang.art_shop);
-    setTxt('artShopOwnedText', lang.art_owned);
-    setTxt('artPull1Btn', lang.art_pull1);
-    setTxt('artPull10Btn', lang.art_pull10);
-    
     setTxt('artInvTitle', lang.art_inv);
+    
+    // Auto-update all close buttons in panels
+    const closeBtns = document.querySelectorAll('.panel .btn');
+    closeBtns.forEach(btn => {
+        if(btn.textContent.trim() === "닫기" || btn.textContent.trim() === "Close") {
+            btn.innerText = lang.saveCloseBtn;
+        }
+    });
     setHtml('closetUIDesc', lang.closetDesc);
 
     setTxt('achieveUITitle', lang.achieveTitle);
