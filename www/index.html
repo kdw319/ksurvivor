@@ -733,7 +733,7 @@ loadAssets();
 // ==========================================
 // 🏺 ARTIFACT SYSTEM DATA & LOGIC
 // ==========================================
-window.ownedArtifacts = [];
+window.ownedArtifacts = {}; // { id: level, ... }
 window.equippedArtifacts = [null, null, null]; // 3 Slots
 window.ARTIFACT_DATA = {
     // R (10): Stat Boosts
@@ -810,10 +810,14 @@ window.rollArtGacha = function(count) {
         
         const pool = Object.values(window.ARTIFACT_DATA).filter(a => a.rarity === rarity);
         const art = pool[Math.floor(Math.random() * pool.length)];
-        results.push(art);
         
-        if (!window.ownedArtifacts.includes(art.id)) {
-            window.ownedArtifacts.push(art.id);
+        // Handle Enhancement Level (+N)
+        if (window.ownedArtifacts[art.id]) {
+            window.ownedArtifacts[art.id]++; // Level Up
+            results.push({ ...art, level: window.ownedArtifacts[art.id], isNew: false });
+        } else {
+            window.ownedArtifacts[art.id] = 1; // New
+            results.push({ ...art, level: 1, isNew: true });
         }
     }
 
@@ -822,8 +826,10 @@ window.rollArtGacha = function(count) {
 
 window.showArtResults = function(results) {
     const container = document.getElementById('artResultContainer');
+    const lang = window.I18N[window.currentLang];
     container.innerHTML = '';
-    results.forEach(art => {
+    results.forEach(res => {
+        const art = res;
         const rarityColor = art.rarity === 'UR' ? '#f1c40f' : (art.rarity === 'SSR' ? '#9b59b6' : (art.rarity === 'SR' ? '#3498db' : '#bdc3c7'));
         const div = document.createElement('div');
         div.className = 'choice-card';
@@ -832,6 +838,8 @@ window.showArtResults = function(results) {
             <div style="color:${rarityColor}; font-weight:bold;">${art.rarity}</div>
             <div class="choice-icon">${art.icon}</div>
             <div class="choice-title" style="font-size:12px;">${window.currentLang === 'ko' ? art.nameKo : art.nameEn}</div>
+            <div style="color:#2ed573; font-weight:bold; font-size:14px;">+${art.level - 1}</div>
+            ${res.isNew ? `<div style="font-size:10px; color:#ffb142;">${lang.art_new}</div>` : ''}
         `;
         container.appendChild(div);
     });
@@ -840,13 +848,19 @@ window.showArtResults = function(results) {
 
 window.openArtInv = function() {
     document.getElementById('artInvUI').classList.remove('hidden');
-    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.classList.add('hidden');
+    });
     window.renderArtInv();
 };
 
 window.closeArtInv = function() {
     document.getElementById('artInvUI').classList.add('hidden');
-    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+    ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.classList.remove('hidden');
+    });
 };
 
 window.renderArtInv = function() {
@@ -855,6 +869,7 @@ window.renderArtInv = function() {
     slotsDiv.innerHTML = '';
     for (let i = 0; i < 3; i++) {
         const artId = window.equippedArtifacts[i];
+        const level = artId ? window.ownedArtifacts[artId] : 0;
         const art = artId ? window.ARTIFACT_DATA[artId] : null;
         const div = document.createElement('div');
         div.style.cssText = "width:80px; height:100px; border:2px dashed #555; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;";
@@ -862,18 +877,19 @@ window.renderArtInv = function() {
             const color = art.rarity === 'UR' ? '#f1c40f' : (art.rarity === 'SSR' ? '#9b59b6' : (art.rarity === 'SR' ? '#3498db' : '#bdc3c7'));
             div.style.borderStyle = "solid";
             div.style.borderColor = color;
-            div.innerHTML = `<div style="font-size:24px;">${art.icon}</div><div style="font-size:10px; color:#fff;">${lang.art_rarity_r}${art.rarity}</div>`;
+            div.innerHTML = `<div style="font-size:24px;">${art.icon}</div><div style="font-size:10px; color:#fff;">${art.rarity} +${level-1}</div>`;
             div.onclick = () => window.unequipArt(i);
         } else {
-            div.innerHTML = `<div style="font-size:12px; color:#555;">${lang.art_slot} ${i+1}</div>`;
+            div.innerHTML = `<div style="font-size:12px; color:#555;">${lang.art_slot || 'Slot'} ${i+1}</div>`;
         }
         slotsDiv.appendChild(div);
     }
 
     const listDiv = document.getElementById('artList');
     listDiv.innerHTML = '';
-    window.ownedArtifacts.forEach(id => {
+    Object.keys(window.ownedArtifacts).forEach(id => {
         const art = window.ARTIFACT_DATA[id];
+        const level = window.ownedArtifacts[id];
         const isEquipped = window.equippedArtifacts.includes(id);
         const color = art.rarity === 'UR' ? '#f1c40f' : (art.rarity === 'SSR' ? '#9b59b6' : (art.rarity === 'SR' ? '#3498db' : '#bdc3c7'));
         const card = document.createElement('div');
@@ -881,10 +897,10 @@ window.renderArtInv = function() {
         if (isEquipped) card.style.opacity = "0.4";
         
         card.innerHTML = `
-            <div style="font-size:10px; color:${color}; font-weight:bold;">${art.rarity}</div>
+            <div style="font-size:10px; color:${color}; font-weight:bold;">${art.rarity} +${level-1}</div>
             <div style="font-size:24px; margin:5px 0;">${art.icon}</div>
             <div style="font-size:11px; font-weight:bold; height:30px;">${window.currentLang === 'ko' ? art.nameKo : art.nameEn}</div>
-            <button class="btn" style="padding:4px 8px; font-size:10px; margin:5px 0 0 0;" ${isEquipped ? 'disabled' : ''}>${isEquipped ? lang.outfitEquipped : lang.art_equip}</button>
+            <button class="btn" style="padding:4px 8px; font-size:10px; margin:5px 0 0 0;" ${isEquipped ? 'disabled' : ''}>${isEquipped ? (lang.outfitEquipped || "Equipped") : (lang.art_equip || "Equip")}</button>
         `;
         if (!isEquipped) {
             card.onclick = () => window.equipArt(id);
