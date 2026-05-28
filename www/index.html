@@ -747,7 +747,14 @@ player_idle: "character_idle.webp",
     stage7_floor: "stage7_floor.png",
     stage8_floor: "stage8_floor.png",
     stage9_floor: "stage9_floor.png",
-    stage10_floor: "stage10_floor.png"
+    stage10_floor: "stage10_floor.png",
+    // 🎭 Color Variations
+    vari_color1_front: "vari/front_vari_color1.png", vari_color1_back: "vari/back_vari_color1.png", vari_color1_left: "vari/left_vari_color1.png", vari_color1_right: "vari/right_vari_color1.png", vari_color1_dash: "vari/dash_vari_color1.png",
+    vari_color2_front: "vari/front_vari_color2.png", vari_color2_back: "vari/back_vari_color2.png", vari_color2_left: "vari/left_vari_color2.png", vari_color2_right: "vari/right_vari_color2.png", vari_color2_dash: "vari/dash_vari_color2.png",
+    // 🎭 Concept Variations (1, 2, 3)
+    vari_concept1_front: "vari/concept/front_vari1.png", vari_concept1_back: "vari/concept/back_vari1.png", vari_concept1_left: "vari/concept/left_vari1.png", vari_concept1_right: "vari/concept/right_vari1.png",
+    vari_concept2_front: "vari/concept/front_vari2.png", vari_concept2_back: "vari/concept/back_vari2.png", vari_concept2_left: "vari/concept/left_vari2.png", vari_concept2_right: "vari/concept/right_vari2.png",
+    vari_concept3_front: "vari/concept/front_vari3.png", vari_concept3_back: "vari/concept/back_vari3.png", vari_concept3_left: "vari/concept/left_vari3.png", vari_concept3_right: "vari/concept/right_vari3.png"
 };
 const loadedImages = {};
 
@@ -1189,13 +1196,11 @@ const ACHIEVEMENTS_DATA = [
 
 const OUTFITS = [
     { id: 'default1', name: "기본 교복 (레드)", enName: "Default Uniform", reqStage: 0, colors: { cSkin: '#ffeaa7', cHair: '#f5f6fa', cHairShadow: '#dcdde1', cDress: '#c23616', cDressDark: '#8c220c', cEye: '#b33939' } },
-    { id: 'default2', name: "하복 (블루)", enName: "Summer (Blue)", reqStage: 0, colors: { cSkin: '#ffeaa7', cHair: '#1e272e', cHairShadow: '#000', cDress: '#0984e3', cDressDark: '#075c9e', cEye: '#1e272e' } },
-    { id: 'default3', name: "춘추복 (그린)", enName: "Spring (Green)", reqStage: 0, colors: { cSkin: '#ffeaa7', cHair: '#ff9f43', cHairShadow: '#e17055', cDress: '#10ac84', cDressDark: '#01a3a4', cEye: '#ff9f43' } },
-    { id: 'default4', name: "체육복 (네이비)", enName: "Gym (Navy)", reqStage: 0, colors: { cSkin: '#ffda79', cHair: '#8395a7', cHairShadow: '#576574', cDress: '#222f3e', cDressDark: '#10171e', cEye: '#222f3e' } },
-    { id: 'default5', name: "사복 (핑크)", enName: "Casual (Pink)", reqStage: 0, colors: { cSkin: '#ffeaa7', cHair: '#2d3436', cHairShadow: '#000', cDress: '#fd79a8', cDressDark: '#e84393', cEye: '#2d3436' } },
-    { id: 'stage10', name: "재판소 망령", enName: "Ghost", reqStage: 10, colors: { cSkin: '#d1d8e0', cHair: '#4b6584', cHairShadow: '#2b3a4a', cDress: '#4b4b4b', cDressDark: '#2c2c2c', cEye: '#fc5c65' } },
-    { id: 'stage20', name: "보건실 간호사", enName: "Nurse", reqStage: 20, colors: { cSkin: '#ffeaa7', cHair: '#eb3b5a', cHairShadow: '#b71540', cDress: '#f5f6fa', cDressDark: '#dcdde1', cEye: '#eb3b5a' } },
-    { id: 'stage30', name: "체육관 에이스", enName: "Gym Ace", reqStage: 30, colors: { cSkin: '#ffda79', cHair: '#f7b731', cHairShadow: '#fa8231', cDress: '#20bf6b', cDressDark: '#0fb9b1', cEye: '#2d98da' } },
+    { id: 'vari_color1', name: "교복 (블루 배리)", enName: "Uniform (Blue Vari)", reqStage: 5, assetPrefix: 'vari_color1' },
+    { id: 'vari_color2', name: "교복 (핑크 배리)", enName: "Uniform (Pink Vari)", reqStage: 5, assetPrefix: 'vari_color2' },
+    { id: 'stage10', name: "재판소 망령", enName: "Ghost", reqStage: 10, assetPrefix: 'vari_concept1' },
+    { id: 'stage20', name: "보건실 간호사", enName: "Nurse", reqStage: 20, assetPrefix: 'vari_concept2' },
+    { id: 'stage30', name: "체육관 에이스", enName: "Gym Ace", reqStage: 30, assetPrefix: 'vari_concept3' },
     { id: 'stage40', name: "선혈의 운동장", enName: "Bloody", reqStage: 40, colors: { cSkin: '#ffda79', cHair: '#111', cHairShadow: '#000', cDress: '#eb3b5a', cDressDark: '#b71540', cEye: '#f7b731' } },
     { id: 'stage50', name: "네온 시티 러너", enName: "Neon", reqStage: 50, colors: { cSkin: '#ffeaa7', cHair: '#00d2d3', cHairShadow: '#01a3a4', cDress: '#5f27cd', cDressDark: '#341f97', cEye: '#00d2d3' } },
     { id: 'stage60', name: "황금의 전사", enName: "Golden", reqStage: 60, colors: { cSkin: '#ffeaa7', cHair: '#feca57', cHairShadow: '#ff9f43', cDress: '#f368e0', cDressDark: '#ff9ff3', cEye: '#feca57' } },
@@ -2385,6 +2390,8 @@ function loadSlotsFromLocal() {
             playerBadges = data.playerBadges || 0;
             unlockedWeapons = data.unlockedWeapons || [];
             permanentStats = data.permanentStats || {damage:0, cooldown:0, speed:0, maxHp:0};
+            window.ownedArtifacts = data.ownedArtifacts || {};
+            window.equippedArtifacts = data.equippedArtifacts || [null, null, null];
             currentStage = data.currentStage || 1;
             maxStageReached = data.maxStageReached || 1;
             currentOutfitId = data.currentOutfitId || 'default1';
@@ -2395,6 +2402,7 @@ function loadSlotsFromLocal() {
         console.error("Save Load Error:", e);
     }
     loadAssets();
+    if(window.updateSkillSlotsUI) window.updateSkillSlotsUI();
 }
 
 loadSlotsFromLocal();
@@ -2706,20 +2714,38 @@ function drawMinimap() {
 }
 
 function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTimer = 0, animDir = 'down') {
+    const outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
     let imgKey = 'player_down';
+    let isDefaultAsset = true;
+
     if (typeof window.gameState !== 'undefined' && window.gameState === 'gameover') imgKey = 'player_death';
     else if (typeof player !== 'undefined' && player && player.hitTimer > 0) imgKey = 'player_hurt';
     else if (animState === 'dash') imgKey = 'player_dash';
-    else if (animState === 'run' || animState === 'idle') {
+    else if (animState === 'run' || animState === 'idle' || ['throw', 'swing', 'cast'].includes(animState)) {
         if (animDir === 'up') imgKey = 'player_up';
         else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
         else imgKey = 'player_down';
     }
-    else if (['throw', 'swing', 'cast'].includes(animState)) {
-        if (animDir === 'up') imgKey = 'player_up';
-        else if (animDir === 'side') imgKey = (dirX === 1) ? 'player_right' : 'player_left';
-        else imgKey = 'player_down'; 
+
+    // Check for Skin-specific assets
+    if (outfit.assetPrefix) {
+        let skinPart = 'front';
+        if (typeof window.gameState !== 'undefined' && window.gameState === 'gameover') skinPart = 'front'; // Fallback to front for death if not exists
+        else if (typeof player !== 'undefined' && player && player.hitTimer > 0) skinPart = 'front'; // Fallback for hurt
+        else if (animState === 'dash') skinPart = 'dash';
+        else {
+            if (animDir === 'up') skinPart = 'back';
+            else if (animDir === 'side') skinPart = (dirX === 1) ? 'right' : 'left';
+            else skinPart = 'front';
+        }
+
+        let skinKey = `${outfit.assetPrefix}_${skinPart}`;
+        if (loadedImages[skinKey]) {
+            imgKey = skinKey;
+            isDefaultAsset = false;
+        }
     }
+
     const targetImg = loadedImages[imgKey] || loadedImages['player_down'];
     
     ctx.save();
@@ -2729,10 +2755,12 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
     if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
         ctx.save();
         let flipX = 1;
-        // [CRITICAL] 좌측 이동 에셋은 원본이 오른쪽이므로 가로 반전 적용
-        if (imgKey === 'player_left') flipX = -1;
-        // 대쉬 시에도 방향에 따라 반전
-        if (imgKey === 'player_dash' && dirX === -1) flipX = -1;
+        
+        // Apply flipping only for default assets that need it
+        if (isDefaultAsset) {
+            if (imgKey === 'player_left') flipX = -1;
+            if (imgKey === 'player_dash' && dirX === -1) flipX = -1;
+        }
         
         ctx.scale(scale * flipX, scale);
         let bobY = (animState === 'run') ? Math.abs(Math.sin(performance.now() * 0.01)) * -3 : Math.sin(performance.now() * 0.005) * 1.5;
@@ -2743,8 +2771,7 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
     }
     
     ctx.save(); ctx.scale(scale * dirX, scale); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-    let outfit = OUTFITS.find(o => o.id === currentOutfitId) || OUTFITS[0];
-    ctx.fillStyle = outfit.colors.cSkin; ctx.fillRect(-2, -3, 4, 4); ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-8, -26, 16, 14, 4); else ctx.rect(-8, -26, 16, 14); ctx.fill();
+    ctx.fillStyle = outfit.colors ? outfit.colors.cSkin : '#ffeaa7'; ctx.fillRect(-2, -3, 4, 4); ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-8, -26, 16, 14, 4); else ctx.rect(-8, -26, 16, 14); ctx.fill();
     ctx.restore();
 }
 
