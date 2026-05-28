@@ -750,11 +750,7 @@ player_idle: "character_idle.webp",
     stage10_floor: "stage10_floor.png",
     // 🎭 Color Variations
     vari_color1_front: "vari/front_vari_color1.png", vari_color1_back: "vari/back_vari_color1.png", vari_color1_left: "vari/left_vari_color1.png", vari_color1_right: "vari/right_vari_color1.png", vari_color1_dash: "vari/dash_vari_color1.png",
-    vari_color2_front: "vari/front_vari_color2.png", vari_color2_back: "vari/back_vari_color2.png", vari_color2_left: "vari/left_vari_color2.png", vari_color2_right: "vari/right_vari_color2.png", vari_color2_dash: "vari/dash_vari_color2.png",
-    // 🎭 Concept Variations (1, 2, 3)
-    vari_concept1_front: "vari/concept/front_vari1.png", vari_concept1_back: "vari/concept/back_vari1.png", vari_concept1_left: "vari/concept/left_vari1.png", vari_concept1_right: "vari/concept/right_vari1.png",
-    vari_concept2_front: "vari/concept/front_vari2.png", vari_concept2_back: "vari/concept/back_vari2.png", vari_concept2_left: "vari/concept/left_vari2.png", vari_concept2_right: "vari/concept/right_vari2.png",
-    vari_concept3_front: "vari/concept/front_vari3.png", vari_concept3_back: "vari/concept/back_vari3.png", vari_concept3_left: "vari/concept/left_vari3.png", vari_concept3_right: "vari/concept/right_vari3.png"
+    vari_color2_front: "vari/front_vari_color2.png", vari_color2_back: "vari/back_vari_color2.png", vari_color2_left: "vari/left_vari_color2.png", vari_color2_right: "vari/right_vari_color2.png", vari_color2_dash: "vari/dash_vari_color2.png"
 };
 const loadedImages = {};
 
@@ -1198,9 +1194,9 @@ const OUTFITS = [
     { id: 'default1', name: "기본 교복 (레드)", enName: "Default Uniform", reqStage: 0, colors: { cSkin: '#ffeaa7', cHair: '#f5f6fa', cHairShadow: '#dcdde1', cDress: '#c23616', cDressDark: '#8c220c', cEye: '#b33939' } },
     { id: 'vari_color1', name: "교복 (블루 배리)", enName: "Uniform (Blue Vari)", reqStage: 5, assetPrefix: 'vari_color1' },
     { id: 'vari_color2', name: "교복 (핑크 배리)", enName: "Uniform (Pink Vari)", reqStage: 5, assetPrefix: 'vari_color2' },
-    { id: 'stage10', name: "재판소 망령", enName: "Ghost", reqStage: 10, assetPrefix: 'vari_concept1' },
-    { id: 'stage20', name: "보건실 간호사", enName: "Nurse", reqStage: 20, assetPrefix: 'vari_concept2' },
-    { id: 'stage30', name: "체육관 에이스", enName: "Gym Ace", reqStage: 30, assetPrefix: 'vari_concept3' },
+    { id: 'stage10', name: "재판소 망령", enName: "Ghost", reqStage: 10 },
+    { id: 'stage20', name: "보건실 간호사", enName: "Nurse", reqStage: 20 },
+    { id: 'stage30', name: "체육관 에이스", enName: "Gym Ace", reqStage: 30 },
     { id: 'stage40', name: "선혈의 운동장", enName: "Bloody", reqStage: 40, colors: { cSkin: '#ffda79', cHair: '#111', cHairShadow: '#000', cDress: '#eb3b5a', cDressDark: '#b71540', cEye: '#f7b731' } },
     { id: 'stage50', name: "네온 시티 러너", enName: "Neon", reqStage: 50, colors: { cSkin: '#ffeaa7', cHair: '#00d2d3', cHairShadow: '#01a3a4', cDress: '#5f27cd', cDressDark: '#341f97', cEye: '#00d2d3' } },
     { id: 'stage60', name: "황금의 전사", enName: "Golden", reqStage: 60, colors: { cSkin: '#ffeaa7', cHair: '#feca57', cHairShadow: '#ff9f43', cDress: '#f368e0', cDressDark: '#ff9ff3', cEye: '#feca57' } },
@@ -1412,6 +1408,10 @@ window.I18N = {
         tut_p3_t: "가챠 및 무기", tut_p3_d: "가챠를 통해 특수 무기를 해금하세요. 해금된 무기는 게임 중 레벨업 풀에 1.5배 확률로 등장합니다!",
         tut_p4_t: "리듬 대쉬", tut_p4_d: "화면 하단의 리듬 바가 노란색 중앙에 올 때 대쉬(SHIFT)를 쓰면 쿨타임 없이 연속 대쉬가 가능합니다!",
         tut_p5_t: "심판의 룰렛", tut_p5_d: "몬스터 50마리를 처치하면 게이지가 찹니다. 스페이스바를 눌러 버프(+5%)를 획득하세요. 같은 종류 3개가 모이면 강력한 시너지(JACKPOT 등)가 발동합니다!",
+        art_shop: "아티팩트 상점", art_inv: "아티팩트 보관함", art_pull1: "1회 소환 (10 뱃지)", art_pull10: "10회 소환 (100 뱃지)",
+        art_rarity_r: "R", art_rarity_sr: "SR", art_rarity_ssr: "SSR", art_rarity_ur: "UR",
+        art_slot: "슬롯", art_equip: "착용", art_unequip: "해제", art_owned: "보유 중",
+        art_get: "🎉 아티팩트 획득! 🎉", art_new: "신규!", art_passive: "패시브", art_active: "액티브",
         orb_get: "⚖️ 심판의 구슬 획득!", orb_fury: "Justice Red (공격력)", orb_life: "Judgment Yellow (공격속도)", orb_wind: "Mercy Green (이동속도)",
         syn_triple: "초월적 시너지 (25%)", syn_double: "공명 시너지 (15%)", syn_mix: "조화로운 심판 (10%)",
         verdictPrefix: "심판: ",
@@ -2821,7 +2821,7 @@ function toggleLanguage() {
     setTxt('artShopTitle', lang.art_shop);
     setTxt('artInvTitle', lang.art_inv);
     
-    setTxt('artShopOwnedText', lang.art_owned);
+    setTxt('artShopOwnedText', lang.gachaOwnedText);
     setTxt('artPull1Btn', lang.art_pull1);
     setTxt('artPull10Btn', lang.art_pull10);
     
