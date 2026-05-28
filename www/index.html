@@ -2935,7 +2935,7 @@ function toggleLanguage() {
         if (w && l) {
             w.name = l.n;
             w.desc = l.d;
-            if (w.statBonus) w.statBonus.label = lang[`stat${w.statBonus.type.charAt(0).toUpperCase() + w.statBonus.type.slice(1).replace('Mult','')}`] || '';
+            if (w.statBonus) { const _m = {damageMult:'statDmg',cooldownMult:'statCool',speedMult:'statSpd',atkSpdMult:'statAtkSpd'}; w.statBonus.label = lang[_m[w.statBonus.type]] || ''; }
         }
     });
     
@@ -3203,9 +3203,7 @@ function triggerLevelUp() {
         let wData = getWeaponSettings(id); let existing = player.weapons.find(w => w.id === id); let nextLv = existing ? existing.level + 1 : 1; let isPremium = GameSettings.specialWeapons[id] !== undefined;
         let statTextHTML = '';
         if(wData.statBonus && wData.statBonus.type !== 'none') {
-            let lang = window.I18N[window.currentLang];
-            let labelKey = wData.statBonus.label.replace('공격력','Dmg').replace('쿨타임','Cool').replace('공격속도','AtkSpd').replace('이동속도','Spd').replace('최대체력','Hp');
-            let label = lang[`stat${labelKey}`] || wData.statBonus.label;
+            let label = wData.statBonus.label;
             let sign = wData.statBonus.value > 0 ? '+' : ''; let valPercent = Math.round(wData.statBonus.value * 100);
             statTextHTML = `<div style="color:#2ed573; font-weight:bold; margin-top:10px; font-size:0.9rem;">${label} ${sign}${valPercent}%</div>`;
         }
