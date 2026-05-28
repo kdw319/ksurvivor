@@ -309,7 +309,7 @@
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #ffb142; cursor: pointer; margin-top: -6px; border: 2px solid #fff; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #555; border-radius: 3px; border: 1px solid #222; }
 
-        /* 🏺 ARTIFACT TOOLTIP */
+        /* 🏺 ARTIFACT TOOLTIP & SKILL TIMER */
         #artTooltip {
             position: fixed; pointer-events: none; z-index: 10002;
             width: 280px; background: rgba(10, 10, 15, 0.95);
@@ -324,6 +324,12 @@
         .art-tooltip-rarity { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
         .art-tooltip-flavor { font-style: italic; color: #aaa; font-size: 11px; line-height: 1.4; margin: 5px 0; border-left: 2px solid #555; padding-left: 8px; }
         .art-tooltip-effect { color: #2ed573; font-size: 12px; font-weight: bold; margin-top: 5px; }
+
+        .skill-timer {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #fff; font-weight: bold; font-size: 18px; text-shadow: 0 0 5px #000;
+            pointer-events: none; z-index: 5;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 
@@ -701,14 +707,17 @@
         <div id="skillSlot0" style="width:50px; height:50px; background:rgba(0,0,0,0.5); border:2px solid #555; display:flex; justify-content:center; align-items:center; font-size:24px; opacity:0.5; position:relative;">
             <span style="position:absolute; bottom:-5px; right:-5px; font-size:10px; background:#000; color:#fff; padding:2px;">1</span>
             <div class="cooldown-overlay" style="position:absolute; bottom:0; left:0; width:100%; height:0%; background:rgba(0,0,0,0.7);"></div>
+            <div id="skillTimer0" class="skill-timer"></div>
         </div>
         <div id="skillSlot1" style="width:50px; height:50px; background:rgba(0,0,0,0.5); border:2px solid #555; display:flex; justify-content:center; align-items:center; font-size:24px; opacity:0.5; position:relative;">
             <span style="position:absolute; bottom:-5px; right:-5px; font-size:10px; background:#000; color:#fff; padding:2px;">2</span>
             <div class="cooldown-overlay" style="position:absolute; bottom:0; left:0; width:100%; height:0%; background:rgba(0,0,0,0.7);"></div>
+            <div id="skillTimer1" class="skill-timer"></div>
         </div>
         <div id="skillSlot2" style="width:50px; height:50px; background:rgba(0,0,0,0.5); border:2px solid #555; display:flex; justify-content:center; align-items:center; font-size:24px; opacity:0.5; position:relative;">
             <span style="position:absolute; bottom:-5px; right:-5px; font-size:10px; background:#000; color:#fff; padding:2px;">3</span>
             <div class="cooldown-overlay" style="position:absolute; bottom:0; left:0; width:100%; height:0%; background:rgba(0,0,0,0.7);"></div>
+            <div id="skillTimer2" class="skill-timer"></div>
         </div>
     </div>
 
@@ -806,19 +815,19 @@ window.ARTIFACT_DATA = {
     art_sr_9: { id: 'art_sr_9', rarity: 'SR', nameKo: "거울 파편", nameEn: "Mirror Shard", flavorKo: "진실을 비추는 거울은 산산조각 났습니다.", flavorEn: "The mirror reflecting the truth is shattered.", descKo: "피격 시 10% 확률로 회피", descEn: "10% Chance to Dodge", icon: "🪞", type: 'passive', stats: { dodge: 0.1 } },
     art_sr_10: { id: 'art_sr_10', rarity: 'SR', nameKo: "낡은 녹음기", nameEn: "Old Recorder", flavorKo: "누군가의 마지막 목소리가 담겨 있을지도...", flavorEn: "Might contain someone's final voice...", descKo: "스킬 범위 +20%", descEn: "Skill Range +20%", icon: " cassette", icon: "📼", type: 'passive', stats: { rangeMult: 0.2 } },
 
-    // SSR (5): Active Skills
-    art_ssr_1: { id: 'art_ssr_1', rarity: 'SSR', nameKo: "정의의 저울", nameEn: "Justice Scale", flavorKo: "균형을 맞추지 못하면, 죽음뿐입니다.", flavorEn: "Failure to balance means death.", descKo: "액티브: 5초간 가한 피해의 10% 흡혈", descEn: "Active: 10% Life Steal for 5s", icon: "⚖️", type: 'active', cooldown: 30, duration: 5, effect: 'lifesteal' },
-    art_ssr_2: { id: 'art_ssr_2', rarity: 'SSR', nameKo: "네온 심장", nameEn: "Neon Heart", flavorKo: "기계처럼 정밀하게, 심장은 뜨겁게.", flavorEn: "Precise like a machine, heart burning hot.", descKo: "액티브: 8초간 공격/이동속도 +50%", descEn: "Active: +50% Atk/Mov SPD for 8s", icon: "💖", type: 'active', cooldown: 30, duration: 8, effect: 'overdrive' },
-    art_ssr_3: { id: 'art_ssr_3', rarity: 'SSR', nameKo: "검게 물든 의사봉", nameEn: "Black Gavel", flavorKo: "심판은 이미 끝났습니다. 이제 형행의 시간입니다.", flavorEn: "Judgment is over. Now is the time for execution.", descKo: "액티브: 화면 내 모든 적 3초간 기절", descEn: "Active: Stun all screen enemies (3s)", icon: "🔨", type: 'active', cooldown: 30, duration: 3, effect: 'stunAll' },
-    art_ssr_4: { id: 'art_ssr_4', rarity: 'SSR', nameKo: "멸균된 메스", nameEn: "Sterile Scalpel", flavorKo: "죄의 근원을 완벽하게 도려냅니다.", flavorEn: "Perfectly excise the root of sin.", descKo: "액티브: 전방에 강력한 레이저 발사", descEn: "Active: Fire powerful frontal laser", icon: "🗡️", type: 'active', cooldown: 30, effect: 'laser' },
-    art_ssr_5: { id: 'art_ssr_5', rarity: 'SSR', nameKo: "유령의 졸업장", nameEn: "Ghost Diploma", flavorKo: "죽음만이 유일한 졸업입니다.", flavorEn: "Only death is the true graduation.", descKo: "액티브: 화면 내 모든 보석 자석 흡수", descEn: "Active: Pull all screen EXP gems", icon: "📜", type: 'active', cooldown: 30, effect: 'vacuum' },
+    // SSR (5): Active Skills + Small Stat Bonus
+    art_ssr_1: { id: 'art_ssr_1', rarity: 'SSR', nameKo: "정의의 저울", nameEn: "Justice Scale", flavorKo: "균형을 맞추지 못하면, 죽음뿐입니다.", flavorEn: "Failure to balance means death.", descKo: "공격력 +3% | 액티브: 5초간 가한 피해의 10% 흡혈", descEn: "ATK +3% | Active: 10% Life Steal for 5s", icon: "⚖️", type: 'active', cooldown: 30, duration: 5, effect: 'lifesteal', stats: { damageMult: 0.03 } },
+    art_ssr_2: { id: 'art_ssr_2', rarity: 'SSR', nameKo: "네온 심장", nameEn: "Neon Heart", flavorKo: "기계처럼 정밀하게, 심장은 뜨겁게.", flavorEn: "Precise like a machine, heart burning hot.", descKo: "최대 체력 +3% | 액티브: 8초간 공격/이동속도 +50%", descEn: "Max HP +3% | Active: +50% Atk/Mov SPD for 8s", icon: "💖", type: 'active', cooldown: 30, duration: 8, effect: 'overdrive', stats: { maxHpMult: 0.03 } },
+    art_ssr_3: { id: 'art_ssr_3', rarity: 'SSR', nameKo: "검게 물든 의사봉", nameEn: "Black Gavel", flavorKo: "심판은 이미 끝났습니다. 이제 형행의 시간입니다.", flavorEn: "Judgment is over. Now is the time for execution.", descKo: "공격력 +3% | 액티브: 화면 내 모든 적 3초간 기절", descEn: "ATK +3% | Active: Stun all screen enemies (3s)", icon: "🔨", type: 'active', cooldown: 30, duration: 3, effect: 'stunAll', stats: { damageMult: 0.03 } },
+    art_ssr_4: { id: 'art_ssr_4', rarity: 'SSR', nameKo: "멸균된 메스", nameEn: "Sterile Scalpel", flavorKo: "죄의 근원을 완벽하게 도려냅니다.", flavorEn: "Perfectly excise the root of sin.", descKo: "공격력 +3% | 액티브: 전방에 강력한 레이저 발사", descEn: "ATK +3% | Active: Fire powerful frontal laser", icon: "🗡️", type: 'active', cooldown: 30, effect: 'laser', stats: { damageMult: 0.03 } },
+    art_ssr_5: { id: 'art_ssr_5', rarity: 'SSR', nameKo: "유령의 졸업장", nameEn: "Ghost Diploma", flavorKo: "죽음만이 유일한 졸업입니다.", flavorEn: "Only death is the true graduation.", descKo: "최대 체력 +3% | 액티브: 화면 내 모든 보석 자석 흡수", descEn: "Max HP +3% | Active: Pull all screen EXP gems", icon: "📜", type: 'active', cooldown: 30, effect: 'vacuum', stats: { maxHpMult: 0.03 } },
 
-    // UR (5): Ultimate Skills
-    art_ur_1: { id: 'art_ur_1', rarity: 'UR', nameKo: "지배자의 왕관", nameEn: "Sovereign Crown", flavorKo: "이 법정의 진정한 주인은 누구인가?", flavorEn: "Who is the true master of this court?", descKo: "액티브: 5초간 무적 및 소형몹 소탕", descEn: "Active: Invincible (5s) + Wipe Mobs", icon: "👑", type: 'active', cooldown: 45, duration: 5, effect: 'sovereign' },
-    art_ur_2: { id: 'art_ur_2', rarity: 'UR', nameKo: "종말의 시계", nameEn: "Clock of End", flavorKo: "째깍, 째깍... 당신의 남은 시간이 끝났습니다.", flavorEn: "Tick, tock... your remaining time is up.", descKo: "액티브: 4초간 시간 정지", descEn: "Active: Freeze Time (4s)", icon: "⏳", type: 'active', cooldown: 45, duration: 4, effect: 'timeStop' },
-    art_ur_3: { id: 'art_ur_3', rarity: 'UR', nameKo: "심판의 소용돌이", nameEn: "Verdict Vortex", flavorKo: "운명의 소용돌이가 모든 것을 집어삼킵니다.", flavorEn: "The vortex of fate swallows everything.", descKo: "액티브: 즉시 구슬 3개 획득 (트리플)", descEn: "Active: Gain 3 same Verdict Orbs", icon: "🌀", type: 'active', cooldown: 45, effect: 'jackpot' },
-    art_ur_4: { id: 'art_ur_4', rarity: 'UR', nameKo: "구원의 날개", nameEn: "Redemption Wings", flavorKo: "하늘 높이 날아올라, 비극의 굴레를 벗어던지세요.", flavorEn: "Fly high into the sky, shed the cycle of tragedy.", descKo: "액티브: 10초간 비행 및 자동 공격", descEn: "Active: Flight + Auto Attack (10s)", icon: "🪽", type: 'active', cooldown: 45, duration: 10, effect: 'ascension' },
-    art_ur_5: { id: 'art_ur_5', rarity: 'UR', nameKo: "이솔의 잃어버린 기억", nameEn: "Isol's Memory", flavorKo: "진실을 마주할 준비가 되셨습니까?", flavorEn: "Are you ready to face the truth?", descKo: "액티브: 체력 완전 회복 및 대폭발", descEn: "Active: Full Heal + Mega Explosion", icon: "💎", type: 'active', cooldown: 45, effect: 'turnabout' }
+    // UR (5): Ultimate Skills + Milestone Stat Bonus
+    art_ur_1: { id: 'art_ur_1', rarity: 'UR', nameKo: "지배자의 왕관", nameEn: "Sovereign Crown", flavorKo: "이 법정의 진정한 주인은 누구인가?", flavorEn: "Who is the true master of this court?", descKo: "공격력 +5% | 액티브: 5초간 무적 및 소형몹 소탕", descEn: "ATK +5% | Active: Invincible (5s) + Wipe Mobs", icon: "👑", type: 'active', cooldown: 45, duration: 5, effect: 'sovereign', stats: { damageMult: 0.05 } },
+    art_ur_2: { id: 'art_ur_2', rarity: 'UR', nameKo: "종말의 시계", nameEn: "Clock of End", flavorKo: "째깍, 째깍... 당신의 남은 시간이 끝났습니다.", flavorEn: "Tick, tock... your remaining time is up.", descKo: "쿨타임 -5% | 액티브: 4초간 시간 정지", descEn: "Cooldown -5% | Active: Freeze Time (4s)", icon: "⏳", type: 'active', cooldown: 45, duration: 4, effect: 'timeStop', stats: { cooldownMult: -0.05 } },
+    art_ur_3: { id: 'art_ur_3', rarity: 'UR', nameKo: "심판의 소용돌이", nameEn: "Verdict Vortex", flavorKo: "운명의 소용돌이가 모든 것을 집어삼킵니다.", flavorEn: "The vortex of fate swallows everything.", descKo: "공격력 +5% | 액티브: 즉시 구슬 3개 획득 (트리플)", descEn: "ATK +5% | Active: Gain 3 same Verdict Orbs", icon: "🌀", type: 'active', cooldown: 45, effect: 'jackpot', stats: { damageMult: 0.05 } },
+    art_ur_4: { id: 'art_ur_4', rarity: 'UR', nameKo: "구원의 날개", nameEn: "Redemption Wings", flavorKo: "하늘 높이 날아올라, 비극의 굴레를 벗어던지세요.", flavorEn: "Fly high into the sky, shed the cycle of tragedy.", descKo: "최대 체력 +5% | 액티브: 10초간 비행 및 자동 공격", descEn: "Max HP +5% | Active: Flight + Auto Attack (10s)", icon: "🪽", type: 'active', cooldown: 45, duration: 10, effect: 'ascension', stats: { maxHpMult: 0.05 } },
+    art_ur_5: { id: 'art_ur_5', rarity: 'UR', nameKo: "이솔의 잃어버린 기억", nameEn: "Isol's Memory", flavorKo: "진실을 마주할 준비가 되셨습니까?", flavorEn: "Are you ready to face the truth?", descKo: "공격력 +5% | 액티브: 체력 완전 회복 및 대폭발", descEn: "ATK +5% | Active: Full Heal + Mega Explosion", icon: "💎", type: 'active', cooldown: 45, effect: 'turnabout', stats: { damageMult: 0.05 } }
 };
 
 window.artCooldowns = [0, 0, 0];
@@ -1064,27 +1073,41 @@ window.handleActiveSkill = function(slotIdx) {
     playSFX('verdictUse');
     window.artCooldowns[slotIdx] = art.cooldown;
     
+    // Global VFX: Screen Flash
+    let flash = document.getElementById('flashOverlay');
+    if (flash) {
+        flash.style.opacity = 0.3;
+        anime({ targets: '#flashOverlay', opacity: [0.3, 0], duration: 500, easing: 'easeOutExpo' });
+    }
+    screenShake = 15;
+
     if (art.effect === 'stunAll') {
         enemies.forEach(e => { e.hitTimer = art.duration; e.speed *= 0.1; setTimeout(() => e.speed /= 0.1, art.duration * 1000); });
         showSystemNotice("GUILTY! (STUN)");
+        for(let i=0; i<20; i++) particles.push(new Particle(player.x + (Math.random()-0.5)*800, player.y + (Math.random()-0.5)*800, '#00d2d3'));
     } else if (art.effect === 'vacuum') {
         expGems.forEach(g => g.isMagnetic = true);
         showSystemNotice("KNOWLEDGE BURST!");
+        particles.push(new Particle(player.x, player.y, '#feca57', true));
     } else if (art.effect === 'timeStop') {
         const oldMultiplier = gameSpeedMultiplier;
         gameSpeedMultiplier = 0.1;
         showSystemNotice("TIME STOP!");
         setTimeout(() => { gameSpeedMultiplier = oldMultiplier; }, art.duration * 1000);
+        canvas.style.filter = 'grayscale(1) contrast(1.2)';
+        setTimeout(() => { canvas.style.filter = 'none'; }, art.duration * 1000);
     } else if (art.effect === 'turnabout') {
         player.hp = player.maxHp;
         projectiles.push(new AreaExplosion(player.x, player.y, 600, 2000, 'rgba(255,255,255,0.9)'));
         showSystemNotice("TURNABOUT!");
+        screenShake = 50;
     } else if (art.effect === 'overdrive') {
         const oldAtkSpd = player.stats.atkSpdMult;
         const oldSpd = player.stats.speedMult;
         player.stats.atkSpdMult += 0.5;
         player.stats.speedMult += 0.5;
         showSystemNotice("OVERDRIVE!");
+        for(let i=0; i<10; i++) particles.push(new Particle(player.x, player.y, '#ff6b6b'));
         setTimeout(() => { player.stats.atkSpdMult -= 0.5; player.stats.speedMult -= 0.5; updateHUD(); }, art.duration * 1000);
     } else if (art.effect === 'lifesteal') {
         player.lifeStealActive = true;
@@ -4650,6 +4673,32 @@ function gameLoop(timestamp) {
             
             if (frameCount % 5 === 0) drawMinimap();
             if (window.updateVerdictUI) window.updateVerdictUI();
+
+            // Update Artifact Cooldowns
+            for(let i=0; i<3; i++) {
+                const timerEl = document.getElementById('skillTimer' + i);
+                if(window.artCooldowns[i] > 0) {
+                    window.artCooldowns[i] -= dt;
+                    const slot = document.getElementById('skillSlot' + i);
+                    if (slot) {
+                        const overlay = slot.querySelector('.cooldown-overlay');
+                        const artId = window.equippedArtifacts[i];
+                        if(artId && overlay) {
+                            const art = window.ARTIFACT_DATA[artId];
+                            const percent = (window.artCooldowns[i] / art.cooldown) * 100;
+                            overlay.style.height = percent + '%';
+                            if(timerEl) timerEl.innerText = Math.ceil(window.artCooldowns[i]);
+                        }
+                    }
+                } else {
+                    if(timerEl) timerEl.innerText = '';
+                    const slot = document.getElementById('skillSlot' + i);
+                    if(slot) {
+                        const overlay = slot.querySelector('.cooldown-overlay');
+                        if(overlay) overlay.style.height = '0%';
+                    }
+                }
+            }
         }
 
         if(window.gameState !== 'lobby' && window.gameState !== 'story') {
