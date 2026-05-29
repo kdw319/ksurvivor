@@ -5,6 +5,13 @@ const steamworks = require('steamworks.js');
 let mainWindow;
 let client;
 
+// Enable Steam Overlay hooking for Electron
+app.commandLine.appendSwitch('in-process-gpu');
+app.commandLine.appendSwitch('disable-direct-composition');
+if (steamworks.electronEnableSteamOverlay) {
+  steamworks.electronEnableSteamOverlay();
+}
+
 function initializeSteam() {
   try {
     // K-Highschool Survivor (4353510)
