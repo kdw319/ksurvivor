@@ -4105,9 +4105,9 @@ class Player {
         this.stats.atkSpdMult = 1.0 + artAtkSpd;
         
         if (window.orbStacks) {
-            this.stats.damageMult += (window.orbStacks.red * 0.05);
-            this.stats.maxHp += (window.orbStacks.yellow * 0.05 * this.baseMaxHp);
-            this.stats.speedMult += (window.orbStacks.green * 0.05);
+            this.stats.damageMult += (window.orbStacks.red * 0.25);
+            this.stats.maxHp += (window.orbStacks.yellow * 0.1 * this.baseMaxHp);
+            this.stats.speedMult += (window.orbStacks.green * 0.1);
         }
         
         if (window.verdictBuffs) {
