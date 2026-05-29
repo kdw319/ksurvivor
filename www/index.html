@@ -3150,6 +3150,10 @@ function triggerStageClear() {
     let reward = (currentStage % 5 === 0) ? GameSettings.economy.clearRewardBoss : GameSettings.economy.clearRewardBase; playerBadges += reward;
     
     maxStageReached = Math.max(maxStageReached, currentStage + 1);
+    // Upload Best_Stage to Steam leaderboard on stage clear
+    if (window.steamAPI && typeof window.steamAPI.uploadLeaderboardStage === 'function') {
+        window.steamAPI.uploadLeaderboardStage(maxStageReached).catch(err => console.error('Best_Stage upload failed:', err));
+    }
     checkAchievements();
     
     let rewardDisp = document.getElementById('clearRewardDisp'); if (rewardDisp) rewardDisp.innerText = reward; 
@@ -3397,6 +3401,7 @@ window.loadFromSlot = function(i) {
             currentOutfitId = data.currentOutfitId || 'default1';
             statsTracking = data.statsTracking || statsTracking;
             achievements = data.achievements || achievements;
+
             
             if(window.player) window.player.recalculateStats();
             updateLobbyCurrency(); 
@@ -3884,6 +3889,7 @@ class Projectile {
         
         if(this.type === 'compass' || this.type === 'backpack') { 
             ctx.rotate(Math.atan2(this.vy, this.vx)); 
+
             ctx.scale(this.sizeScale, this.sizeScale); 
             ctx.beginPath(); 
             ctx.moveTo(10, 0); 
@@ -4260,6 +4266,15 @@ class Player {
             if (goUi) goUi.classList.remove('hidden'); 
             let btn = document.getElementById('mobileDashBtn'); 
             if (btn) btn.classList.add('hidden'); 
+            // Upload Max_Kills to Steam leaderboard (1-time on gameover)
+            if (window.steamAPI && typeof window.steamAPI.uploadLeaderboard === 'function') {
+                const kills = (statsTracking && statsTracking.totalKills) ? statsTracking.totalKills : 0;
+                window.steamAPI.uploadLeaderboard(kills).catch(err => console.error('Max_Kills upload failed:', err));
+            }
+            // Upload Best_Stage to Steam leaderboard (1-time on gameover)
+            if (window.steamAPI && typeof window.steamAPI.uploadLeaderboardStage === 'function') {
+                window.steamAPI.uploadLeaderboardStage(maxStageReached).catch(err => console.error('Best_Stage upload failed:', err));
+            }
         }
     }
     gainExp(amount) {
