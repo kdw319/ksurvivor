@@ -330,6 +330,14 @@
             color: #fff; font-weight: bold; font-size: 18px; text-shadow: 0 0 5px #000;
             pointer-events: none; z-index: 5;
         }
+
+        .gamepad-focus {
+            outline: 3px solid #ffb142 !important;
+            box-shadow: 0 0 20px #ffb142 !important;
+            transform: scale(1.05) !important;
+            filter: brightness(1.2);
+            transition: all 0.2s ease;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 
@@ -3234,6 +3242,13 @@ function triggerLevelUp() {
         choicesBox.appendChild(card);
     });
     let ui = document.getElementById('levelUpUI'); if(ui) ui.classList.remove('hidden');
+    
+    // Steam Deck Menu Focus Init
+    setTimeout(() => {
+        window.gamepadFocusGroup = Array.from(document.querySelectorAll('#choicesBox .choice-card'));
+        window.gamepadFocusIndex = 1; // Focus center card
+        if(window.updateGamepadFocus) window.updateGamepadFocus();
+    }, 50);
 }
 
 function openGacha() { updateLobbyCurrency(); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('gachaUI'); if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden'); }
@@ -4443,7 +4458,24 @@ window.addEventListener('keyup', e => {
     keys[e.key.toLowerCase()] = false; 
 });
 
-let gamepadState = { dash: false, action: false, start: false };
+window.gamepadFocusIndex = 0;
+window.gamepadFocusGroup = [];
+window.updateGamepadFocus = function() {
+    if(!window.gamepadFocusGroup || window.gamepadFocusGroup.length === 0) return;
+    window.gamepadFocusGroup.forEach(el => {
+        if(el && el.classList) el.classList.remove('gamepad-focus');
+    });
+    if(window.gamepadFocusIndex < 0) window.gamepadFocusIndex = 0;
+    if(window.gamepadFocusIndex >= window.gamepadFocusGroup.length) window.gamepadFocusIndex = window.gamepadFocusGroup.length - 1;
+    let target = window.gamepadFocusGroup[window.gamepadFocusIndex];
+    if(target && target.classList) {
+        target.classList.add('gamepad-focus');
+        if(target.scrollIntoViewIfNeeded) target.scrollIntoViewIfNeeded();
+        else target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+};
+
+let gamepadState = { dash: false, action: false, start: false, menuLeft: false, menuRight: false, menuUp: false, menuDown: false, actionA: false };
 
 function pollGamepad() {
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -4485,6 +4517,31 @@ function pollGamepad() {
     let newStart = (gp.buttons[9] && gp.buttons[9].pressed);
     if(newStart && !gamepadState.start && window.gameState === 'playing') togglePause();
     gamepadState.start = newStart;
+
+    // Menu Navigation
+    let menuLeft = dpadLeft || axisX < -0.6;
+    let menuRight = dpadRight || axisX > 0.6;
+    let menuUp = dpadUp || axisY < -0.6;
+    let menuDown = dpadDown || axisY > 0.6;
+    let actionA = gp.buttons[0] && gp.buttons[0].pressed;
+
+    if (window.gameState === 'levelup' || window.gameState === 'lobby' || window.gameState === 'gacha' || window.gameState === 'gameover' || window.gameState === 'clear') {
+        if (menuLeft && !gamepadState.menuLeft) { window.gamepadFocusIndex--; window.updateGamepadFocus(); }
+        if (menuRight && !gamepadState.menuRight) { window.gamepadFocusIndex++; window.updateGamepadFocus(); }
+        if (menuUp && !gamepadState.menuUp) { window.gamepadFocusIndex -= 1; window.updateGamepadFocus(); }
+        if (menuDown && !gamepadState.menuDown) { window.gamepadFocusIndex += 1; window.updateGamepadFocus(); }
+
+        if (actionA && !gamepadState.actionA) {
+            if(window.gamepadFocusGroup && window.gamepadFocusGroup[window.gamepadFocusIndex]) {
+                window.gamepadFocusGroup[window.gamepadFocusIndex].click();
+            }
+        }
+    }
+    gamepadState.menuLeft = menuLeft;
+    gamepadState.menuRight = menuRight;
+    gamepadState.menuUp = menuUp;
+    gamepadState.menuDown = menuDown;
+    gamepadState.actionA = actionA;
 }
 
 window.addEventListener('pointerdown', e => {
