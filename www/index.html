@@ -4148,8 +4148,8 @@ class Player {
         if (this.hitTimer > 0) this.hitTimer -= dt;
 
         let dx = 0; let dy = 0;
-        if(keys['w'] || keys['arrowup']) dy -= 1; if(keys['s'] || keys['arrowdown']) dy += 1;
-        if(keys['a'] || keys['arrowleft']) { dx -= 1; this.dirX = -1; } if(keys['d'] || keys['arrowright']) { dx += 1; this.dirX = 1; }
+        if(keys['w'] || keys['arrowup'] || keys['gp_up']) dy -= 1; if(keys['s'] || keys['arrowdown'] || keys['gp_down']) dy += 1;
+        if(keys['a'] || keys['arrowleft'] || keys['gp_left']) { dx -= 1; this.dirX = -1; } if(keys['d'] || keys['arrowright'] || keys['gp_right']) { dx += 1; this.dirX = 1; }
         
         if (joystick.active) { dx = joystick.dx; dy = joystick.dy; if (dx < 0) this.dirX = -1; else if (dx > 0) this.dirX = 1; }
         
@@ -4443,6 +4443,50 @@ window.addEventListener('keyup', e => {
     keys[e.key.toLowerCase()] = false; 
 });
 
+let gamepadState = { dash: false, action: false, start: false };
+
+function pollGamepad() {
+    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+    let gp = null;
+    for(let i=0; i<gamepads.length; i++) {
+        if(gamepads[i] && gamepads[i].connected) { gp = gamepads[i]; break; }
+    }
+    if (!gp) {
+        keys['gp_up'] = keys['gp_down'] = keys['gp_left'] = keys['gp_right'] = false;
+        return;
+    }
+
+    const DEADZONE = 0.2;
+    let axisX = gp.axes[0] || 0;
+    let axisY = gp.axes[1] || 0;
+    
+    let dpadUp = gp.buttons[12] && gp.buttons[12].pressed;
+    let dpadDown = gp.buttons[13] && gp.buttons[13].pressed;
+    let dpadLeft = gp.buttons[14] && gp.buttons[14].pressed;
+    let dpadRight = gp.buttons[15] && gp.buttons[15].pressed;
+
+    keys['gp_up'] = axisY < -DEADZONE || dpadUp;
+    keys['gp_down'] = axisY > DEADZONE || dpadDown;
+    keys['gp_left'] = axisX < -DEADZONE || dpadLeft;
+    keys['gp_right'] = axisX > DEADZONE || dpadRight;
+
+    let newDash = (gp.buttons[0] && gp.buttons[0].pressed) || (gp.buttons[7] && gp.buttons[7].pressed) || (gp.buttons[5] && gp.buttons[5].pressed);
+    if(newDash && !gamepadState.dash) keys['shift'] = true; 
+    else if (!newDash && gamepadState.dash) keys['shift'] = false;
+    gamepadState.dash = newDash;
+
+    let newAction = (gp.buttons[2] && gp.buttons[2].pressed) || (gp.buttons[3] && gp.buttons[3].pressed);
+    if(newAction && !gamepadState.action && window.gameState === 'playing') {
+        initAudio();
+        if(window.useVerdictRoulette) window.useVerdictRoulette();
+    }
+    gamepadState.action = newAction;
+    
+    let newStart = (gp.buttons[9] && gp.buttons[9].pressed);
+    if(newStart && !gamepadState.start && window.gameState === 'playing') togglePause();
+    gamepadState.start = newStart;
+}
+
 window.addEventListener('pointerdown', e => {
     if(window.gameState === 'story' && e.target.id !== 'storySkipBtn' && e.target.id !== 'storyLangBtn') { 
         nextStoryStep(); 
@@ -4572,6 +4616,7 @@ if (dashBtnEl) {
 }
 
 function gameLoop(timestamp) {
+    pollGamepad();
     try {
         let rawDt = (timestamp - lastTime) / 1000; 
         if(rawDt > 0.1) rawDt = 0.1; 
