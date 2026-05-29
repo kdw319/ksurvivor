@@ -5,5 +5,8 @@ contextBridge.exposeInMainWorld('steamAPI', {
   unlockAchievement: (id) => ipcRenderer.invoke('steam-unlock-achievement', id),
   quitApp: () => ipcRenderer.send('quit-app'),
   toggleFullscreen: () => ipcRenderer.invoke('toggle-fullscreen'),
+  saveDataSync: (key, data) => ipcRenderer.sendSync('save-data-sync', key, data),
+  loadDataSync: (key) => ipcRenderer.sendSync('load-data-sync', key),
+  deleteDataSync: (key) => ipcRenderer.sendSync('delete-data-sync', key),
   isPC: true
 });

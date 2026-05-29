@@ -726,6 +726,27 @@
 </div>
 
 <script type="module">
+const StorageAPI = {
+    getItem: (key) => {
+        if (window.steamAPI && window.steamAPI.loadDataSync) {
+            let data = window.steamAPI.loadDataSync(key);
+            if (data) return data;
+        }
+        return localStorage.getItem(key);
+    },
+    setItem: (key, value) => {
+        if (window.steamAPI && window.steamAPI.saveDataSync) {
+            window.steamAPI.saveDataSync(key, value);
+        }
+        localStorage.setItem(key, value);
+    },
+    removeItem: (key) => {
+        if (window.steamAPI && window.steamAPI.deleteDataSync) {
+            window.steamAPI.deleteDataSync(key);
+        }
+        localStorage.removeItem(key);
+    }
+};
 // ==========================================
 // [1-A] 외부 에셋 데이터 슬롯 (URL, 파일명, Base64 모두 지원)
 // ==========================================
@@ -2418,7 +2439,7 @@ lCtx.strokeStyle = '#2a2a35'; lCtx.lineWidth = 2; lCtx.strokeRect(0,0,100,100);
 
 function loadSlotsFromLocal() {
     try {
-        let rawData = localStorage.getItem('op_save_slot_0');
+        let rawData = StorageAPI.getItem('op_save_slot_0');
         if(rawData) {
             let data = JSON.parse(rawData);
             playerBadges = data.playerBadges || 0;
@@ -3270,7 +3291,7 @@ window.renderSaveSlots = function() {
     const slotList = document.getElementById('slotList'); if(!slotList) return; slotList.innerHTML = ''; 
     const lang = window.I18N[window.currentLang];
     for(let i=0; i<5; i++) { 
-        let rawData = localStorage.getItem('op_save_slot_' + i);
+        let rawData = StorageAPI.getItem('op_save_slot_' + i);
         let data = null;
         try { data = rawData ? JSON.parse(rawData) : null; } catch(e) { data = null; }
         
@@ -3284,7 +3305,7 @@ window.renderSaveSlots = function() {
 
 window.saveToSlot = function(i) {
     const lang = window.I18N[window.currentLang];
-    let existing = localStorage.getItem('op_save_slot_' + i);
+    let existing = StorageAPI.getItem('op_save_slot_' + i);
     
     const performSave = () => {
         initAudio(); playSFX('levelup'); 
@@ -3301,7 +3322,7 @@ window.saveToSlot = function(i) {
             achievements: {...achievements},
             timestamp: new Date().toISOString() 
         };
-        localStorage.setItem('op_save_slot_' + i, JSON.stringify(saveData));
+        StorageAPI.setItem('op_save_slot_' + i, JSON.stringify(saveData));
         window.renderSaveSlots();
         showSystemNotice(`[SLOT ${i+1}] ${lang.noticeSave}`);
     };
@@ -3316,7 +3337,7 @@ window.saveToSlot = function(i) {
 window.deleteSlot = function(i) {
     const lang = window.I18N[window.currentLang];
     window.showConfirm(lang.warnDelete || "Delete?", () => {
-        localStorage.removeItem('op_save_slot_' + i);
+        StorageAPI.removeItem('op_save_slot_' + i);
         window.renderSaveSlots();
         showSystemNotice(`[SLOT ${i+1}] ${lang.noticeDelete || 'Deleted'}`);
     });
@@ -3379,7 +3400,7 @@ window.loadFromSlot = function(i) {
         closeSaveLoad();
     };
 
-    let rawData = localStorage.getItem('op_save_slot_' + i);
+    let rawData = StorageAPI.getItem('op_save_slot_' + i);
     if (!rawData) {
         window.showConfirm(lang.loadEmpty, () => performLoad(null));
     } else {

@@ -84,8 +84,52 @@ ipcMain.handle('steam-unlock-achievement', (event, achievementId) => {
   return false;
 });
 
+const fs = require('fs');
+
 ipcMain.on('quit-app', () => {
   app.quit();
+});
+
+const saveDir = path.join(app.getPath('userData'), 'Saves');
+if (!fs.existsSync(saveDir)) {
+  fs.mkdirSync(saveDir, { recursive: true });
+}
+
+ipcMain.on('save-data-sync', (event, key, data) => {
+  try {
+    fs.writeFileSync(path.join(saveDir, key + '.json'), data, 'utf8');
+    event.returnValue = true;
+  } catch (e) {
+    console.error('Save error:', e);
+    event.returnValue = false;
+  }
+});
+
+ipcMain.on('load-data-sync', (event, key) => {
+  try {
+    const filePath = path.join(saveDir, key + '.json');
+    if (fs.existsSync(filePath)) {
+      event.returnValue = fs.readFileSync(filePath, 'utf8');
+    } else {
+      event.returnValue = null;
+    }
+  } catch (e) {
+    console.error('Load error:', e);
+    event.returnValue = null;
+  }
+});
+
+ipcMain.on('delete-data-sync', (event, key) => {
+  try {
+    const filePath = path.join(saveDir, key + '.json');
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    event.returnValue = true;
+  } catch (e) {
+    console.error('Delete error:', e);
+    event.returnValue = false;
+  }
 });
 
 ipcMain.handle('toggle-fullscreen', () => {
