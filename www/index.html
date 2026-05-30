@@ -1096,6 +1096,10 @@ window.handleActiveSkill = function(slotIdx) {
     const art = window.ARTIFACT_DATA[artId];
     if (art.type !== 'active') return;
     if (window.artCooldowns[slotIdx] > 0) return;
+    if (window.player && window.player.silenceTimer > 0) {
+        showSystemNotice(currentLang === 'ko' ? "침묵 상태입니다!" : "Silenced!");
+        return;
+    }
 
     // Trigger Active Effect
     playSFX('verdictUse');
@@ -4066,6 +4070,8 @@ class Player {
         this.aimX = 1; this.aimY = 0; 
         this.hitTimer = 0;
         this.artTickTimer = 0; this.artHealTimer = 0;
+        this.silenceTimer = 0; // Skill Lock
+        this.slowTimer = 0;    // Speed Reduction
         this.recalculateStats();
     }
     
@@ -4117,6 +4123,12 @@ class Player {
             this.stats.maxHp += (window.verdictBuffs.yellow * this.baseMaxHp);
             this.stats.speedMult += window.verdictBuffs.green;
         }
+
+        // Apply Status Effects
+        if (this.slowTimer > 0) {
+            this.stats.speedMult *= 0.5; // 50% Slow
+        }
+
         this.weapons.forEach(w => { let bonus = w.settings.statBonus; if(bonus && bonus.type !== 'none') { this.stats[bonus.type] += (bonus.value * w.level); } });
         
         if (this.activeSynergies.proGamer) {
@@ -4314,6 +4326,10 @@ class Enemy {
         }
                 this.maxHp = this.hp; this.hitTimer = 0;
         this.imgKey = '';
+        this.gimmickTimer = 5.0; // Start first gimmick soon
+        this.gimmickState = 'idle';
+        this.shieldHp = 0;
+        
         if (this.type === 'boss') {
             const milestones = [10, 20, 30, 40, 50, 60, 70, 75, 80, 90, 95, 100];
             if (milestones.includes(currentStage)) {
@@ -4335,6 +4351,122 @@ class Enemy {
     }
     update(dt) {
         let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy; 
+        
+        // --- Milestone Boss Gimmicks ---
+        if (this.type === 'boss' || this.type === 'midboss') {
+            this.gimmickTimer -= dt;
+            
+            // Stage 5: Silence
+            if (this.imgKey === 'boss_5' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 12;
+                player.silenceTimer = 4;
+                showSystemNotice(currentLang === 'ko' ? "침묵! 변론 중지!" : "SILENCE! VERDICT SUSPENDED!");
+                if (window.playSFX) window.playSFX('bossSkill');
+                for(let i=0; i<15; i++) particles.push(new Particle(this.x, this.y, '#9b59b6'));
+            }
+            
+            // Stage 10: Chains of Guilt (Slow)
+            if (this.imgKey === 'boss_10' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 10;
+                let angle = Math.atan2(dy, dx);
+                for(let i=-1; i<=1; i++) {
+                    let a = angle + i * 0.3;
+                    enemyProjectiles.push(new EnemyProjectile(this.x, this.y, Math.cos(a)*300, Math.sin(a)*300, 15, '#34495e', true));
+                }
+                showSystemNotice(currentLang === 'ko' ? "죄의 사슬!" : "CHAINS OF GUILT!");
+            }
+            
+            // Stage 15: Shield of Consensus
+            if (this.imgKey === 'boss_15' && this.hp < this.maxHp * 0.5 && this.shieldHp <= 0 && this.gimmickState !== 'shielded') {
+                this.shieldHp = this.maxHp * 0.3;
+                this.gimmickState = 'shielded';
+                showSystemNotice(currentLang === 'ko' ? "만장일치의 결계!" : "SHIELD OF CONSENSUS!");
+                for(let i=0; i<4; i++) {
+                    let mx = this.x + (Math.random()-0.5)*200;
+                    let my = this.y + (Math.random()-0.5)*200;
+                    enemies.push(new Enemy(mx, my, 'mob'));
+                }
+            }
+            
+            // Stage 20 & 100: Final Sentence
+            if ((this.imgKey === 'boss_20' || this.imgKey === 'boss_100') && this.gimmickTimer <= 0) {
+                if (this.gimmickState === 'idle') {
+                    this.gimmickState = 'charging';
+                    this.gimmickTimer = 2.5; 
+                    this.safeZone = { x: player.x + (Math.random()-0.5)*400, y: player.y + (Math.random()-0.5)*400, r: 150 };
+                    showSystemNotice(currentLang === 'ko' ? "최후의 선고를 기다리십시오!" : "AWAIT THE FINAL SENTENCE!");
+                } else if (this.gimmickState === 'charging') {
+                    let dSafe = Math.hypot(player.x - this.safeZone.x, player.y - this.safeZone.y);
+                    if (dSafe > this.safeZone.r) {
+                        player.takeDamage(player.maxHp * 0.6);
+                        showSystemNotice(currentLang === 'ko' ? "유죄 판결!" : "GUILTY VERDICT!");
+                    } else {
+                        showSystemNotice(currentLang === 'ko' ? "무죄! 생존하셨습니다." : "INNOCENT! YOU SURVIVED.");
+                    }
+                    this.gimmickState = 'idle';
+                    this.gimmickTimer = 15;
+                    this.safeZone = null;
+                }
+            }
+
+            // Stage 30: Mirror Images (Clones)
+            if (this.imgKey === 'boss_30' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 20;
+                showSystemNotice(currentLang === 'ko' ? "거짓의 거울!" : "MIRROR OF FALSEHOOD!");
+                for(let i=0; i<2; i++) {
+                    let clone = new Enemy(this.x + (Math.random()-0.5)*300, this.y + (Math.random()-0.5)*300, 'midboss');
+                    clone.hp = clone.maxHp = this.maxHp * 0.2;
+                    clone.isClone = true;
+                    enemies.push(clone);
+                }
+            }
+
+            // Stage 40: Gavel Shockwave
+            if (this.imgKey === 'boss_40' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 8;
+                showSystemNotice(currentLang === 'ko' ? "집행자의 분노!" : "GAVEL SHOCKWAVE!");
+                // Visual Shockwave Particle
+                for(let i=0; i<36; i++) {
+                    let a = (i * 10) * Math.PI / 180;
+                    particles.push(new Particle(this.x, this.y, '#e67e22'));
+                }
+                // Damage player if not dashing
+                if (player.dashTimer <= 0) {
+                    player.takeDamage(30);
+                }
+            }
+
+            // Stage 50: Suppression
+            if (this.imgKey === 'boss_50' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 25;
+                showSystemNotice(currentLang === 'ko' ? "강제 압수수색! 버프 일시 해제!" : "SUPPRESSION! BUFFS DISABLED!");
+                const oldBuffs = JSON.parse(JSON.stringify(window.verdictBuffs));
+                window.verdictBuffs = { red: 0, yellow: 0, green: 0 };
+                player.recalculateStats();
+                setTimeout(() => {
+                    window.verdictBuffs = oldBuffs;
+                    player.recalculateStats();
+                    showSystemNotice(currentLang === 'ko' ? "압수수색 종료." : "SUPPRESSION ENDED.");
+                }, 8000);
+            }
+
+            // Stage 90+: Blackhole
+            if (currentStage >= 90 && this.type === 'boss' && this.gimmickTimer <= 0 && this.gimmickState === 'idle') {
+                this.gimmickTimer = 10;
+                showSystemNotice(currentLang === 'ko' ? "심판의 블랙홀!" : "BLACKHOLE OF JUDGMENT!");
+                this.gimmickState = 'blackhole';
+                setTimeout(() => { this.gimmickState = 'idle'; }, 5000);
+            }
+
+            if (this.gimmickState === 'blackhole') {
+                let d = Math.hypot(player.x - this.x, player.y - this.y);
+                if (d > 50) {
+                    player.x -= (player.x - this.x) / d * 150 * dt;
+                    player.y -= (player.y - this.y) / d * 150 * dt;
+                }
+            }
+        }
+
         if (this.subType === 'melee') { if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } } 
         else if (this.subType === 'ranged') {
             if(distSq > this.range*this.range) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
@@ -4349,8 +4481,42 @@ class Enemy {
     }
         draw(ctx) {
         if(isOffScreen(this.x, this.y, this.radius*2)) return;
+        
+        // --- Milestone Boss Gimmick Visuals (Ground Layer) ---
+        if (this.imgKey === 'boss_20' && this.gimmickState === 'charging' && this.safeZone) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(this.safeZone.x - camera.x, this.safeZone.y - camera.y, this.safeZone.r, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(46, 204, 113, 0.3)';
+            ctx.fill();
+            ctx.strokeStyle = '#2ecc71';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([10, 5]);
+            ctx.stroke();
+            // Draw Label
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(currentLang === 'ko' ? "무죄 구역 (SAFE)" : "INNOCENT ZONE (SAFE)", this.safeZone.x - camera.x, this.safeZone.y - camera.y - this.safeZone.r - 10);
+            ctx.restore();
+        }
+
         ctx.save(); ctx.translate((this.x - camera.x) | 0, (this.y - camera.y) | 0);
         ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, this.radius, this.radius, this.radius/2, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
+        
+        // --- Milestone Boss Gimmick Visuals (Character Layer) ---
+        if (this.shieldHp > 0) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(0, -this.radius/2, this.radius * 2, 0, Math.PI*2);
+            ctx.strokeStyle = 'rgba(52, 152, 219, 0.6)';
+            ctx.lineWidth = 5;
+            ctx.setLineDash([15, 10]);
+            ctx.lineDashOffset = -performance.now() / 30;
+            ctx.stroke();
+            ctx.restore();
+        }
+
         const img = loadedImages[this.imgKey];
         if (img && img.complete && img.naturalWidth > 0) {
             let size = this.radius * 3.5; ctx.drawImage(img, -size/2, -size + this.radius, size, size);
@@ -4364,7 +4530,22 @@ class Enemy {
         ctx.restore();
     }
     takeDamage(amount) {
-        if(this.hp <= 0) return; this.hp -= amount; playSFX('hit'); 
+        if(this.hp <= 0) return;
+        
+        // Prioritize Shield
+        if (this.shieldHp > 0) {
+            this.shieldHp -= amount;
+            if (this.shieldHp < 0) {
+                this.hp += this.shieldHp; // Apply remaining damage to HP
+                this.shieldHp = 0;
+                showSystemNotice(currentLang === 'ko' ? "결계가 파괴되었습니다!" : "SHIELD BROKEN!");
+            }
+            amount = 0; // Shield absorbed damage for UI text purposes or minimal damage
+        } else {
+            this.hp -= amount;
+        }
+        
+        playSFX('hit'); 
         
         let existingText = damageTexts.find(d => !d.isPlayer && Math.abs(d.x - this.x) < 30 && Math.abs(d.y - (this.y - this.radius)) < 30 && d.life > 0.2);
         if (existingText) {
@@ -4401,8 +4582,22 @@ class Enemy {
 }
 
 class EnemyProjectile {
-    constructor(x, y, vx, vy, damage, color) { this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.damage = damage; this.color = color; this.life = 3.0; this.radius = 6; }
-    update(dt) { this.x += this.vx * dt; this.y += this.vy * dt; this.life -= dt; let dx = player.x - this.x; let dy = player.y - this.y; let rSum = player.radius + this.radius; if(dx*dx + dy*dy < rSum*rSum) { player.takeDamage(this.damage); this.life = 0; } }
+    constructor(x, y, vx, vy, damage, color, isSlow = false) { 
+        this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.damage = damage; this.color = color; this.life = 3.0; this.radius = 6; 
+        this.isSlow = isSlow;
+    }
+    update(dt) { 
+        this.x += this.vx * dt; this.y += this.vy * dt; this.life -= dt; 
+        let dx = player.x - this.x; let dy = player.y - this.y; let rSum = player.radius + this.radius; 
+        if(dx*dx + dy*dy < rSum*rSum) { 
+            player.takeDamage(this.damage); 
+            if (this.isSlow) {
+                player.slowTimer = 3.0;
+                player.recalculateStats();
+            }
+            this.life = 0; 
+        } 
+    }
     draw(ctx) { if(isOffScreen(this.x, this.y)) return; ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, this.radius/2, 0, Math.PI*2); ctx.fill(); ctx.restore(); }
 }
 
@@ -5040,7 +5235,10 @@ window.useVerdictRoulette = function() {
         }
         window.verdictInventory.push(result);
         
-        window.verdictBuffs[result] += 0.05;
+        // ⚖️ Restored Buffed Increments
+        const increments = { red: 0.25, yellow: 0.15, green: 0.15 };
+        window.verdictBuffs[result] += increments[result];
+        
         if (window.player) window.player.recalculateStats();
         
         window.updateVerdictUI();
@@ -5062,29 +5260,36 @@ window.checkRouletteSynergy = function() {
     
     if (counts.red === 3 || counts.yellow === 3 || counts.green === 3) {
         const type = inv[0];
-        window.verdictBuffs[type] += 0.15;
+        window.verdictBuffs[type] += 1.0; // Massive Buff: +100% Stat
         if (window.player) {
-            window.player.hp = Math.min(window.player.maxHp, window.player.hp + (window.player.maxHp * 0.5));
+            window.player.hp = window.player.maxHp; // Full Heal
             window.player.recalculateStats();
         }
         if (window.playSFX) window.playSFX('verdictJackpot');
-        if (window.showSystemNotice) window.showSystemNotice(`🎉 ${lang.syn_triple}`);
+        if (window.showSystemNotice) window.showSystemNotice(`🎰 JACKPOT TRIPLE! ${lang.syn_triple}`);
     } else if (counts.red === 2 || counts.yellow === 2 || counts.green === 2) {
         const type = Object.keys(counts).find(k => counts[k] === 2);
-        window.verdictBuffs[type] += 0.05;
+        window.verdictBuffs[type] += 0.50; // Buffed to +50%
         if (window.player) window.player.recalculateStats();
         if (window.enemies && window.player) {
             window.enemies.forEach(e => {
                 let dx = e.x - window.player.x; let dy = e.y - window.player.y; let dist = Math.hypot(dx, dy);
-                if (dist > 0 && dist < 300) { e.x += (dx/dist)*150; e.y += (dy/dist)*150; }
+                if (dist > 0 && dist < 600) { e.x += (dx/dist)*400; e.y += (dy/dist)*400; }
             });
         }
         if (window.playSFX) window.playSFX('verdictPair');
-        if (window.showSystemNotice) window.showSystemNotice(`✨ ${lang.syn_double}`);
+        if (window.showSystemNotice) window.showSystemNotice(`✨ ROYAL PAIR! ${lang.syn_double}`);
     } else {
-        if (window.player) window.player.stats.cooldownMult *= 0.85;
+        // Rainbow Synergy (Straight)
+        window.verdictBuffs.red += 0.30;
+        window.verdictBuffs.yellow += 0.30;
+        window.verdictBuffs.green += 0.30;
+        if (window.player) {
+            window.player.stats.cooldownMult *= 0.5; // 50% Reduction
+            window.player.recalculateStats();
+        }
         if (window.playSFX) window.playSFX('verdictStraight');
-        if (window.showSystemNotice) window.showSystemNotice(`🃏 ${lang.syn_mix}`);
+        if (window.showSystemNotice) window.showSystemNotice(`🌈 PERFECT STRAIGHT! ${lang.syn_mix}`);
     }
 };
 
