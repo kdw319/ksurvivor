@@ -4358,15 +4358,25 @@ class Enemy {
             
             // Generic Boss Gimmick (boss_mid)
             if (this.imgKey === 'boss_mid' && this.gimmickTimer <= 0) {
-                this.gimmickTimer = 8;
-                showSystemNotice(currentLang === 'ko' ? "심판의 압박!" : "PRESSURE OF JUDGMENT!");
-                // Small pushback shockwave
-                if (window.playSFX) window.playSFX('bossSkill');
-                let pushRadius = 250;
-                let d = Math.hypot(player.x - this.x, player.y - this.y);
-                if (d < pushRadius) {
-                    player.x += (player.x - this.x) / d * 50;
-                    player.y += (player.y - this.y) / d * 50;
+                if (this.gimmickState === 'idle') {
+                    this.gimmickState = 'shockwave_charging';
+                    this.gimmickTimer = 1.0; // Warning time
+                } else if (this.gimmickState === 'shockwave_charging') {
+                    this.gimmickTimer = 8;
+                    this.gimmickState = 'idle';
+                    showSystemNotice(currentLang === 'ko' ? "심판의 압박!" : "PRESSURE OF JUDGMENT!");
+                    if (window.playSFX) window.playSFX('bossSkill');
+                    
+                    let pushRadius = 350;
+                    let d = Math.hypot(player.x - this.x, player.y - this.y);
+                    if (d < pushRadius) {
+                        player.x += (player.x - this.x) / d * 150;
+                        player.y += (player.y - this.y) / d * 150;
+                        // Add impact particles on player
+                        for(let i=0; i<10; i++) particles.push(new Particle(player.x, player.y, '#fff'));
+                    }
+                    // Visual shockwave ring
+                    this.shockwaveVisual = { r: 0, maxR: pushRadius, alpha: 1.0 };
                 }
             }
 
