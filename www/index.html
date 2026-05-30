@@ -4358,13 +4358,13 @@ class Enemy {
     update(dt) {
         if (this.skillLabelTimer > 0) this.skillLabelTimer -= dt;
         let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy; 
-        
+
         // --- Milestone Boss Gimmicks ---
         if (this.type === 'boss' || this.type === 'midboss') {
             this.gimmickTimer -= dt;
-            
-            // Generic Boss Gimmick (boss_mid)
-            if (this.imgKey === 'boss_mid' && this.gimmickTimer <= 0) {
+
+            // Generic Midboss Gimmick (Midboss Only)
+            if (this.type === 'midboss' && this.imgKey === 'boss_mid' && this.gimmickTimer <= 0) {
                 if (this.gimmickState === 'idle') {
                     this.gimmickState = 'shockwave_charging';
                     this.gimmickTimer = 1.0; 
@@ -4373,16 +4373,38 @@ class Enemy {
                     this.gimmickState = 'idle';
                     this.setSkillLabel(currentLang === 'ko' ? "심판의 압박!" : "PRESSURE!");
                     if (window.playSFX) window.playSFX('bossSkill');
-                    
+
                     let pushRadius = 350;
                     let d = Math.hypot(player.x - this.x, player.y - this.y);
                     if (d < pushRadius) {
                         player.x += (player.x - this.x) / d * 150;
                         player.y += (player.y - this.y) / d * 150;
-                        for(let i=0; i<10; i++) particles.push(new Particle(player.x, player.y, '#fff'));
+                        for(let i=0; i<8; i++) particles.push(new Particle(player.x, player.y, '#fff'));
                     }
                     this.shockwaveVisual = { r: 0, maxR: pushRadius, alpha: 1.0 };
                 }
+            }
+
+            // Generic Boss Gimmick (Boss Only - Executioner Dash)
+            if (this.type === 'boss' && this.imgKey === 'boss_mid' && this.gimmickTimer <= 0) {
+                if (this.gimmickState === 'idle') {
+                    this.gimmickState = 'dash_charging';
+                    this.gimmickTimer = 1.2; 
+                    this.dashDir = { x: dx / Math.sqrt(distSq || 1), y: dy / Math.sqrt(distSq || 1) };
+                } else if (this.gimmickState === 'dash_charging') {
+                    this.gimmickState = 'dashing';
+                    this.gimmickTimer = 0.5; // Dash duration
+                    this.setSkillLabel(currentLang === 'ko' ? "집행의 돌격!" : "EXECUTIONER DASH!");
+                    if (window.playSFX) window.playSFX('bossSkill');
+                } else if (this.gimmickState === 'dashing') {
+                    this.gimmickState = 'idle';
+                    this.gimmickTimer = 6; // Cooldown
+                }
+            }
+            if (this.gimmickState === 'dashing') {
+                this.x += this.dashDir.x * 600 * dt;
+                this.y += this.dashDir.y * 600 * dt;
+                if (particles.length < 100 && Math.random() < 0.3) particles.push(new Particle(this.x, this.y, '#ff4757'));
             }
 
             // Stage 5: Silence
@@ -4391,14 +4413,13 @@ class Enemy {
                 player.silenceTimer = 4;
                 this.setSkillLabel(currentLang === 'ko' ? "조용히 하세요!" : "SILENCE!");
                 if (window.playSFX) window.playSFX('bossSkill');
-                // Enhanced Purple Burst
-                for(let i=0; i<30; i++) {
+                for(let i=0; i<20; i++) {
                     let p = new Particle(this.x, this.y, '#9b59b6');
-                    p.vx *= 3; p.vy *= 3; p.life = 1.5;
+                    p.vx *= 2.5; p.vy *= 2.5; p.life = 1.2;
                     particles.push(p);
                 }
             }
-            
+
             // Stage 10: Chains of Guilt (Slow)
             if (this.imgKey === 'boss_10' && this.gimmickTimer <= 0) {
                 this.gimmickTimer = 10;
@@ -4409,19 +4430,19 @@ class Enemy {
                     enemyProjectiles.push(new EnemyProjectile(this.x, this.y, Math.cos(a)*300, Math.sin(a)*300, 15, '#34495e', true));
                 }
             }
-            
+
             // Stage 15: Shield of Consensus
             if (this.imgKey === 'boss_15' && this.hp < this.maxHp * 0.5 && this.shieldHp <= 0 && this.gimmickState !== 'shielded') {
                 this.shieldHp = this.maxHp * 0.3;
                 this.gimmickState = 'shielded';
                 this.setSkillLabel(currentLang === 'ko' ? "만장일치의 결계!" : "SHIELD!");
-                for(let i=0; i<4; i++) {
+                for(let i=0; i<3; i++) {
                     let mx = this.x + (Math.random()-0.5)*200;
                     let my = this.y + (Math.random()-0.5)*200;
                     enemies.push(new Enemy(mx, my, 'mob'));
                 }
             }
-            
+
             // Stage 20 & 100: Final Sentence
             if ((this.imgKey === 'boss_20' || this.imgKey === 'boss_100') && this.gimmickTimer <= 0) {
                 if (this.gimmickState === 'idle') {
@@ -4459,8 +4480,8 @@ class Enemy {
             if (this.imgKey === 'boss_40' && this.gimmickTimer <= 0) {
                 this.gimmickTimer = 8;
                 this.setSkillLabel(currentLang === 'ko' ? "집행자의 분노!" : "GAVEL!");
-                for(let i=0; i<36; i++) {
-                    let a = (i * 10) * Math.PI / 180;
+                for(let i=0; i<30; i++) {
+                    let a = (i * 12) * Math.PI / 180;
                     particles.push(new Particle(this.x, this.y, '#e67e22'));
                 }
                 if (player.dashTimer <= 0) {
@@ -4476,9 +4497,11 @@ class Enemy {
                 window.verdictBuffs = { red: 0, yellow: 0, green: 0 };
                 player.recalculateStats();
                 setTimeout(() => {
-                    window.verdictBuffs = oldBuffs;
-                    player.recalculateStats();
-                    this.setSkillLabel(currentLang === 'ko' ? "수색 종료" : "RELEASED", 1.0);
+                    if (this.hp > 0) {
+                        window.verdictBuffs = oldBuffs;
+                        player.recalculateStats();
+                        this.setSkillLabel(currentLang === 'ko' ? "수색 종료" : "RELEASED", 1.0);
+                    }
                 }, 8000);
             }
 
@@ -4511,9 +4534,9 @@ class Enemy {
         if(distSq < rSum*rSum && this.hitTimer <= 0) { player.takeDamage(this.damage); this.hitTimer = 0.5; }
         if(this.hitTimer > 0) this.hitTimer -= dt;
     }
-        draw(ctx) {
+    draw(ctx) {
         if(isOffScreen(this.x, this.y, this.radius*2)) return;
-        
+
         // --- Milestone Boss Gimmick Visuals (Ground Layer) ---
         // Stage 20/100: Safe Zone
         if ((this.imgKey === 'boss_20' || this.imgKey === 'boss_100') && this.gimmickState === 'charging' && this.safeZone) {
@@ -4544,9 +4567,9 @@ class Enemy {
 
         ctx.save(); ctx.translate((this.x - camera.x) | 0, (this.y - camera.y) | 0);
         ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, this.radius, this.radius, this.radius/2, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
-        
+
         // --- Milestone Boss Gimmick Visuals (Character Layer) ---
-        
+
         // Stage 15: Shield Pulse
         if (this.shieldHp > 0) {
             ctx.save();
@@ -4567,12 +4590,15 @@ class Enemy {
         const img = loadedImages[this.imgKey];
         if (img && img.complete && img.naturalWidth > 0) {
             let size = this.radius * 3.5; 
-            // Charging flash for skills
-            if (this.gimmickState.includes('charging')) {
-                ctx.filter = `brightness(${1.5 + Math.sin(performance.now()/50)*0.5})`;
-            }
+            // Performance Optimization: Replace ctx.filter with a simple alpha overlay or color tint
             ctx.drawImage(img, -size/2, -size + this.radius, size, size);
-            ctx.filter = 'none';
+            if (this.gimmickState.includes('charging')) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'source-atop';
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + Math.sin(performance.now()/50)*0.2})`;
+                ctx.fillRect(-size/2, -size + this.radius, size, size);
+                ctx.restore();
+            }
         } else {
             ctx.fillStyle = this.hitTimer > 0 ? '#fff' : this.color; ctx.beginPath(); ctx.arc(0, -this.radius/2, this.radius, 0, Math.PI*2); ctx.fill();
         }
