@@ -4324,11 +4324,13 @@ class Enemy {
         } else {
             this.subType = 'melee'; this.hp = (type==='midboss'?500:3000) * hpMul; this.speed = type==='midboss'?110:70; this.damage = (type==='midboss'?15:30) * dmgMul; this.color = type==='midboss'?'#e1b12c':'#c23616'; this.exp = type==='midboss'?20:100;
         }
-                this.maxHp = this.hp; this.hitTimer = 0;
+        this.maxHp = this.hp; this.hitTimer = 0;
         this.imgKey = '';
-        this.gimmickTimer = 5.0; // Start first gimmick soon
+        this.gimmickTimer = 5.0; 
         this.gimmickState = 'idle';
         this.shieldHp = 0;
+        this.skillLabel = '';
+        this.skillLabelTimer = 0;
         
         if (this.type === 'boss') {
             const milestones = [10, 20, 30, 40, 50, 60, 70, 75, 80, 90, 95, 100];
@@ -4349,7 +4351,12 @@ class Enemy {
             else this.imgKey = (Math.random() < 0.5) ? 'mob_juror' : 'mob_gavel';
         }
     }
+    setSkillLabel(text, duration = 2.0) {
+        this.skillLabel = text;
+        this.skillLabelTimer = duration;
+    }
     update(dt) {
+        if (this.skillLabelTimer > 0) this.skillLabelTimer -= dt;
         let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy; 
         
         // --- Milestone Boss Gimmicks ---
@@ -4360,11 +4367,11 @@ class Enemy {
             if (this.imgKey === 'boss_mid' && this.gimmickTimer <= 0) {
                 if (this.gimmickState === 'idle') {
                     this.gimmickState = 'shockwave_charging';
-                    this.gimmickTimer = 1.0; // Warning time
+                    this.gimmickTimer = 1.0; 
                 } else if (this.gimmickState === 'shockwave_charging') {
                     this.gimmickTimer = 8;
                     this.gimmickState = 'idle';
-                    showSystemNotice(currentLang === 'ko' ? "심판의 압박!" : "PRESSURE OF JUDGMENT!");
+                    this.setSkillLabel(currentLang === 'ko' ? "심판의 압박!" : "PRESSURE!");
                     if (window.playSFX) window.playSFX('bossSkill');
                     
                     let pushRadius = 350;
@@ -4372,10 +4379,8 @@ class Enemy {
                     if (d < pushRadius) {
                         player.x += (player.x - this.x) / d * 150;
                         player.y += (player.y - this.y) / d * 150;
-                        // Add impact particles on player
                         for(let i=0; i<10; i++) particles.push(new Particle(player.x, player.y, '#fff'));
                     }
-                    // Visual shockwave ring
                     this.shockwaveVisual = { r: 0, maxR: pushRadius, alpha: 1.0 };
                 }
             }
@@ -4384,27 +4389,32 @@ class Enemy {
             if (this.imgKey === 'boss_5' && this.gimmickTimer <= 0) {
                 this.gimmickTimer = 10;
                 player.silenceTimer = 4;
-                showSystemNotice(currentLang === 'ko' ? "조용히 하세요! 변론 중지!" : "SILENCE! ORDER IN THE COURT!");
+                this.setSkillLabel(currentLang === 'ko' ? "조용히 하세요!" : "SILENCE!");
                 if (window.playSFX) window.playSFX('bossSkill');
-                for(let i=0; i<15; i++) particles.push(new Particle(this.x, this.y, '#9b59b6'));
+                // Enhanced Purple Burst
+                for(let i=0; i<30; i++) {
+                    let p = new Particle(this.x, this.y, '#9b59b6');
+                    p.vx *= 3; p.vy *= 3; p.life = 1.5;
+                    particles.push(p);
+                }
             }
             
             // Stage 10: Chains of Guilt (Slow)
             if (this.imgKey === 'boss_10' && this.gimmickTimer <= 0) {
                 this.gimmickTimer = 10;
+                this.setSkillLabel(currentLang === 'ko' ? "죄의 사슬!" : "CHAINS!");
                 let angle = Math.atan2(dy, dx);
                 for(let i=-1; i<=1; i++) {
                     let a = angle + i * 0.3;
                     enemyProjectiles.push(new EnemyProjectile(this.x, this.y, Math.cos(a)*300, Math.sin(a)*300, 15, '#34495e', true));
                 }
-                showSystemNotice(currentLang === 'ko' ? "죄의 사슬!" : "CHAINS OF GUILT!");
             }
             
             // Stage 15: Shield of Consensus
             if (this.imgKey === 'boss_15' && this.hp < this.maxHp * 0.5 && this.shieldHp <= 0 && this.gimmickState !== 'shielded') {
                 this.shieldHp = this.maxHp * 0.3;
                 this.gimmickState = 'shielded';
-                showSystemNotice(currentLang === 'ko' ? "만장일치의 결계!" : "SHIELD OF CONSENSUS!");
+                this.setSkillLabel(currentLang === 'ko' ? "만장일치의 결계!" : "SHIELD!");
                 for(let i=0; i<4; i++) {
                     let mx = this.x + (Math.random()-0.5)*200;
                     let my = this.y + (Math.random()-0.5)*200;
@@ -4418,14 +4428,14 @@ class Enemy {
                     this.gimmickState = 'charging';
                     this.gimmickTimer = 2.5; 
                     this.safeZone = { x: player.x + (Math.random()-0.5)*400, y: player.y + (Math.random()-0.5)*400, r: 150 };
-                    showSystemNotice(currentLang === 'ko' ? "최후의 선고를 기다리십시오!" : "AWAIT THE FINAL SENTENCE!");
+                    this.setSkillLabel(currentLang === 'ko' ? "판결을 기다려라!" : "WAIT FOR VERDICT!");
                 } else if (this.gimmickState === 'charging') {
                     let dSafe = Math.hypot(player.x - this.safeZone.x, player.y - this.safeZone.y);
                     if (dSafe > this.safeZone.r) {
                         player.takeDamage(player.maxHp * 0.6);
-                        showSystemNotice(currentLang === 'ko' ? "유죄 판결!" : "GUILTY VERDICT!");
+                        this.setSkillLabel(currentLang === 'ko' ? "유죄!" : "GUILTY!", 1.0);
                     } else {
-                        showSystemNotice(currentLang === 'ko' ? "무죄! 생존하셨습니다." : "INNOCENT! YOU SURVIVED.");
+                        this.setSkillLabel(currentLang === 'ko' ? "무죄!" : "INNOCENT!", 1.0);
                     }
                     this.gimmickState = 'idle';
                     this.gimmickTimer = 15;
@@ -4436,7 +4446,7 @@ class Enemy {
             // Stage 30: Mirror Images (Clones)
             if (this.imgKey === 'boss_30' && this.gimmickTimer <= 0) {
                 this.gimmickTimer = 20;
-                showSystemNotice(currentLang === 'ko' ? "거짓의 거울!" : "MIRROR OF FALSEHOOD!");
+                this.setSkillLabel(currentLang === 'ko' ? "거짓의 거울!" : "MIRROR!");
                 for(let i=0; i<2; i++) {
                     let clone = new Enemy(this.x + (Math.random()-0.5)*300, this.y + (Math.random()-0.5)*300, 'midboss');
                     clone.hp = clone.maxHp = this.maxHp * 0.2;
@@ -4448,13 +4458,11 @@ class Enemy {
             // Stage 40: Gavel Shockwave
             if (this.imgKey === 'boss_40' && this.gimmickTimer <= 0) {
                 this.gimmickTimer = 8;
-                showSystemNotice(currentLang === 'ko' ? "집행자의 분노!" : "GAVEL SHOCKWAVE!");
-                // Visual Shockwave Particle
+                this.setSkillLabel(currentLang === 'ko' ? "집행자의 분노!" : "GAVEL!");
                 for(let i=0; i<36; i++) {
                     let a = (i * 10) * Math.PI / 180;
                     particles.push(new Particle(this.x, this.y, '#e67e22'));
                 }
-                // Damage player if not dashing
                 if (player.dashTimer <= 0) {
                     player.takeDamage(30);
                 }
@@ -4463,21 +4471,21 @@ class Enemy {
             // Stage 50: Suppression
             if (this.imgKey === 'boss_50' && this.gimmickTimer <= 0) {
                 this.gimmickTimer = 25;
-                showSystemNotice(currentLang === 'ko' ? "강제 압수수색! 버프 일시 해제!" : "SUPPRESSION! BUFFS DISABLED!");
+                this.setSkillLabel(currentLang === 'ko' ? "압수수색!" : "SUPPRESSION!");
                 const oldBuffs = JSON.parse(JSON.stringify(window.verdictBuffs));
                 window.verdictBuffs = { red: 0, yellow: 0, green: 0 };
                 player.recalculateStats();
                 setTimeout(() => {
                     window.verdictBuffs = oldBuffs;
                     player.recalculateStats();
-                    showSystemNotice(currentLang === 'ko' ? "압수수색 종료." : "SUPPRESSION ENDED.");
+                    this.setSkillLabel(currentLang === 'ko' ? "수색 종료" : "RELEASED", 1.0);
                 }, 8000);
             }
 
             // Stage 90+: Blackhole
             if (currentStage >= 90 && this.type === 'boss' && this.gimmickTimer <= 0 && this.gimmickState === 'idle') {
                 this.gimmickTimer = 10;
-                showSystemNotice(currentLang === 'ko' ? "심판의 블랙홀!" : "BLACKHOLE OF JUDGMENT!");
+                this.setSkillLabel(currentLang === 'ko' ? "블랙홀!" : "BLACKHOLE!");
                 this.gimmickState = 'blackhole';
                 setTimeout(() => { this.gimmickState = 'idle'; }, 5000);
             }
@@ -4551,6 +4559,41 @@ class Enemy {
             ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(-this.radius, -this.radius*2.2, this.radius*2, 6);
             ctx.fillStyle = '#ff4757'; ctx.fillRect(-this.radius, -this.radius*2.2, this.radius*2 * (this.hp/this.maxHp), 6); 
         }
+
+        // --- Speech Bubble / Skill Label ---
+        if (this.skillLabelTimer > 0) {
+            ctx.save();
+            ctx.globalAlpha = Math.min(1.0, this.skillLabelTimer * 2);
+            let labelY = -this.radius * 3;
+            
+            // Bubble Background
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            let textWidth = ctx.measureText(this.skillLabel).width;
+            let padding = 10;
+            let bw = textWidth + padding * 2;
+            let bh = 24;
+            
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(-bw/2, labelY - bh, bw, bh, 5);
+            else ctx.rect(-bw/2, labelY - bh, bw, bh);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Pointer
+            ctx.beginPath();
+            ctx.moveTo(-5, labelY); ctx.lineTo(5, labelY); ctx.lineTo(0, labelY + 8); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            // Text
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 12px "Noto Sans KR"';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.skillLabel, 0, labelY - 7);
+            ctx.restore();
+        }
+
         ctx.restore();
     }
     takeDamage(amount) {
