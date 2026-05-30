@@ -4356,11 +4356,25 @@ class Enemy {
         if (this.type === 'boss' || this.type === 'midboss') {
             this.gimmickTimer -= dt;
             
+            // Generic Boss Gimmick (boss_mid)
+            if (this.imgKey === 'boss_mid' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 8;
+                showSystemNotice(currentLang === 'ko' ? "심판의 압박!" : "PRESSURE OF JUDGMENT!");
+                // Small pushback shockwave
+                if (window.playSFX) window.playSFX('bossSkill');
+                let pushRadius = 250;
+                let d = Math.hypot(player.x - this.x, player.y - this.y);
+                if (d < pushRadius) {
+                    player.x += (player.x - this.x) / d * 50;
+                    player.y += (player.y - this.y) / d * 50;
+                }
+            }
+
             // Stage 5: Silence
             if (this.imgKey === 'boss_5' && this.gimmickTimer <= 0) {
-                this.gimmickTimer = 12;
+                this.gimmickTimer = 10;
                 player.silenceTimer = 4;
-                showSystemNotice(currentLang === 'ko' ? "침묵! 변론 중지!" : "SILENCE! VERDICT SUSPENDED!");
+                showSystemNotice(currentLang === 'ko' ? "조용히 하세요! 변론 중지!" : "SILENCE! ORDER IN THE COURT!");
                 if (window.playSFX) window.playSFX('bossSkill');
                 for(let i=0; i<15; i++) particles.push(new Particle(this.x, this.y, '#9b59b6'));
             }
