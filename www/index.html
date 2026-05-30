@@ -4515,21 +4515,30 @@ class Enemy {
         if(isOffScreen(this.x, this.y, this.radius*2)) return;
         
         // --- Milestone Boss Gimmick Visuals (Ground Layer) ---
-        if (this.imgKey === 'boss_20' && this.gimmickState === 'charging' && this.safeZone) {
+        // Stage 20/100: Safe Zone
+        if ((this.imgKey === 'boss_20' || this.imgKey === 'boss_100') && this.gimmickState === 'charging' && this.safeZone) {
             ctx.save();
             ctx.beginPath();
             ctx.arc(this.safeZone.x - camera.x, this.safeZone.y - camera.y, this.safeZone.r, 0, Math.PI*2);
-            ctx.fillStyle = 'rgba(46, 204, 113, 0.3)';
-            ctx.fill();
-            ctx.strokeStyle = '#2ecc71';
-            ctx.lineWidth = 4;
-            ctx.setLineDash([10, 5]);
-            ctx.stroke();
-            // Draw Label
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 16px sans-serif';
-            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(46, 204, 113, 0.2)'; ctx.fill();
+            ctx.strokeStyle = '#2ecc71'; ctx.lineWidth = 4; ctx.setLineDash([10, 5]); ctx.stroke();
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
             ctx.fillText(currentLang === 'ko' ? "무죄 구역 (SAFE)" : "INNOCENT ZONE (SAFE)", this.safeZone.x - camera.x, this.safeZone.y - camera.y - this.safeZone.r - 10);
+            ctx.restore();
+        }
+
+        // Stage 90+: Blackhole Swirl
+        if (this.gimmickState === 'blackhole') {
+            ctx.save();
+            ctx.translate(this.x - camera.x, this.y - camera.y);
+            let time = performance.now() / 1000;
+            ctx.rotate(time * 5);
+            let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 150);
+            grad.addColorStop(0, 'rgba(0, 0, 0, 1)');
+            grad.addColorStop(0.5, 'rgba(155, 89, 182, 0.4)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(0, 0, 150, 0, Math.PI*2); ctx.fill();
             ctx.restore();
         }
 
@@ -4537,64 +4546,76 @@ class Enemy {
         ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, this.radius, this.radius, this.radius/2, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
         
         // --- Milestone Boss Gimmick Visuals (Character Layer) ---
+        
+        // Stage 15: Shield Pulse
         if (this.shieldHp > 0) {
             ctx.save();
-            ctx.beginPath();
-            ctx.arc(0, -this.radius/2, this.radius * 2, 0, Math.PI*2);
-            ctx.strokeStyle = 'rgba(52, 152, 219, 0.6)';
-            ctx.lineWidth = 5;
-            ctx.setLineDash([15, 10]);
-            ctx.lineDashOffset = -performance.now() / 30;
-            ctx.stroke();
+            ctx.beginPath(); ctx.arc(0, -this.radius/2, this.radius * 2, 0, Math.PI*2);
+            ctx.strokeStyle = 'rgba(52, 152, 219, 0.6)'; ctx.lineWidth = 5; ctx.setLineDash([15, 10]);
+            ctx.lineDashOffset = -performance.now() / 30; ctx.stroke();
+            ctx.restore();
+        }
+
+        // Stage 5: Silence Aura
+        if (this.imgKey === 'boss_5' && this.gimmickTimer < 0.5 && this.gimmickTimer > 0) {
+            ctx.save();
+            ctx.beginPath(); ctx.arc(0, -this.radius/2, 200 * (1 - this.gimmickTimer/0.5), 0, Math.PI*2);
+            ctx.strokeStyle = 'rgba(155, 89, 182, 0.8)'; ctx.lineWidth = 10; ctx.stroke();
             ctx.restore();
         }
 
         const img = loadedImages[this.imgKey];
         if (img && img.complete && img.naturalWidth > 0) {
-            let size = this.radius * 3.5; ctx.drawImage(img, -size/2, -size + this.radius, size, size);
+            let size = this.radius * 3.5; 
+            // Charging flash for skills
+            if (this.gimmickState.includes('charging')) {
+                ctx.filter = `brightness(${1.5 + Math.sin(performance.now()/50)*0.5})`;
+            }
+            ctx.drawImage(img, -size/2, -size + this.radius, size, size);
+            ctx.filter = 'none';
         } else {
             ctx.fillStyle = this.hitTimer > 0 ? '#fff' : this.color; ctx.beginPath(); ctx.arc(0, -this.radius/2, this.radius, 0, Math.PI*2); ctx.fill();
         }
+
+        // --- Boss HP Bar ---
         if(this.type === 'boss' || this.type === 'midboss') { 
             ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(-this.radius, -this.radius*2.2, this.radius*2, 6);
             ctx.fillStyle = '#ff4757'; ctx.fillRect(-this.radius, -this.radius*2.2, this.radius*2 * (this.hp/this.maxHp), 6); 
         }
 
-        // --- Speech Bubble / Skill Label ---
+        // --- Speech Bubble ---
         if (this.skillLabelTimer > 0) {
             ctx.save();
             ctx.globalAlpha = Math.min(1.0, this.skillLabelTimer * 2);
             let labelY = -this.radius * 3;
-            
-            // Bubble Background
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            let textWidth = ctx.measureText(this.skillLabel).width;
-            let padding = 10;
-            let bw = textWidth + padding * 2;
-            let bh = 24;
-            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+            let textWidth = ctx.measureText(this.skillLabel).width; let padding = 10;
+            let bw = textWidth + padding * 2; let bh = 24;
             ctx.beginPath();
-            if (ctx.roundRect) ctx.roundRect(-bw/2, labelY - bh, bw, bh, 5);
-            else ctx.rect(-bw/2, labelY - bh, bw, bh);
-            ctx.fill();
-            ctx.stroke();
-            
-            // Pointer
-            ctx.beginPath();
-            ctx.moveTo(-5, labelY); ctx.lineTo(5, labelY); ctx.lineTo(0, labelY + 8); ctx.closePath();
+            if (ctx.roundRect) ctx.roundRect(-bw/2, labelY - bh, bw, bh, 5); else ctx.rect(-bw/2, labelY - bh, bw, bh);
             ctx.fill(); ctx.stroke();
-
-            // Text
-            ctx.fillStyle = '#000';
-            ctx.font = 'bold 12px "Noto Sans KR"';
-            ctx.textAlign = 'center';
+            ctx.beginPath(); ctx.moveTo(-5, labelY); ctx.lineTo(5, labelY); ctx.lineTo(0, labelY + 8); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#000'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
             ctx.fillText(this.skillLabel, 0, labelY - 7);
             ctx.restore();
         }
 
         ctx.restore();
+        
+        // Stage 10/50: Status VFX on Player (Global)
+        if (player.silenceTimer > 0 || player.slowTimer > 0) {
+            ctx.save();
+            ctx.translate(player.x - camera.x, player.y - camera.y);
+            if (player.silenceTimer > 0) {
+                ctx.fillStyle = 'rgba(155, 89, 182, 0.3)';
+                ctx.beginPath(); ctx.arc(0, 0, player.radius * 1.5, 0, Math.PI*2); ctx.fill();
+            }
+            if (player.slowTimer > 0) {
+                ctx.strokeStyle = 'rgba(52, 73, 94, 0.8)'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(0, 0, player.radius * 1.8, 0, Math.PI*2); ctx.stroke();
+            }
+            ctx.restore();
+        }
     }
     takeDamage(amount) {
         if(this.hp <= 0) return;
