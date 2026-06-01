@@ -4597,7 +4597,7 @@ class Enemy {
                 this.gimmickTimer = 10; this.setSkillLabel(currentLang === 'ko' ? "죄의 사슬!" : "CHAINS!"); let angle = Math.atan2(dy, dx);
                 for(let i=-1; i<=1; i++) { let a = angle + i * 0.3; enemyProjectiles.push(pool.get(EnemyProjectile, this.x, this.y, Math.cos(a)*300, Math.sin(a)*300, 15, '#34495e', true)); }
             }
-            if (this.imgKey === 'boss_15' && this.hp < this.maxHp * 0.8 && this.shieldHp <= 0 && this.gimmickState !== 'shielded') {
+            if (this.imgKey === 'boss_15' && this.hp < this.maxHp * 0.5 && this.shieldHp <= 0 && this.gimmickState !== 'shielded') {
                 this.shieldHp = this.maxHp * 0.3; this.gimmickState = 'shielded'; this.setSkillLabel(currentLang === 'ko' ? "만장일치의 결계!" : "SHIELD!");
                 for(let i=0; i<3; i++) { let mx = this.x + (Math.random()-0.5)*200; let my = this.y + (Math.random()-0.5)*200; enemies.push(pool.get(Enemy, mx, my, 'mob')); }
             }
