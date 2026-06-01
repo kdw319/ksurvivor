@@ -994,14 +994,14 @@ window.showArtTooltip = function(artId, event) {
 window.moveArtTooltip = function(event) {
     const tooltip = document.getElementById('artTooltip');
     if (!tooltip || tooltip.style.display === 'none') return;
-    
+
     let x = event.clientX + 15;
     let y = event.clientY + 15;
-    
-    // Boundary check
-    if (x + 280 > window.innerWidth) x = event.clientX - 295;
-    if (y + 200 > window.innerHeight) y = event.innerHeight - 210;
-    
+
+    // Dynamic Boundary check
+    if (x + tooltip.offsetWidth > window.innerWidth) x = event.clientX - tooltip.offsetWidth - 15;
+    if (y + tooltip.offsetHeight > window.innerHeight) y = event.clientY - tooltip.offsetHeight - 15;
+
     tooltip.style.left = x + 'px';
     tooltip.style.top = y + 'px';
 };
@@ -3233,16 +3233,43 @@ function triggerLevelUp() {
     }
 
     choices.forEach(id => {
-        let wData = getWeaponSettings(id); let existing = player.weapons.find(w => w.id === id); let nextLv = existing ? existing.level + 1 : 1; let isPremium = GameSettings.specialWeapons[id] !== undefined;
+        let wData = getWeaponSettings(id); 
+        let existing = player.weapons.find(w => w.id === id); 
+        let nextLv = existing ? existing.level + 1 : 1; 
+        let isPremium = GameSettings.specialWeapons[id] !== undefined;
+        
+        let canAwaken = (existing && existing.level >= 4 && !existing.isAwakened);
+        
         let statTextHTML = '';
-        if(wData.statBonus && wData.statBonus.type !== 'none') {
+        if(canAwaken) {
+            statTextHTML = `<div style="color:#f1c40f; font-weight:bold; margin-top:10px; font-size:1.1rem; text-shadow: 0 0 10px #f1c40f;">✨ AWAKENING AVAILABLE ✨</div>`;
+        } else if(wData.statBonus && wData.statBonus.type !== 'none') {
             let label = wData.statBonus.label;
             let sign = wData.statBonus.value > 0 ? '+' : ''; let valPercent = Math.round(wData.statBonus.value * 100);
             statTextHTML = `<div style="color:#2ed573; font-weight:bold; margin-top:10px; font-size:0.9rem;">${label} ${sign}${valPercent}%</div>`;
         }
-        let card = document.createElement('div'); card.className = `choice-card ${isPremium ? 'premium' : ''}`;
-        card.innerHTML = `<div class="choice-icon">${wData.icon}</div><div class="choice-title" style="${isPremium ? 'color:#ff9ff3;' : ''}">${wData.name} <br><span style="color:#2ed573">Lv.${nextLv}</span></div><div class="choice-desc">${wData.desc}</div>${statTextHTML}`;
-        card.onclick = () => { giveWeapon(id); let ui = document.getElementById('levelUpUI'); if(ui) ui.classList.add('hidden'); lastTime = performance.now(); window.gameState = 'playing'; };
+        
+        let card = document.createElement('div'); 
+        card.className = `choice-card ${canAwaken ? 'premium' : (isPremium ? 'premium' : '')}`;
+        if (canAwaken) card.style.borderColor = '#f1c40f';
+        
+        card.innerHTML = `
+            <div class="choice-icon">${wData.icon}</div>
+            <div class="choice-title" style="${(canAwaken || isPremium) ? 'color:#ff9ff3;' : ''}">${canAwaken ? "[AWAKEN]" : wData.name} <br><span style="color:#2ed573">${canAwaken ? "ULTIMATE" : "Lv." + nextLv}</span></div>
+            <div class="choice-desc">${canAwaken ? (currentLang === 'ko' ? "초월적인 힘을 해방합니다!" : "Unleash ultimate power!") : wData.desc}</div>
+            ${statTextHTML}
+        `;
+        card.onclick = () => { 
+            if (canAwaken) {
+                existing.awaken();
+            } else {
+                giveWeapon(id); 
+            }
+            let ui = document.getElementById('levelUpUI'); 
+            if(ui) ui.classList.add('hidden'); 
+            lastTime = performance.now(); 
+            window.gameState = 'playing'; 
+        };
         choicesBox.appendChild(card);
     });
     let ui = document.getElementById('levelUpUI'); if(ui) ui.classList.remove('hidden');
@@ -3944,7 +3971,16 @@ class MeleeEffect {
 }
 
 class Weapon { 
-    constructor(id) { this.id = id; this.level = 1; this.timer = 0; this.settings = getWeaponSettings(id); } 
+    constructor(id) { 
+        this.id = id; this.level = 1; this.timer = 0; this.settings = getWeaponSettings(id); 
+        this.isAwakened = false;
+    } 
+    awaken() {
+        this.isAwakened = true;
+        if(window.playSFX) playSFX('jackpot');
+        if(window.showSystemNotice) showSystemNotice(currentLang === 'ko' ? `각성: ${this.settings.name[currentLang]}` : `AWAKENED: ${this.settings.name[currentLang]}`);
+        hitStopTimer = 0.5; screenShake = 20;
+    }
 }
 
 class ProjectileWeapon extends Weapon {
@@ -3955,12 +3991,22 @@ class ProjectileWeapon extends Weapon {
             let target = findNearestEnemy();
             if(target) {
                 player.playAnim('throw');
-                let dx = target.x - player.x; let dy = target.y - player.y; let dist = Math.sqrt(dx*dx + dy*dy);
-                let vx = (dx/dist) * this.settings.speed; let vy = (dy/dist) * this.settings.speed;
+                let dx = target.x - player.x; let dy = target.y - player.y; let dist = Math.max(1, Math.sqrt(dx*dx + dy*dy));
+                let vx = (dx/dist) * (this.isAwakened ? this.settings.speed * 1.5 : this.settings.speed);
+                let vy = (dy/dist) * (this.isAwakened ? this.settings.speed * 1.5 : this.settings.speed);
                 let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier();
-                let piercing = (this.id === 'compass' || this.id === 'magicMic' || this.id === 'laserPointer' || this.id === 'backpack'); 
+                if (this.isAwakened) finalDamage *= 3.0;
+                
+                let piercing = this.isAwakened || (this.id === 'compass' || this.id === 'magicMic' || this.id === 'laserPointer' || this.id === 'backpack'); 
                 let count = (this.id === 'magicMic' || this.id === 'backpack') ? 1 : Math.min(3, this.level);
-                for(let i=0; i<count; i++) { setTimeout(() => { projectiles.push(new Projectile(player.x, player.y, vx, vy, finalDamage, this.id, this.settings.color, piercing, this.level)); playSFX('shoot'); }, i * 100); }
+                for(let i=0; i<count; i++) { 
+                    setTimeout(() => { 
+                        let p = new Projectile(player.x, player.y, vx, vy, finalDamage, this.id, this.isAwakened ? '#f1c40f' : this.settings.color, piercing, this.level);
+                        p.isAwakened = this.isAwakened;
+                        projectiles.push(p); 
+                        playSFX('shoot'); 
+                    }, i * 100); 
+                }
             }
         }
     }
@@ -4311,6 +4357,9 @@ class Enemy {
             this.subType = 'melee'; this.hp = (type==='midboss'?500:3000) * hpMul; this.speed = type==='midboss'?110:70; this.damage = (type==='midboss'?15:30) * dmgMul; this.color = type==='midboss'?'#e1b12c':'#c23616'; this.exp = type==='midboss'?20:100;
         }
                 this.maxHp = this.hp; this.hitTimer = 0;
+        this.shieldHp = 0; this.gimmickTimer = 0; this.gimmickState = 'idle';
+        this.skillLabel = ''; this.skillLabelTimer = 0;
+
         this.imgKey = '';
         if (this.type === 'boss') {
             const milestones = [10, 20, 30, 40, 50, 60, 70, 75, 80, 90, 95, 100];
@@ -4331,8 +4380,28 @@ class Enemy {
             else this.imgKey = (Math.random() < 0.5) ? 'mob_juror' : 'mob_gavel';
         }
     }
+    setSkillLabel(txt) { this.skillLabel = txt; this.skillLabelTimer = 2.0; }
     update(dt) {
+        if(this.skillLabelTimer > 0) this.skillLabelTimer -= dt;
+        if(this.gimmickTimer > 0) this.gimmickTimer -= dt;
+        
         let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy; 
+
+        // --- Milestone Boss Gimmicks ---
+        if (this.type === 'boss' || this.type === 'midboss') {
+            // Stage 15: Shield of Consensus (Trigger at 80% HP)
+            if (this.imgKey === 'boss_15' && this.hp < this.maxHp * 0.8 && this.shieldHp <= 0 && this.gimmickState !== 'shielded') {
+                this.shieldHp = this.maxHp * 0.3;
+                this.gimmickState = 'shielded';
+                this.setSkillLabel(currentLang === 'ko' ? "만장일치의 결계!" : "SHIELD!");
+                if (window.playSFX) playSFX('bossSkill');
+                for(let i=0; i<3; i++) {
+                    let mx = this.x + (Math.random()-0.5)*200;
+                    let my = this.y + (Math.random()-0.5)*200;
+                    enemies.push(new Enemy(mx, my, 'mob'));
+                }
+            }
+        }
         if (this.subType === 'melee') { if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } } 
         else if (this.subType === 'ranged') {
             if(distSq > this.range*this.range) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
@@ -4358,11 +4427,42 @@ class Enemy {
         if(this.type === 'boss' || this.type === 'midboss') { 
             ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(-this.radius, -this.radius*2.2, this.radius*2, 6);
             ctx.fillStyle = '#ff4757'; ctx.fillRect(-this.radius, -this.radius*2.2, this.radius*2 * (this.hp/this.maxHp), 6); 
+
+            // Gimmick: Shield Rendering
+            if (this.shieldHp > 0) {
+                ctx.save();
+                ctx.strokeStyle = '#00d2ff'; ctx.lineWidth = 4;
+                ctx.shadowBlur = 10; ctx.shadowColor = '#00d2ff';
+                ctx.beginPath(); ctx.arc(0, 0, this.radius * 1.5, 0, Math.PI*2); ctx.stroke();
+                ctx.restore();
+            }
+
+            // Gimmick: Skill Label
+            if (this.skillLabelTimer > 0) {
+                ctx.save();
+                ctx.font = "bold 16px 'Noto Sans KR'"; ctx.textAlign = "center";
+                ctx.fillStyle = "#fff"; ctx.shadowBlur = 5; ctx.shadowColor = "#000";
+                ctx.fillText(this.skillLabel, 0, -this.radius * 2.5);
+                ctx.restore();
+            }
         }
         ctx.restore();
     }
     takeDamage(amount) {
-        if(this.hp <= 0) return; this.hp -= amount; playSFX('hit'); 
+        if(this.hp <= 0) return; 
+
+        // Gimmick: Shield absorption
+        if (this.shieldHp > 0) {
+            this.shieldHp -= amount;
+            if (this.shieldHp <= 0) {
+                this.shieldHp = 0;
+                this.gimmickState = 'normal';
+                if (window.playSFX) playSFX('shieldBreak');
+            }
+            amount = 0; // Shield absorbs everything for now
+        }
+
+        this.hp -= amount; playSFX('hit'); 
         
         let existingText = damageTexts.find(d => !d.isPlayer && Math.abs(d.x - this.x) < 30 && Math.abs(d.y - (this.y - this.radius)) < 30 && d.life > 0.2);
         if (existingText) {
@@ -5137,7 +5237,7 @@ window.updateVerdictUI = function() {
     }
 };
 
-setInterval(() => { if (window.updateVerdictUI) window.updateVerdictUI(); }, 100);
+setInterval(() => { if (window.updateVerdictUI && document.getElementById('vo-container')) window.updateVerdictUI(); }, 100);
 </script>
 </body>
 </html>
