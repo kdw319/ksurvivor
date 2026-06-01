@@ -997,9 +997,9 @@ window.moveArtTooltip = function(event) {
     let x = event.clientX + 15;
     let y = event.clientY + 15;
     
-    // Boundary check
-    if (x + 280 > window.innerWidth) x = event.clientX - 295;
-    if (y + 200 > window.innerHeight) y = event.innerHeight - 210;
+    // Dynamic Boundary check
+    if (x + tooltip.offsetWidth > window.innerWidth) x = event.clientX - tooltip.offsetWidth - 15;
+    if (y + tooltip.offsetHeight > window.innerHeight) y = event.clientY - tooltip.offsetHeight - 15;
     
     tooltip.style.left = x + 'px';
     tooltip.style.top = y + 'px';
@@ -3245,15 +3245,8 @@ function triggerLevelUp() {
         let isPremium = GameSettings.specialWeapons[id] !== undefined;
         
         let canAwaken = false;
-        if (existing && existing.level >= 5 && !existing.isAwakened) {
-            // Check specific synergies for awakening
-            const inv = window.verdictInventory;
-            const counts = { red: 0, yellow: 0, green: 0 };
-            inv.forEach(i => counts[i]++);
-
-            if (id === 'chalk' && counts.red === 3) canAwaken = true;
-            if (id === 'eraser' && counts.yellow === 3) canAwaken = true;
-            if (id === 'smartPhone' && counts.green === 3) canAwaken = true;
+        if (existing && existing.level >= 4 && !existing.isAwakened) {
+            canAwaken = true;
         }
 
         let statTextHTML = '';
@@ -3299,21 +3292,181 @@ function triggerLevelUp() {
 function openGacha() { updateLobbyCurrency(); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('gachaUI'); if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden'); }
 function closeGacha() { let ui = document.getElementById('gachaUI'); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); if (ui) ui.classList.add('hidden'); if (title) title.classList.remove('hidden'); if (bbar) bbar.classList.remove('hidden'); }
 
+// --- Gacha & Awakening Integration ---
+let currentGachaTab = 'weapon';
+
+function switchGachaTab(tab) {
+    currentGachaTab = tab;
+    document.getElementById('weaponTabBtn').style.background = tab === 'weapon' ? '#ff4757' : '#2f3542';
+    document.getElementById('artifactTabBtn').style.background = tab === 'artifact' ? '#ff4757' : '#2f3542';
+    document.getElementById('gachaDesc').innerHTML = tab === 'weapon' 
+        ? (currentLang === 'ko' ? "특수 무기를 해금하여 필드에 추가합니다." : "Unlock special weapons for the field.")
+        : (currentLang === 'ko' ? "강력한 아티팩트를 소환합니다." : "Summon powerful artifacts.");
+}
+
 function rollGacha() {
     initAudio(); const lang = I18N[currentLang];
-    if(playerBadges < GameSettings.economy.gachaCost) { let disp = document.getElementById('gachaBadgeDisp'); if(disp) disp.innerText = lang.gachaNoBadge; setTimeout(updateLobbyCurrency, 1500); return; }
-    playerBadges -= GameSettings.economy.gachaCost; updateLobbyCurrency(); playSFX('gacha');
+    if(playerBadges < GameSettings.economy.gachaCost) { 
+        let disp = document.getElementById('gachaBadgeDisp'); 
+        if(disp) disp.innerText = lang.gachaNoBadge; 
+        setTimeout(updateLobbyCurrency, 1500); 
+        return; 
+    }
     
-    let pool = Object.keys(GameSettings.specialWeapons); let resultId = pool[Math.floor(Math.random() * pool.length)]; let wData = GameSettings.specialWeapons[resultId];
-    let titleEl = document.getElementById('gachaResultTitle'); let msgEl = document.getElementById('gachaResultMsg');
+    playerBadges -= GameSettings.economy.gachaCost; 
+    updateLobbyCurrency(); 
+    playSFX('gacha');
+
+    // Gacha Animation Direction
+    const gachaBox = document.getElementById('gachaUI');
+    const resultBox = document.getElementById('gachaResultUI');
     
-    if(!unlockedWeapons.includes(resultId)) { unlockedWeapons.push(resultId); if(titleEl) titleEl.innerText = lang.gachaResTitleNew; if(msgEl) msgEl.innerText = lang.gachaResMsgNew; } 
-    else { playerBadges += 5; statsTracking.totalBadges += 5; updateLobbyCurrency(); if(titleEl) titleEl.innerText = lang.gachaResTitleDup; if(msgEl) msgEl.innerText = lang.gachaResMsgDup; }
+    // Create Flashy Backdrop
+    let overlay = document.createElement('div');
+    overlay.id = 'gachaOverlay';
+    overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; align-items:center; justify-content:center; flex-direction:column;";
+    overlay.innerHTML = `
+        <div id="gachaAnimation" style="width:220px; height:320px; background:#1a1a1a; border:4px solid #f1c40f; border-radius:15px; box-shadow: 0 0 50px #f1c40f; display:flex; align-items:center; justify-content:center; font-size:80px; transform: scale(0);">?</div>
+        <div style="color:#f1c40f; font-weight:bold; margin-top:20px; font-size:1.5rem; text-shadow:0 0 10px #f1c40f;">SUMMONING...</div>
+    `;
+    document.body.appendChild(overlay);
+
+    anime({
+        targets: '#gachaAnimation',
+        scale: [0, 1.2, 1],
+        rotateY: '720deg',
+        duration: 1500,
+        easing: 'easeOutElastic(1, .8)',
+        complete: () => {
+            setTimeout(() => {
+                document.body.removeChild(overlay);
+                resultBox.classList.remove('hidden');
+                
+                if (currentGachaTab === 'weapon') {
+                    rollWeaponGacha();
+                } else {
+                    rollArtifactGacha();
+                }
+            }, 500);
+        }
+    });
+}
+
+function rollWeaponGacha() {
+    const lang = I18N[currentLang];
+    let pool = Object.keys(GameSettings.specialWeapons); 
+    let resultId = pool[Math.floor(Math.random() * pool.length)]; 
+    let wData = GameSettings.specialWeapons[resultId];
+    let titleEl = document.getElementById('gachaResultTitle'); 
+    let msgEl = document.getElementById('gachaResultMsg');
     
+    if(!unlockedWeapons.includes(resultId)) { 
+        unlockedWeapons.push(resultId); 
+        if(titleEl) titleEl.innerText = lang.gachaResTitleNew; 
+        if(msgEl) msgEl.innerText = lang.gachaResMsgNew; 
+    } else { 
+        playerBadges += 5; 
+        if(titleEl) titleEl.innerText = lang.gachaResTitleDup; 
+        if(msgEl) msgEl.innerText = lang.gachaResMsgDup; 
+    }
+    
+    updateLobbyCurrency();
     checkAchievements();
     
-    let card = document.getElementById('gachaResultCard'); if(card) { card.innerHTML = `<div class="choice-icon" style="font-size: 60px;">${wData.icon}</div><div class="choice-title" style="color:#ff9ff3; font-size:1.5rem;">${wData.name}</div><div class="choice-desc">${wData.desc}</div>`; }
-    let ui = document.getElementById('gachaResultUI'); if(ui) ui.classList.remove('hidden');
+    let card = document.getElementById('gachaResultCard'); 
+    if(card) { 
+        card.innerHTML = `<div class="choice-icon" style="font-size: 60px;">${wData.icon}</div><div class="choice-title" style="color:#ff9ff3; font-size:1.5rem;">${wData.name}</div><div class="choice-desc">${wData.desc}</div><div style="color:#f1c40f; font-weight:bold; margin-top:10px;">[EQUIPMENT]</div>`; 
+    }
+}
+
+function rollArtifactGacha() {
+    const lang = I18N[currentLang];
+    const keys = Object.keys(window.ARTIFACT_DATA);
+    const resultId = keys[Math.floor(Math.random() * keys.length)];
+    const art = window.ARTIFACT_DATA[resultId];
+    let titleEl = document.getElementById('gachaResultTitle'); 
+    let msgEl = document.getElementById('gachaResultMsg');
+    
+    if (!window.ownedArtifacts.includes(resultId)) {
+        window.ownedArtifacts.push(resultId);
+        if(titleEl) titleEl.innerText = lang.art_get;
+        if(msgEl) msgEl.innerText = lang.art_new;
+    } else {
+        playerBadges += 5; 
+        if(titleEl) titleEl.innerText = lang.gachaResTitleDup; 
+        if(msgEl) msgEl.innerText = lang.gachaResMsgDup; 
+    }
+    
+    updateLobbyCurrency();
+    
+    let card = document.getElementById('gachaResultCard'); 
+    if(card) { 
+        card.innerHTML = `<div class="choice-icon" style="font-size: 60px;">${art.icon}</div><div class="choice-title" style="color:#f1c40f; font-size:1.5rem;">${art.name[currentLang] || art.name}</div><div class="choice-desc">${art.desc[currentLang] || art.desc}</div><div style="color:#9b59b6; font-weight:bold; margin-top:10px;">[ARTIFACT]</div>`; 
+    }
+}
+
+// --- Specific Awakened Behaviors for Gacha Weapons ---
+class TriangleWeapon extends Weapon {
+    update(dt) {
+        this.timer -= dt;
+        if(this.timer <= 0) {
+            this.timer = (this.settings.cooldown * (1 - this.level*0.1)) * player.stats.cooldownMult;
+            let target = findNearestEnemy();
+            if(target) {
+                let dx = target.x - player.x; let dy = target.y - player.y; let dist = Math.hypot(dx, dy);
+                let vx = (dx/dist) * this.settings.speed; let vy = (dy/dist) * this.settings.speed;
+                let dmg = (this.settings.damage * this.level) * player.getDamageMultiplier();
+                if (this.isAwakened) dmg *= 4.0;
+                
+                let p = pool.get(Projectile, player.x, player.y, vx, vy, dmg, 'triangle', this.isAwakened ? '#e74c3c' : this.settings.color, true, this.level);
+                p.isAwakened = this.isAwakened;
+                projectiles.push(p);
+                playSFX('shoot');
+            }
+        }
+    }
+}
+
+class LunchboxWeapon extends Weapon {
+    update(dt) {
+        this.timer -= dt;
+        if(this.timer <= 0) {
+            this.timer = (this.settings.cooldown * (1 - this.level*0.1)) * player.stats.cooldownMult;
+            let target = findNearestEnemy();
+            if(target) {
+                let finalDmg = (this.settings.damage * this.level) * player.getDamageMultiplier();
+                if (this.isAwakened) {
+                    finalDmg *= 3.0;
+                    player.hp = Math.min(player.maxHp, player.hp + 5);
+                    updateHUD();
+                }
+                projectiles.push(pool.get(AreaExplosion, target.x, target.y, this.isAwakened ? 300 : 150, finalDmg, this.settings.color));
+            }
+        }
+    }
+}
+
+class CompassWeapon extends Weapon {
+    update(dt) {
+        this.timer -= dt;
+        if(this.timer <= 0) {
+            this.timer = (this.settings.cooldown * (1 - this.level*0.1)) * player.stats.cooldownMult;
+            let aimAngle = Math.atan2(player.aimY, player.aimX);
+            let count = this.isAwakened ? 8 : Math.min(4, this.level);
+            let dmg = (this.settings.damage * this.level) * player.getDamageMultiplier();
+            if (this.isAwakened) dmg *= 2.5;
+
+            for(let i=0; i<count; i++) {
+                let ang = aimAngle + (Math.PI*2 / count) * i;
+                let vx = Math.cos(ang) * this.settings.speed;
+                let vy = Math.sin(ang) * this.settings.speed;
+                let p = pool.get(Projectile, player.x, player.y, vx, vy, dmg, 'compass', this.isAwakened ? '#3498db' : this.settings.color, true, this.level);
+                p.isAwakened = this.isAwakened;
+                projectiles.push(p);
+            }
+            playSFX('shoot');
+        }
+    }
 }
 
 function openUpgrade() { updateLobbyCurrency(); let title = document.getElementById('lobbyTitle'); let bbar = document.getElementById('lobbyBottomBar'); let ui = document.getElementById('upgradeUI'); if (title) title.classList.add('hidden'); if (bbar) bbar.classList.add('hidden'); if (ui) ui.classList.remove('hidden'); renderUpgradeList(); }
@@ -5485,7 +5638,7 @@ window.updateVerdictUI = function() {
     }
 };
 
-setInterval(() => { if (window.updateVerdictUI) window.updateVerdictUI(); }, 100);
+setInterval(() => { if (window.updateVerdictUI && document.getElementById('vo-container')) window.updateVerdictUI(); }, 100);
 </script>
 </body>
 </html>
