@@ -1461,6 +1461,8 @@ window.I18N = {
         gachaTitle: "특수 무기 픽업", gachaOwnedText: "보유 뱃지: ", gachaUnitText: "개", gachaDesc: "다양한 특수 무기를 해금하여<br>레벨업 풀에 추가합니다. (해금 무기는 등장 확률 1.5배!)", gachaRollBtn: "1회 뽑기 (10 뱃지)", gachaCloseBtn: "닫기", gachaResCloseBtn: "확인", gachaNoBadge: "뱃지가 부족합니다!",
         gachaResTitleNew: "🎉 신규 무기 해금! 🎉", gachaResMsgNew: "이제 인게임 레벨업 시 등장합니다.", gachaResTitleDup: "중복 무기 획득", gachaResMsgDup: "중복 보상으로 뱃지 5개가 환급되었습니다.",
         saveTitle: "데이터 센터", saveDesc: "메타 프로그레션(재화, 해금 무기, 영구 스탯)을 보존합니다.", saveCloseBtn: "닫기", saveEmpty: "빈 데이터 슬롯", saveBadges: "보유 뱃지: ", saveWeapons: "해금 무기: ", saveBtn: "저장", loadBtn: "로드", delBtn: "삭제", saveUnit: "개", saveType: "종",
+        saveNamePrompt: "데이터의 이름을 입력하세요.",
+        saveDefaultName: "이름 없는 데이터",
         warnOverwrite: "이미 데이터가 존재합니다. 저장 시 기존 데이터는 복구할 수 없습니다. 계속하시겠습니까?",
         warnDelete: "해당 슬롯의 데이터를 삭제하시겠습니까?",
         noticeDelete: "데이터 삭제 완료",
@@ -1516,6 +1518,8 @@ window.I18N = {
         gachaTitle: "Special Weapon Pickup", gachaOwnedText: "Owned Badges: ", gachaUnitText: "", gachaDesc: "Unlock special weapons and add them to the level-up pool. (Unlocked weapons have 1.5x appearance rate!)", gachaRollBtn: "1 Roll (10 Badges)", gachaCloseBtn: "Close", gachaResCloseBtn: "Confirm", gachaNoBadge: "Not enough badges!",
         gachaResTitleNew: "🎉 New Weapon Unlocked! 🎉", gachaResMsgNew: "Will now appear in the level-up pool.", gachaResTitleDup: "Duplicate Weapon", gachaResMsgDup: "5 badges have been refunded for duplicate.",
         saveTitle: "Data Center", saveDesc: "Safely preserve meta-progression (currency, weapons, stats).", saveCloseBtn: "Close", saveEmpty: "Empty Data Slot", saveBadges: "Badges: ", saveWeapons: "Unlocked Weapons: ", saveBtn: "Save", loadBtn: "Load", delBtn: "DELETE", saveUnit: "", saveType: "",
+        saveNamePrompt: "Enter a name for this data.",
+        saveDefaultName: "Untitled Data",
         warnOverwrite: "Data already exists. Saving will overwrite it, and it cannot be recovered. Continue?",
         warnDelete: "Are you sure you want to delete this data?",
         noticeDelete: "Data Deleted",
@@ -2535,7 +2539,7 @@ function getWeaponSettings(id) {
 function giveWeapon(id) {
     let existing = player.weapons.find(w => w.id === id);
     if(existing) {
-        existing.level++;
+        if(existing.level < 4) existing.level++;
     } 
     else if(['recorder', 'tablet'].includes(id)) {
         player.weapons.push(new RecorderWeapon(id));
@@ -3229,8 +3233,14 @@ function triggerLevelUp() {
     let choicesBox = document.getElementById('choicesBox'); if(!choicesBox) return; choicesBox.innerHTML = '';
     
     let pool = [];
-    Object.keys(GameSettings.weapons).forEach(k => pool.push({id: k, weight: 1.0}));
-    unlockedWeapons.forEach(k => pool.push({id: k, weight: 1.5}));
+    Object.keys(GameSettings.weapons).forEach(k => {
+        let w = player.weapons.find(wp => wp.id === k);
+        if (!w || w.level < 5) pool.push({id: k, weight: 1.0});
+    });
+    unlockedWeapons.forEach(k => {
+        let w = player.weapons.find(wp => wp.id === k);
+        if (!w || w.level < 5) pool.push({id: k, weight: 1.5});
+    });
     
     let choices = []; 
     while(choices.length < 3 && pool.length > 0) { 
@@ -3241,10 +3251,11 @@ function triggerLevelUp() {
     choices.forEach(id => {
         let wData = getWeaponSettings(id); 
         let existing = player.weapons.find(w => w.id === id); 
-        let nextLv = existing ? existing.level + 1 : 1; 
-        let isPremium = GameSettings.specialWeapons[id] !== undefined;
         
-        let canAwaken = (existing && existing.level >= 4 && !existing.isAwakened);
+        // Awakening happens when moving from Lv.4 to Lv.5
+        let canAwaken = (existing && existing.level === 4 && !existing.isAwakened);
+        let nextLv = existing ? (canAwaken ? 5 : existing.level + 1) : 1;
+        let isPremium = GameSettings.specialWeapons[id] !== undefined;
         
         let statTextHTML = '';
         if(canAwaken) {
@@ -3347,11 +3358,12 @@ window.renderSaveSlots = function() {
         let data = null;
         try { data = rawData ? JSON.parse(rawData) : null; } catch(e) { data = null; }
         
-        let isEmpty = !data || !data.timestamp; 
+        let isEmpty = !data || !data.timestamp;
+        let displayName = isEmpty ? `SLOT ${i+1}` : (data.slotName || `SLOT ${i+1}`);
         let infoText = isEmpty ? `<span style="color:#666">${lang.saveEmpty}</span>` : `${lang.saveBadges}<span style="color:#ffb142;font-weight:bold">${data.playerBadges}${lang.saveUnit}</span> | ${lang.saveWeapons}${data.unlockedWeapons.length}${lang.saveType}<br><span style="font-size:12px;color:#888;">${new Date(data.timestamp).toLocaleString()}</span>`; 
         
         let delBtnHtml = !isEmpty ? `<button class="btn" style="background:#ff4757; color:#fff; padding: 8px 15px;" onclick="window.deleteSlot(${i})">${lang.delBtn || (window.currentLang === 'ko' ? '삭제' : 'DELETE')}</button>` : '';
-        slotList.innerHTML += `<div class="slot-item"><div style="font-weight:bold; color:#00d2d3; font-size:18px; width:70px;">SLOT ${i+1}</div><div class="slot-info" style="flex:1; padding:0 20px;">${infoText}</div><div class="slot-actions">${delBtnHtml}<button class="btn" style="background:#0984e3; color:#fff;" onclick="window.saveToSlot(${i})">${lang.saveBtn}</button><button class="btn primary" onclick="window.loadFromSlot(${i})">${lang.loadBtn}</button></div></div>`; 
+        slotList.innerHTML += `<div class="slot-item"><div style="font-weight:bold; color:#00d2d3; font-size:16px; width:120px; word-break:break-all;">${displayName}</div><div class="slot-info" style="flex:1; padding:0 20px;">${infoText}</div><div class="slot-actions">${delBtnHtml}<button class="btn" style="background:#0984e3; color:#fff;" onclick="window.saveToSlot(${i})">${lang.saveBtn}</button><button class="btn primary" onclick="window.loadFromSlot(${i})">${lang.loadBtn}</button></div></div>`; 
     }
 };
 
@@ -3360,8 +3372,13 @@ window.saveToSlot = function(i) {
     let existing = StorageAPI.getItem('op_save_slot_' + i);
     
     const performSave = () => {
+        let customName = window.prompt(lang.saveNamePrompt, lang.saveDefaultName);
+        if (customName === null) return; // Cancelled
+        if (customName.trim() === "") customName = lang.saveDefaultName;
+
         initAudio(); playSFX('levelup'); 
         let saveData = { 
+            slotName: customName,
             playerBadges: playerBadges, 
             unlockedWeapons: [...unlockedWeapons], 
             permanentStats: {...permanentStats}, 
@@ -3376,7 +3393,7 @@ window.saveToSlot = function(i) {
         };
         StorageAPI.setItem('op_save_slot_' + i, JSON.stringify(saveData));
         window.renderSaveSlots();
-        showSystemNotice(`[SLOT ${i+1}] ${lang.noticeSave}`);
+        showSystemNotice(`[${customName}] ${lang.noticeSave}`);
     };
 
     if (existing) {
@@ -3983,6 +4000,7 @@ class Weapon {
     } 
     awaken() {
         this.isAwakened = true;
+        this.level = 5;
         if(window.playSFX) playSFX('jackpot');
         const awkName = currentLang === 'ko' ? (this.settings.awakenNameKo || this.settings.name) : (this.settings.awakenNameEn || this.settings.name);
         if(window.showSystemNotice) showSystemNotice(currentLang === 'ko' ? `각성: ${awkName}` : `AWAKENED: ${awkName}`);
@@ -4025,7 +4043,12 @@ class RecorderWeapon extends Weapon {
         if(this.timer <= 0) {
             this.timer = (this.settings.cooldown * Math.max(0.4, (1 - this.level*0.1))) * player.stats.cooldownMult;
             player.playAnim('swing');
-            let hitAny = false; let currentRange = this.settings.range * (1 + this.level*0.2); let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier();
+            let hitAny = false; 
+            let currentRange = this.settings.range * (1 + this.level*0.2); 
+            if (this.isAwakened) currentRange *= 1.5;
+            
+            let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier();
+            if (this.isAwakened) finalDamage *= 3.0;
             
             let aimAngle = Math.atan2(player.aimY, player.aimX);
             
@@ -4040,7 +4063,7 @@ class RecorderWeapon extends Weapon {
             });
             
             if(hitAny) playSFX('hit');
-            projectiles.push(new MeleeEffect(player.x, player.y, aimAngle, currentRange, this.settings.color, this.level));
+            projectiles.push(new MeleeEffect(player.x, player.y, aimAngle, currentRange, this.isAwakened ? '#f1c40f' : this.settings.color, this.level));
             
             if(player.activeSynergies.musicMath && this.id === 'recorder') { 
                 let angles = [aimAngle - 0.2, aimAngle, aimAngle + 0.2]; let cSpd = GameSettings.weapons.compass.speed; 
@@ -4057,8 +4080,12 @@ class OrbitWeapon extends Weapon {
         if(this.timer <= 0) { 
             this.timer = this.settings.cooldown; 
             let rMultiplier = (this.id === 'studentID' && player.activeSynergies.digitalDefense) ? 1.5 : 1.0;
+            if (this.isAwakened) rMultiplier *= 1.5;
+            
             let radius = this.settings.radius * (1 + this.level*0.1) * rMultiplier; 
             let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier(); 
+            if (this.isAwakened) finalDamage *= 3.0;
+
             enemies.forEach(e => { 
                 let dx=e.x-player.x; let dy=e.y-player.y; 
                 if(dx*dx+dy*dy < radius*radius) { 
@@ -4074,12 +4101,25 @@ class OrbitWeapon extends Weapon {
     }
     draw(ctx) {
         let rMultiplier = (this.id === 'studentID' && player.activeSynergies.digitalDefense) ? 1.5 : 1.0;
+        if (this.isAwakened) rMultiplier *= 1.5;
         let radius = this.settings.radius * (1 + this.level*0.1) * rMultiplier; 
-        let count = Math.min(5, 1 + this.level);
+        let count = Math.min(8, 1 + this.level + (this.isAwakened ? 3 : 0));
         if(isOffScreen(player.x, player.y, radius*2)) return;
-        if(this.level >= 3 || rMultiplier > 1.0) { ctx.save(); ctx.translate((player.x - camera.x)|0, (player.y - camera.y)|0); ctx.rotate(this.angle * 0.5); ctx.strokeStyle = rMultiplier > 1.0 ? 'rgba(0, 210, 211, 0.4)' : 'rgba(212, 175, 55, 0.3)'; ctx.lineWidth = rMultiplier > 1.0 ? 4 : 2; ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.stroke(); ctx.restore(); }
-        let bScale = (1 + (this.level * 0.1)) * (rMultiplier > 1.0 ? 1.2 : 1.0); 
-        for(let i=0; i<count; i++) { let a = this.angle + (Math.PI*2 / count) * i; let bx = player.x - camera.x + Math.cos(a) * radius; let by = player.y - camera.y + Math.sin(a) * radius; ctx.save(); ctx.translate(bx|0, by|0); ctx.rotate(a + Math.PI/2); ctx.scale(bScale, bScale); ctx.fillStyle = this.settings.color; ctx.fillRect(-8, -12, 16, 24); ctx.fillStyle = '#fff'; ctx.fillRect(-6, -10, 12, 20); ctx.restore(); }
+        if(this.level >= 3 || rMultiplier > 1.0 || this.isAwakened) { 
+            ctx.save(); ctx.translate((player.x - camera.x)|0, (player.y - camera.y)|0); ctx.rotate(this.angle * 0.5); 
+            ctx.strokeStyle = this.isAwakened ? 'rgba(241, 196, 15, 0.6)' : (rMultiplier > 1.0 ? 'rgba(0, 210, 211, 0.4)' : 'rgba(212, 175, 55, 0.3)'); 
+            ctx.lineWidth = this.isAwakened ? 6 : (rMultiplier > 1.0 ? 4 : 2); 
+            ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI*2); ctx.stroke(); ctx.restore(); 
+        }
+        let bScale = (1 + (this.level * 0.1)) * (rMultiplier > 1.0 ? 1.2 : 1.0) * (this.isAwakened ? 1.5 : 1.0); 
+        for(let i=0; i<count; i++) { 
+            let a = this.angle + (Math.PI*2 / count) * i; 
+            let bx = player.x - camera.x + Math.cos(a) * radius; 
+            let by = player.y - camera.y + Math.sin(a) * radius; 
+            ctx.save(); ctx.translate(bx|0, by|0); ctx.rotate(a + Math.PI/2); ctx.scale(bScale, bScale); 
+            ctx.fillStyle = this.isAwakened ? '#f1c40f' : this.settings.color; 
+            ctx.fillRect(-8, -12, 16, 24); ctx.fillStyle = '#fff'; ctx.fillRect(-6, -10, 12, 20); ctx.restore(); 
+        }
     }
 }
 
@@ -4089,8 +4129,13 @@ class SmartPhoneWeapon extends Weapon {
         if(this.timer <= 0) {
             this.timer = (this.settings.cooldown * Math.max(0.4, (1 - this.level*0.1))) * player.stats.cooldownMult;
             player.playAnim('cast');
-            let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier(); let radius = this.settings.radius * (1 + this.level*0.2);
-            projectiles.push(new AreaExplosion(player.x, player.y, radius, finalDamage, this.settings.color));
+            let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier(); 
+            if (this.isAwakened) finalDamage *= 3.0;
+            
+            let radius = this.settings.radius * (1 + this.level*0.2);
+            if (this.isAwakened) radius *= 1.5;
+            
+            projectiles.push(new AreaExplosion(player.x, player.y, radius, finalDamage, this.isAwakened ? '#f1c40f' : this.settings.color));
             
             if(player.activeSynergies.cyberWarrior) {
                 let lSpd = GameSettings.specialWeapons.laserPointer.speed;
