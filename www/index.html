@@ -1415,24 +1415,24 @@ const GameSettings = {
         { id: 'map5', nameKo: "Stage 100: 최후의 심판", nameEn: "Stage 100: The Final Verdict" }
     ],
     weapons: {
-        chalk: { name: "분필", icon: "✏️", desc: "가장 가까운 적에게 투사체를 던집니다.", damage: 20, cooldown: 1.0, speed: 400, color: '#fff', statBonus: { type: 'damageMult', value: 0.05, label: '공격력' } },
-        textbook: { name: "교과서", icon: "📘", desc: "주변을 맴도는 마법의 교과서.", damage: 8, cooldown: 0.1, radius: 90, color: '#8b4513', statBonus: { type: 'cooldownMult', value: -0.05, label: '쿨타임' } },
-        recorder: { name: "리코더", icon: "🎵", desc: "전방을 향해 넓게 휘두릅니다.", damage: 35, cooldown: 1.2, range: 120, color: '#d4af37', statBonus: { type: 'damageMult', value: 0.10, label: '공격력' } },
-        compass: { name: "컴퍼스", icon: "📐", desc: "적을 관통하는 컴퍼스를 투척합니다.", damage: 25, cooldown: 2.0, speed: 250, color: '#a0a0a0', statBonus: { type: 'speedMult', value: 0.05, label: '이동속도' } },
-        gymClothes: { name: "체육복", icon: "👕", desc: "최대 체력이 증가하고 서서히 회복합니다.", maxHpBonus: 20, healTick: 5.0, healAmount: 2, statBonus: { type: 'none', value: 0, label: '' } },
-        eraser: { name: "지우개", icon: "🧽", desc: "주변의 적들을 지워버리듯 밀쳐내며 타격합니다.", damage: 25, cooldown: 1.5, radius: 100, color: '#f5f6fa', statBonus: { type: 'cooldownMult', value: -0.05, label: '쿨타임' } },
-        triangle: { name: "삼각자", icon: "📐", desc: "날카로운 삼각자가 날아가 적을 찌릅니다.", damage: 30, cooldown: 1.2, speed: 450, color: '#badc58', statBonus: { type: 'damageMult', value: 0.05, label: '공격력' } },
-        lunchbox: { name: "도시락", icon: "🍱", desc: "맛있는 도시락 폭탄을 던져 광역 피해를 줍니다.", damage: 50, cooldown: 2.5, speed: 300, color: '#ffbe76', statBonus: { type: 'atkSpdMult', value: 0.05, label: '공격속도' } }
+        chalk: { name: "분필", icon: "✏️", desc: "가장 가까운 적에게 투사체를 던집니다.", damage: 20, cooldown: 1.0, speed: 400, color: '#fff', statBonus: { type: 'damageMult', value: 0.05, label: '공격력' }, awakenNameKo: "분필 세례", awakenNameEn: "Chalk Barrage" },
+        textbook: { name: "교과서", icon: "📘", desc: "주변을 맴도는 마법의 교과서.", damage: 8, cooldown: 0.1, radius: 90, color: '#8b4513', statBonus: { type: 'cooldownMult', value: -0.05, label: '쿨타임' }, awakenNameKo: "지혜의 경전", awakenNameEn: "Scripture of Wisdom" },
+        recorder: { name: "리코더", icon: "🎵", desc: "전방을 향해 넓게 휘두릅니다.", damage: 35, cooldown: 1.2, range: 120, color: '#d4af37', statBonus: { type: 'damageMult', value: 0.10, label: '공격력' }, awakenNameKo: "천상의 선율", awakenNameEn: "Celestial Melody" },
+        compass: { name: "컴퍼스", icon: "📐", desc: "적을 관통하는 컴퍼스를 투척합니다.", damage: 25, cooldown: 2.0, speed: 250, color: '#a0a0a0', statBonus: { type: 'speedMult', value: 0.05, label: '이동속도' }, awakenNameKo: "진실의 이정표", awakenNameEn: "Milestone of Truth" },
+        gymClothes: { name: "체육복", icon: "👕", desc: "최대 체력이 증가하고 서서히 회복합니다.", maxHpBonus: 20, healTick: 5.0, healAmount: 2, statBonus: { type: 'none', value: 0, label: '' }, awakenNameKo: "땀 흘리는 열정", awakenNameEn: "Sweating Passion" },
+        eraser: { name: "지우개", icon: "🧽", desc: "주변의 적들을 지워버리듯 밀쳐내며 타격합니다.", damage: 25, cooldown: 1.5, radius: 100, color: '#f5f6fa', statBonus: { type: 'cooldownMult', value: -0.05, label: '쿨타임' }, awakenNameKo: "망각의 심판", awakenNameEn: "Judgment of Oblivion" },
+        triangle: { name: "삼각자", icon: "📐", desc: "날카로운 삼각자가 날아가 적을 찌릅니다.", damage: 30, cooldown: 1.2, speed: 450, color: '#badc58', statBonus: { type: 'damageMult', value: 0.05, label: '공격력' }, awakenNameKo: "날카로운 통찰", awakenNameEn: "Sharp Insight" },
+        lunchbox: { name: "도시락", icon: "🍱", desc: "맛있는 도시락 폭탄을 던져 광역 피해를 줍니다.", damage: 50, cooldown: 2.5, speed: 300, color: '#ffbe76', statBonus: { type: 'atkSpdMult', value: 0.05, label: '공격속도' }, awakenNameKo: "만찬의 폭발", awakenNameEn: "Feast Explosion" }
     },
     specialWeapons: {
-        magicMic: { name: "마이크", icon: "🎤", desc: "강력한 음파로 적들을 관통합니다.", damage: 45, cooldown: 1.5, speed: 350, color: '#ff9ff3', statBonus: { type: 'damageMult', value: 0.1, label: '공격력' } },
-        smartPhone: { name: "스마트폰", icon: "📱", desc: "주변에 플래시 폭발을 일으킵니다.", damage: 60, cooldown: 3.0, radius: 150, color: '#feca57', statBonus: { type: 'cooldownMult', value: -0.1, label: '쿨타임' } },
-        laserPointer: { name: "레이저 포인터", icon: "🔦", desc: "빛의 속도로 적을 관통합니다.", damage: 30, cooldown: 0.8, speed: 800, color: '#ff7979', statBonus: { type: 'damageMult', value: 0.05, label: '공격력' } },
-        energyDrink: { name: "에너지 드링크", icon: "🥫", desc: "주변에 강력한 에너지를 분출합니다.", damage: 80, cooldown: 4.0, radius: 180, color: '#badc58', statBonus: { type: 'speedMult', value: 0.1, label: '이동속도' } },
-        studentID: { name: "학생증", icon: "🪪", desc: "플레이어 주변을 넓게 방어합니다.", damage: 15, cooldown: 0.1, radius: 130, color: '#c7ecee', statBonus: { type: 'none', value: 0, label: '' } },
-        backpack: { name: "책가방", icon: "🎒", desc: "거대한 가방을 던져 압살합니다.", damage: 150, cooldown: 3.5, speed: 150, color: '#ffbe76', statBonus: { type: 'damageMult', value: 0.15, label: '공격력' } },
-        tablet: { name: "태블릿", icon: "📱", desc: "넓은 반경을 데이터 파동으로 타격합니다.", damage: 40, cooldown: 1.5, range: 160, color: '#e056fd', statBonus: { type: 'cooldownMult', value: -0.05, label: '쿨타임' } },
-        gamingMouse: { name: "게이밍 마우스", icon: "🖱️", desc: "광클의 힘으로 공격 속도가 대폭 상승합니다.", damage: 10, cooldown: 1.0, speed: 0, color: '#333', statBonus: { type: 'atkSpdMult', value: 0.1, label: '공격속도' } }
+        magicMic: { name: "마이크", icon: "🎤", desc: "강력한 음파로 적들을 관통합니다.", damage: 45, cooldown: 1.5, speed: 350, color: '#ff9ff3', statBonus: { type: 'damageMult', value: 0.1, label: '공격력' }, awakenNameKo: "울려퍼지는 진실", awakenNameEn: "Resonating Truth" },
+        smartPhone: { name: "스마트폰", icon: "📱", desc: "주변에 플래시 폭발을 일으킵니다.", damage: 60, cooldown: 3.0, radius: 150, color: '#feca57', statBonus: { type: 'cooldownMult', value: -0.1, label: '쿨타임' }, awakenNameKo: "섬광의 기록", awakenNameEn: "Record of Flash" },
+        laserPointer: { name: "레이저 포인터", icon: "🔦", desc: "빛의 속도로 적을 관통합니다.", damage: 30, cooldown: 0.8, speed: 800, color: '#ff7979', statBonus: { type: 'damageMult', value: 0.05, label: '공격력' }, awakenNameKo: "심판의 광선", awakenNameEn: "Ray of Judgment" },
+        energyDrink: { name: "에너지 드링크", icon: "🥫", desc: "주변에 강력한 에너지를 분출합니다.", damage: 80, cooldown: 4.0, radius: 180, color: '#badc58', statBonus: { type: 'speedMult', value: 0.1, label: '이동속도' }, awakenNameKo: "심연의 활력", awakenNameEn: "Vitality of the Abyss" },
+        studentID: { name: "학생증", icon: "🪪", desc: "플레이어 주변을 넓게 방어합니다.", damage: 15, cooldown: 0.1, radius: 130, color: '#c7ecee', statBonus: { type: 'none', value: 0, label: '' }, awakenNameKo: "권위의 증명", awakenNameEn: "Proof of Authority" },
+        backpack: { name: "책가방", icon: "🎒", desc: "거대한 가방을 던져 압살합니다.", damage: 150, cooldown: 3.5, speed: 150, color: '#ffbe76', statBonus: { type: 'damageMult', value: 0.15, label: '공격력' }, awakenNameKo: "무게중심의 압박", awakenNameEn: "Pressure of Gravity" },
+        tablet: { name: "태블릿", icon: "📱", desc: "넓은 반경을 데이터 파동으로 타격합니다.", damage: 40, cooldown: 1.5, range: 160, color: '#e056fd', statBonus: { type: 'cooldownMult', value: -0.05, label: '쿨타임' }, awakenNameKo: "데이터의 지배자", awakenNameEn: "Master of Data" },
+        gamingMouse: { name: "게이밍 마우스", icon: "🖱️", desc: "광클의 힘으로 공격 속도가 대폭 상승합니다.", damage: 10, cooldown: 1.0, speed: 0, color: '#333', statBonus: { type: 'atkSpdMult', value: 0.1, label: '공격속도' }, awakenNameKo: "신속의 클리커", awakenNameEn: "Rapid Clicker" }
     },
     synergies: {
         studyManiac: { id: 'studyManiac', name: "🔥 학구열 (분필+교과서)", enName: "🔥 Academic Passion (Chalk+Textbook)", icon: "🔥", req: ['chalk', 'textbook'], desc: "분필이 적에게 적중 시 폭발합니다." },
@@ -2335,17 +2335,17 @@ function playSFX(type) {
             const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
             o.connect(g); g.connect(masterGainNode);
             o.type = 'sine'; o.frequency.setValueAtTime(freq, now + i * 0.08);
-            g.gain.setValueAtTime(0.2, now + i * 0.08);
+            g.gain.setValueAtTime(0.1, now + i * 0.08);
             g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.5);
             o.start(now + i * 0.08); o.stop(now + i * 0.08 + 0.5);
         });
     }
     else if(type === 'verdictUse') {
-        // 마법 스킬 사용음 (빠른 주파수 상승과 잔향 느낌) - Volume Boosted
+        // 마법 스킬 사용음 (Volume Adjusted)
         osc.type = 'sine'; 
         osc.frequency.setValueAtTime(400 * pitch, now); 
         osc.frequency.exponentialRampToValueAtTime(1200 * pitch, now + 0.3);
-        gain.gain.setValueAtTime(0.8, now); 
+        gain.gain.setValueAtTime(0.4, now); 
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); 
         osc.start(now); osc.stop(now + 0.3);
 
@@ -2355,48 +2355,37 @@ function playSFX(type) {
         osc2.type = 'triangle'; 
         osc2.frequency.setValueAtTime(800 * pitch, now + 0.1); 
         osc2.frequency.exponentialRampToValueAtTime(2000 * pitch, now + 0.4);
-        gain2.gain.setValueAtTime(0.5, now + 0.1); 
+        gain2.gain.setValueAtTime(0.25, now + 0.1); 
         gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.4); 
         osc2.start(now + 0.1); osc2.stop(now + 0.4);
     }
     else if(type === 'verdictJackpot') {
-        // 잭팟: 웅장한 아르페지오 (C 메이저 코드) - Volume Boosted
-        osc.type = 'square'; 
-        osc.frequency.setValueAtTime(523.25, now); // C5
-        osc.frequency.setValueAtTime(659.25, now + 0.15); // E5
-        osc.frequency.setValueAtTime(783.99, now + 0.3); // G5
-        osc.frequency.setValueAtTime(1046.50, now + 0.45); // C6
-        gain.gain.setValueAtTime(0.6, now); 
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2); 
-        osc.start(now); osc.stop(now + 1.2);
-
-        const osc2 = audioCtx.createOscillator(); 
-        const gain2 = audioCtx.createGain();
-        osc2.connect(gain2); gain2.connect(masterGainNode);
-        osc2.type = 'sine'; 
-        osc2.frequency.setValueAtTime(1046.50, now); 
-        osc2.frequency.setValueAtTime(1318.51, now + 0.15); 
-        osc2.frequency.setValueAtTime(2093.00, now + 0.3); 
-        gain2.gain.setValueAtTime(0.6, now); 
-        gain2.gain.exponentialRampToValueAtTime(0.01, now + 1.5); 
-        osc2.start(now); osc2.stop(now + 1.5);
+        // 잭팟: 청아한 C 메이저 아르페지오 (Sine waves, Rounded tone)
+        [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.connect(g); g.connect(masterGainNode);
+            o.type = 'sine'; o.frequency.setValueAtTime(f, now + i * 0.1);
+            g.gain.setValueAtTime(0.3, now + i * 0.1);
+            g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 1.0);
+            o.start(now + i * 0.1); o.stop(now + i * 0.1 + 1.0);
+        });
     }
     else if(type === 'verdictPair') {
-        // 원페어: 청아한 차임벨 - Volume Boosted
+        // 원페어: 청아한 차임벨 (Sine wave)
         osc.type = 'sine'; 
-        osc.frequency.setValueAtTime(880, now); // A5
-        osc.frequency.setValueAtTime(1108.73, now + 0.1); // C#6
-        gain.gain.setValueAtTime(0.7, now); 
+        osc.frequency.setValueAtTime(880, now); 
+        osc.frequency.setValueAtTime(1108.73, now + 0.1); 
+        gain.gain.setValueAtTime(0.35, now); 
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6); 
         osc.start(now); osc.stop(now + 0.6);
     }
     else if(type === 'verdictStraight') {
-        // 스트레이트: 신비로운 하행음 - Volume Boosted
-        osc.type = 'triangle'; 
-        osc.frequency.setValueAtTime(1318.51, now); // E6
-        osc.frequency.setValueAtTime(1046.50, now + 0.1); // C6
-        osc.frequency.setValueAtTime(880, now + 0.2); // A5
-        gain.gain.setValueAtTime(0.6, now); 
+        // 스트레이트: 부드러운 하행음 (Sine wave)
+        osc.type = 'sine'; 
+        osc.frequency.setValueAtTime(1318.51, now); 
+        osc.frequency.setValueAtTime(1046.50, now + 0.1); 
+        osc.frequency.setValueAtTime(880, now + 0.2); 
+        gain.gain.setValueAtTime(0.3, now); 
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8); 
         osc.start(now); osc.stop(now + 0.8);
     }
@@ -3134,6 +3123,8 @@ function togglePause() {
 function returnToLobby() {
     if (window.gameState === 'gameover') currentStage = 1; else if (window.gameState === 'clear') currentStage++; 
     window.gameState = 'lobby'; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
+    window.artCooldowns = [0, 0, 0];
+    if(window.updateSkillSlotsUI) window.updateSkillSlotsUI();
     ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
     let orbPocketUI = document.getElementById('orbPocketUI');
     if (orbPocketUI && player && player.marblePocket) {
@@ -3993,7 +3984,8 @@ class Weapon {
     awaken() {
         this.isAwakened = true;
         if(window.playSFX) playSFX('jackpot');
-        if(window.showSystemNotice) showSystemNotice(currentLang === 'ko' ? `각성: ${this.settings.name[currentLang]}` : `AWAKENED: ${this.settings.name[currentLang]}`);
+        const awkName = currentLang === 'ko' ? (this.settings.awakenNameKo || this.settings.name) : (this.settings.awakenNameEn || this.settings.name);
+        if(window.showSystemNotice) showSystemNotice(currentLang === 'ko' ? `각성: ${awkName}` : `AWAKENED: ${awkName}`);
         hitStopTimer = 0.5; screenShake = 20;
     }
 }
@@ -4404,6 +4396,29 @@ class Enemy {
 
         // --- Milestone Boss Gimmicks ---
         if (this.type === 'boss' || this.type === 'midboss') {
+            // Stage 5: Rush Pattern
+            if (this.imgKey === 'boss_5' && this.gimmickTimer <= 0) {
+                if (this.gimmickState === 'idle' || !this.gimmickState) {
+                    this.gimmickState = 'charging'; this.gimmickTimer = 1.0;
+                    this.setSkillLabel(currentLang === 'ko' ? "잡으러 간다!" : "I'm coming!");
+                } else if (this.gimmickState === 'charging') {
+                    this.gimmickState = 'rushing'; this.gimmickTimer = 1.5;
+                } else {
+                    this.gimmickState = 'idle'; this.gimmickTimer = 3.0;
+                }
+            }
+
+            // Stage 10: Gavel Slam
+            if (this.imgKey === 'boss_10' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 4.0;
+                this.setSkillLabel(currentLang === 'ko' ? "정숙히 하세요!" : "SILENCE!");
+                if (window.playSFX) playSFX('bossSkill');
+                for(let i=0; i<8; i++) {
+                    let ang = (Math.PI*2/8) * i;
+                    projectiles.push(new Projectile(this.x, this.y, Math.cos(ang)*250, Math.sin(ang)*250, this.damage*1.5, 'gavel', '#c23616', true, 1));
+                }
+            }
+
             // Stage 15: Shield of Consensus (Trigger at 80% HP)
             if (this.imgKey === 'boss_15' && this.hp < this.maxHp * 0.8 && this.shieldHp <= 0 && this.gimmickState !== 'shielded') {
                 this.shieldHp = this.maxHp * 0.3;
@@ -4416,8 +4431,35 @@ class Enemy {
                     enemies.push(new Enemy(mx, my, 'mob'));
                 }
             }
+
+            // Stage 20: Evidence Chain
+            if (this.imgKey === 'boss_20' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 6.0;
+                this.setSkillLabel(currentLang === 'ko' ? "증거 인멸 시도!" : "Destroy Evidence!");
+                for(let i=0; i<5; i++) {
+                    setTimeout(() => {
+                        let tx = player.x + (Math.random()-0.5)*100;
+                        let ty = player.y + (Math.random()-0.5)*100;
+                        groundTraps.push(new EnemyTrap(tx, ty, 50, this.damage*0.8, '#ff4757'));
+                    }, i * 400);
+                }
+            }
+
+            // Generic Boss Taunts
+            if (this.gimmickTimer <= 0) {
+                this.gimmickTimer = 5.0 + Math.random() * 5.0;
+                const taunts = currentLang === 'ko' ? ["각오해라!", "도망칠 수 없다!", "심판을 받아라!", "크오오오!"] : ["Prepare yourself!", "No escape!", "Accept your verdict!", "ROAAAR!"];
+                this.setSkillLabel(taunts[Math.floor(Math.random() * taunts.length)]);
+            }
         }
-        if (this.subType === 'melee') { if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } } 
+
+        if (this.gimmickState === 'rushing') {
+            let speedMul = 3.0;
+            if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * speedMul * dt; this.y += (dy/dist) * this.speed * speedMul * dt; }
+            if (Math.random() < 0.3) particles.push(new Particle(this.x, this.y, this.color));
+        } else if (this.subType === 'melee') { 
+            if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
+        } 
         else if (this.subType === 'ranged') {
             if(distSq > this.range*this.range) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
             else { this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; let dist = Math.sqrt(distSq); enemyProjectiles.push(new EnemyProjectile(this.x, this.y, (dx/dist)*200, (dy/dist)*200, this.damage, this.color)); playSFX('shoot'); } }
@@ -4455,9 +4497,38 @@ class Enemy {
             // Gimmick: Skill Label
             if (this.skillLabelTimer > 0) {
                 ctx.save();
-                ctx.font = "bold 16px 'Noto Sans KR'"; ctx.textAlign = "center";
-                ctx.fillStyle = "#fff"; ctx.shadowBlur = 5; ctx.shadowColor = "#000";
-                ctx.fillText(this.skillLabel, 0, -this.radius * 2.5);
+                ctx.font = "bold 16px 'Noto Sans KR'"; 
+                const textWidth = ctx.measureText(this.skillLabel).width;
+                const padding = 12;
+                const bubbleW = textWidth + padding * 2;
+                const bubbleH = 30;
+                const bx = -bubbleW / 2;
+                const by = -this.radius * 3.5;
+
+                // Speech Bubble Background (Rounded Rect)
+                ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(bx, by, bubbleW, bubbleH, 8);
+                ctx.fill();
+                ctx.stroke();
+
+                // Bubble tail
+                ctx.beginPath();
+                ctx.moveTo(-10, by + bubbleH);
+                ctx.lineTo(0, by + bubbleH + 10);
+                ctx.lineTo(10, by + bubbleH);
+                ctx.fill();
+                ctx.stroke();
+
+                // Text with Glow
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = "#fff";
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = "#ff4757";
+                ctx.fillText(this.skillLabel, 0, by + bubbleH / 2);
                 ctx.restore();
             }
         }
