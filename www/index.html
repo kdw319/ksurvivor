@@ -4361,7 +4361,26 @@ class Enemy {
             let data = GameSettings.enemyTypes[type];
             this.subType = data.subType; this.hp = data.hpBase * hpMul; this.speed = data.speed + Math.random() * 20; this.damage = data.damage * dmgMul; this.color = data.color; this.exp = data.exp; this.range = data.range || 0; this.cooldown = data.cooldown || 0; this.attackTimer = Math.random() * this.cooldown; 
         } else {
-            this.subType = 'melee'; this.hp = (type==='midboss'?500:3000) * hpMul; this.speed = type==='midboss'?110:70; this.damage = (type==='midboss'?15:30) * dmgMul; this.color = type==='midboss'?'#e1b12c':'#c23616'; this.exp = type==='midboss'?20:100;
+            // Boss / Midboss
+            this.hp = (type === 'midboss' ? 500 : 3000) * hpMul; 
+            this.speed = type === 'midboss' ? 110 : 70; 
+            this.damage = (type === 'midboss' ? 15 : 30) * dmgMul; 
+            this.color = type === 'midboss' ? '#e1b12c' : '#c23616'; 
+            this.exp = type === 'midboss' ? 20 : 100;
+
+            this.range = 350;
+            this.cooldown = 2.5;
+            this.attackTimer = 1.0;
+
+            const milestones = [5, 10, 15, 20, 30, 40, 50, 60, 70, 75, 80, 90, 95, 100];
+            if (milestones.includes(currentStage)) {
+                this.subType = 'melee';
+            } else {
+                let rand = Math.random();
+                if (rand < 0.4) this.subType = 'melee';
+                else if (rand < 0.7) this.subType = 'ranged';
+                else this.subType = 'trap';
+            }
         }
                 this.maxHp = this.hp; this.hitTimer = 0;
         this.shieldHp = 0; this.gimmickTimer = 0; this.gimmickState = 'idle';
@@ -4445,6 +4464,38 @@ class Enemy {
                 }
             }
 
+            // Stage 30: Cross Verdict
+            if (this.imgKey === 'boss_30' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 5.0;
+                this.setSkillLabel(currentLang === 'ko' ? "최종 변론 준비!" : "Final Argument!");
+                if (window.playSFX) playSFX('bossSkill');
+                for(let i=0; i<12; i++) {
+                    let ang = (Math.PI*2/12) * i;
+                    projectiles.push(new Projectile(this.x, this.y, Math.cos(ang)*300, Math.sin(ang)*300, this.damage*2, 'gavel', '#f1c40f', true, 1));
+                }
+            }
+
+            // Stage 40: Evidence Overload
+            if (this.imgKey === 'boss_40' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 7.0;
+                this.setSkillLabel(currentLang === 'ko' ? "쏟아지는 증거물!" : "Evidence Overload!");
+                for(let i=0; i<8; i++) {
+                    let ang = (Math.PI*2/8) * i;
+                    let tx = player.x + Math.cos(ang) * 150;
+                    let ty = player.y + Math.sin(ang) * 150;
+                    groundTraps.push(new EnemyTrap(tx, ty, 70, this.damage, '#ff4757'));
+                }
+            }
+
+            // Stage 50: Supreme Gavel
+            if (this.imgKey === 'boss_50' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 8.0;
+                this.setSkillLabel(currentLang === 'ko' ? "최종 판결 집행!" : "Supreme Verdict!");
+                if (window.playSFX) playSFX('bossSkill');
+                let dx = player.x - this.x; let dy = player.y - this.y; let dist = Math.max(1, Math.sqrt(dx*dx + dy*dy));
+                projectiles.push(new Projectile(this.x, this.y, (dx/dist)*150, (dy/dist)*150, this.damage*5, 'gavel', '#e74c3c', true, 1));
+            }
+
             // Generic Boss Taunts
             if (this.gimmickTimer <= 0) {
                 this.gimmickTimer = 5.0 + Math.random() * 5.0;
@@ -4457,6 +4508,25 @@ class Enemy {
             let speedMul = 3.0;
             if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * speedMul * dt; this.y += (dy/dist) * this.speed * speedMul * dt; }
             if (Math.random() < 0.3) particles.push(new Particle(this.x, this.y, this.color));
+        } else if (this.subType === 'ranged') {
+            if(distSq > this.range*this.range) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
+            else { 
+                this.attackTimer -= dt; 
+                if(this.attackTimer <= 0) { 
+                    this.attackTimer = this.cooldown; 
+                    if(this.type === 'boss' || this.type === 'midboss') this.setSkillLabel(currentLang === 'ko' ? "원거리 사격!" : "Ranged Shot!");
+                    let dist = Math.sqrt(distSq); enemyProjectiles.push(new EnemyProjectile(this.x, this.y, (dx/dist)*200, (dy/dist)*200, this.damage, this.color)); 
+                    playSFX('shoot'); 
+                } 
+            }
+        } else if (this.subType === 'trap') {
+            if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; }
+            this.attackTimer -= dt; 
+            if(this.attackTimer <= 0) { 
+                this.attackTimer = this.cooldown; 
+                if(this.type === 'boss' || this.type === 'midboss') this.setSkillLabel(currentLang === 'ko' ? "함정 설치!" : "Set Trap!");
+                groundTraps.push(new EnemyTrap(this.x, this.y, 60, this.damage, this.color)); 
+            }
         } else if (this.subType === 'melee') { 
             if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
         } 
