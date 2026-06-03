@@ -1461,6 +1461,7 @@ window.I18N = {
         gachaTitle: "특수 무기 픽업", gachaOwnedText: "보유 뱃지: ", gachaUnitText: "개", gachaDesc: "다양한 특수 무기를 해금하여<br>레벨업 풀에 추가합니다. (해금 무기는 등장 확률 1.5배!)", gachaRollBtn: "1회 뽑기 (10 뱃지)", gachaCloseBtn: "닫기", gachaResCloseBtn: "확인", gachaNoBadge: "뱃지가 부족합니다!",
         gachaResTitleNew: "🎉 신규 무기 해금! 🎉", gachaResMsgNew: "이제 인게임 레벨업 시 등장합니다.", gachaResTitleDup: "중복 무기 획득", gachaResMsgDup: "중복 보상으로 뱃지 5개가 환급되었습니다.",
         saveTitle: "데이터 센터", saveDesc: "메타 프로그레션(재화, 해금 무기, 영구 스탯)을 보존합니다.", saveCloseBtn: "닫기", saveEmpty: "빈 데이터 슬롯", saveBadges: "보유 뱃지: ", saveWeapons: "해금 무기: ", saveBtn: "저장", loadBtn: "로드", delBtn: "삭제", saveUnit: "개", saveType: "종",
+        renameBtn: "이름 변경",
         saveNamePrompt: "데이터의 이름을 입력하세요.",
         saveDefaultName: "이름 없는 데이터",
         warnOverwrite: "이미 데이터가 존재합니다. 저장 시 기존 데이터는 복구할 수 없습니다. 계속하시겠습니까?",
@@ -1518,6 +1519,7 @@ window.I18N = {
         gachaTitle: "Special Weapon Pickup", gachaOwnedText: "Owned Badges: ", gachaUnitText: "", gachaDesc: "Unlock special weapons and add them to the level-up pool. (Unlocked weapons have 1.5x appearance rate!)", gachaRollBtn: "1 Roll (10 Badges)", gachaCloseBtn: "Close", gachaResCloseBtn: "Confirm", gachaNoBadge: "Not enough badges!",
         gachaResTitleNew: "🎉 New Weapon Unlocked! 🎉", gachaResMsgNew: "Will now appear in the level-up pool.", gachaResTitleDup: "Duplicate Weapon", gachaResMsgDup: "5 badges have been refunded for duplicate.",
         saveTitle: "Data Center", saveDesc: "Safely preserve meta-progression (currency, weapons, stats).", saveCloseBtn: "Close", saveEmpty: "Empty Data Slot", saveBadges: "Badges: ", saveWeapons: "Unlocked Weapons: ", saveBtn: "Save", loadBtn: "Load", delBtn: "DELETE", saveUnit: "", saveType: "",
+        renameBtn: "Rename",
         saveNamePrompt: "Enter a name for this data.",
         saveDefaultName: "Untitled Data",
         warnOverwrite: "Data already exists. Saving will overwrite it, and it cannot be recovered. Continue?",
@@ -3363,22 +3365,36 @@ window.renderSaveSlots = function() {
         let infoText = isEmpty ? `<span style="color:#666">${lang.saveEmpty}</span>` : `${lang.saveBadges}<span style="color:#ffb142;font-weight:bold">${data.playerBadges}${lang.saveUnit}</span> | ${lang.saveWeapons}${data.unlockedWeapons.length}${lang.saveType}<br><span style="font-size:12px;color:#888;">${new Date(data.timestamp).toLocaleString()}</span>`; 
         
         let delBtnHtml = !isEmpty ? `<button class="btn" style="background:#ff4757; color:#fff; padding: 8px 15px;" onclick="window.deleteSlot(${i})">${lang.delBtn || (window.currentLang === 'ko' ? '삭제' : 'DELETE')}</button>` : '';
-        slotList.innerHTML += `<div class="slot-item"><div style="font-weight:bold; color:#00d2d3; font-size:16px; width:120px; word-break:break-all;">${displayName}</div><div class="slot-info" style="flex:1; padding:0 20px;">${infoText}</div><div class="slot-actions">${delBtnHtml}<button class="btn" style="background:#0984e3; color:#fff;" onclick="window.saveToSlot(${i})">${lang.saveBtn}</button><button class="btn primary" onclick="window.loadFromSlot(${i})">${lang.loadBtn}</button></div></div>`; 
+        let renameBtnHtml = !isEmpty ? `<button class="btn" style="background:#8e44ad; color:#fff; padding: 8px 15px;" onclick="window.renameSlot(${i})">${lang.renameBtn || 'Rename'}</button>` : '';
+        
+        slotList.innerHTML += `
+            <div class="slot-item">
+                <div style="display:flex; flex-direction:column; width:130px; align-items:flex-start; gap:5px;">
+                    <div style="font-weight:bold; color:#00d2d3; font-size:16px; word-break:break-all; line-height:1.2;">${displayName}</div>
+                    ${renameBtnHtml}
+                </div>
+                <div class="slot-info" style="flex:1; padding:0 20px;">${infoText}</div>
+                <div class="slot-actions" style="display:flex; flex-direction:column; gap:5px;">
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn" style="background:#0984e3; color:#fff; flex:1;" onclick="window.saveToSlot(${i})">${lang.saveBtn}</button>
+                        <button class="btn primary" style="flex:1;" onclick="window.loadFromSlot(${i})">${lang.loadBtn}</button>
+                    </div>
+                    ${delBtnHtml}
+                </div>
+            </div>`; 
     }
 };
 
 window.saveToSlot = function(i) {
     const lang = window.I18N[window.currentLang];
-    let existing = StorageAPI.getItem('op_save_slot_' + i);
+    let rawExisting = StorageAPI.getItem('op_save_slot_' + i);
+    let existingData = null;
+    try { existingData = rawExisting ? JSON.parse(rawExisting) : null; } catch(e) {}
     
     const performSave = () => {
-        let customName = window.prompt(lang.saveNamePrompt, lang.saveDefaultName);
-        if (customName === null) return; // Cancelled
-        if (customName.trim() === "") customName = lang.saveDefaultName;
-
         initAudio(); playSFX('levelup'); 
         let saveData = { 
-            slotName: customName,
+            slotName: (existingData && existingData.slotName) ? existingData.slotName : lang.saveDefaultName,
             playerBadges: playerBadges, 
             unlockedWeapons: [...unlockedWeapons], 
             permanentStats: {...permanentStats}, 
@@ -3393,13 +3409,29 @@ window.saveToSlot = function(i) {
         };
         StorageAPI.setItem('op_save_slot_' + i, JSON.stringify(saveData));
         window.renderSaveSlots();
-        showSystemNotice(`[${customName}] ${lang.noticeSave}`);
+        showSystemNotice(`[${saveData.slotName}] ${lang.noticeSave}`);
     };
 
-    if (existing) {
+    if (rawExisting) {
         window.showConfirm(lang.warnOverwrite, performSave);
     } else {
         performSave();
+    }
+};
+
+window.renameSlot = function(i) {
+    const lang = window.I18N[window.currentLang];
+    let rawData = StorageAPI.getItem('op_save_slot_' + i);
+    if (!rawData) return;
+    
+    let data = JSON.parse(rawData);
+    let newName = window.prompt(lang.saveNamePrompt, data.slotName || lang.saveDefaultName);
+    
+    if (newName !== null && newName.trim() !== "") {
+        data.slotName = newName.trim();
+        StorageAPI.setItem('op_save_slot_' + i, JSON.stringify(data));
+        window.renderSaveSlots();
+        showSystemNotice(lang.noticeRename || "Slot Renamed");
     }
 };
 
