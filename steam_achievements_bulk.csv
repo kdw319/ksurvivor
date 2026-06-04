@@ -1,31 +1,31 @@
-API Name,Display Name,Description,Hidden,Type,Icon
-NEW_ACHIEVEMENT_KILLS_100,"첫 피의 세례","적 100마리 처치",0,stat,www/assets/achievements/ach_icon_1.png
-NEW_ACHIEVEMENT_KILLS_500,"학살의 시작","적 500마리 처치",0,stat,www/assets/achievements/ach_icon_2.png
-NEW_ACHIEVEMENT_KILLS_1000,"심판관","적 1,000마리 처치",0,stat,www/assets/achievements/ach_icon_3.png
-NEW_ACHIEVEMENT_KILLS_5000,"무자비한 변론","적 5,000마리 처치",0,stat,www/assets/achievements/ach_icon_4.png
-NEW_ACHIEVEMENT_KILLS_10000,"전설의 사신","적 10,000마리 처치",0,stat,www/assets/achievements/ach_icon_5.png
-NEW_ACHIEVEMENT_STAGE_5,"생존 전문가 I","스테이지 5 도달",0,stat,www/assets/achievements/ach_icon_6.png
-NEW_ACHIEVEMENT_STAGE_10,"생존 전문가 II","스테이지 10 도달",0,stat,www/assets/achievements/ach_icon_7.png
-NEW_ACHIEVEMENT_STAGE_20,"생존 전문가 III","스테이지 20 도달",0,stat,www/assets/achievements/ach_icon_8.png
-NEW_ACHIEVEMENT_STAGE_30,"마스터 서바이버","스테이지 30 도달",0,stat,www/assets/achievements/ach_icon_9.png
-NEW_ACHIEVEMENT_STAGE_50,"불멸의 학생","스테이지 50 도달",0,stat,www/assets/achievements/ach_icon_10.png
-NEW_ACHIEVEMENT_BADGES_1000,"매점 VIP","누적 뱃지 1,000개 획득",0,stat,www/assets/achievements/ach_icon_11.png
-NEW_ACHIEVEMENT_BADGES_5000,"자산가","누적 뱃지 5,000개 획득",0,stat,www/assets/achievements/ach_icon_12.png
-NEW_ACHIEVEMENT_BADGES_10000,"백만장자","누적 뱃지 10,000개 획득",0,stat,www/assets/achievements/ach_icon_13.png
-NEW_ACHIEVEMENT_ROULETTE_1,"도박의 시작","심판의 룰렛 1회 사용",0,stat,www/assets/achievements/ach_icon_14.png
-NEW_ACHIEVEMENT_ROULETTE_10,"룰렛 매니아","심판의 룰렛 10회 사용",0,stat,www/assets/achievements/ach_icon_15.png
-NEW_ACHIEVEMENT_ROULETTE_50,"운명에 맡긴 자","심판의 룰렛 50회 사용",0,stat,www/assets/achievements/ach_icon_16.png
-NEW_ACHIEVEMENT_DASH_100,"바람을 가르는","대쉬 100회 사용",0,stat,www/assets/achievements/ach_icon_17.png
-NEW_ACHIEVEMENT_DASH_500,"번개 같은 속도","대쉬 500회 사용",0,stat,www/assets/achievements/ach_icon_18.png
-NEW_ACHIEVEMENT_PERFECT_ROULETTE,"행운의 신","룰렛에서 3개 같은 구슬 획득",0,stat,www/assets/achievements/ach_icon_19.png
-NEW_ACHIEVEMENT_BOSS_10,"첫 번째 고난 극복","10스테이지 보스 처치",0,stat,www/assets/achievements/ach_icon_20.png
-NEW_ACHIEVEMENT_BOSS_20,"두 번째 고난 극복","20스테이지 보스 처치",0,stat,www/assets/achievements/ach_icon_21.png
-NEW_ACHIEVEMENT_BOSS_30,"최종 변론 준비","30스테이지 보스 처치",0,stat,www/assets/achievements/ach_icon_22.png
-NEW_ACHIEVEMENT_NO_HIT_1,"무결점 생존","한 스테이지 피격 없이 클리어",0,stat,www/assets/achievements/ach_icon_23.png
-NEW_ACHIEVEMENT_TIME_30,"버티기의 달인","한 판에서 30분 생존",0,stat,www/assets/achievements/ach_icon_24.png
-NEW_ACHIEVEMENT_LEVEL_50,"초월자","한 판에서 레벨 50 달성",0,stat,www/assets/achievements/ach_icon_25.png
-NEW_ACHIEVEMENT_ALL_SKILLS,"만능 해결사","모든 스킬 만렙 달성",0,stat,www/assets/achievements/ach_icon_26.png
-NEW_ACHIEVEMENT_COMBO_100,"화려한 콤보","100 콤보 달성",0,stat,www/assets/achievements/ach_icon_27.png
-NEW_ACHIEVEMENT_RAINBOW_ROULETTE,"무지개 심판","룰렛에서 서로 다른 3개 구슬 획득",0,stat,www/assets/achievements/ach_icon_28.png
-NEW_ACHIEVEMENT_MARBLES_100,"구슬 수집가","구슬 100개 획득",0,stat,www/assets/achievements/ach_icon_29.png
-NEW_ACHIEVEMENT_LEGEND_REACHED,"고등학교의 전설","모든 업적 달성",0,stat,www/assets/achievements/ach_icon_30.png
+﻿API Name,Display Name (KO),Description (KO),Display Name (EN),Description (EN),Hidden
+kills_100,첫 피의 세례,적 100마리 처치,First Blood,Kill 100 enemies,No
+kills_500,학살의 시작,적 500마리 처치,Slayer,Kill 500 enemies,No
+kills_1000,심판관,적 1000마리 처치,Judge,Kill 1000 enemies,No
+kills_5000,무자비한 변론,적 5000마리 처치,Merciless,Kill 5000 enemies,No
+kills_10000,전설의 사신,적 10000마리 처치,Reaper,Kill 10000 enemies,No
+stage_5,생존 전문가 I,스테이지 5 도달,Survivor I,Reach Stage 5,No
+stage_10,생존 전문가 II,스테이지 10 도달,Survivor II,Reach Stage 10,No
+stage_20,생존 전문가 III,스테이지 20 도달,Survivor III,Reach Stage 20,No
+stage_30,마스터 서바이버,스테이지 30 도달,Master Survivor,Reach Stage 30,No
+stage_50,불멸의 학생,스테이지 50 도달,Immortal Student,Reach Stage 50,No
+badges_1000,매점 VIP,누적 뱃지 1000개 획득,Snack Bar VIP,Collect 1000 badges total,No
+badges_5000,자산가,누적 뱃지 5000개 획득,Wealthy,Collect 5000 badges total,No
+badges_10000,백만장자,누적 뱃지 10000개 획득,Millionaire,Collect 10000 badges total,No
+roulette_1,도박의 시작,심판의 룰렛 1회 사용,First Gamble,Use Verdict Roulette once,No
+roulette_10,룰렛 매니아,심판의 룰렛 10회 사용,Roulette Lover,Use Verdict Roulette 10 times,No
+roulette_50,운명에 맡긴 자,심판의 룰렛 50회 사용,Fate's Gambler,Use Verdict Roulette 50 times,No
+dash_100,바람을 가르는,대쉬 100회 사용,Wind Walker,Dash 100 times,No
+dash_500,번개 같은 속도,대쉬 500회 사용,Lightning Speed,Dash 500 times,No
+perfect_roulette,행운의 신,룰렛에서 3개 같은 구슬 획득,God of Luck,Get 3 same orbs in roulette,No
+boss_10,첫 번째 고난 극복,10스테이지 보스 처치,First Trial Overcome,Defeat Stage 10 Boss,No
+boss_20,두 번째 고난 극복,20스테이지 보스 처치,Second Trial Overcome,Defeat Stage 20 Boss,No
+boss_30,최종 변론 준비,30스테이지 보스 처치,Final Argument Prep,Defeat Stage 30 Boss,No
+no_hit_1,무결점 생존,한 스테이지 피격 없이 클리어,Flawless Survival,Clear a stage without taking damage,No
+time_30,버티기의 달인,한 판에서 30분 생존,Endurance Master,Survive 30 minutes in a single run,No
+level_50,초월자,한 판에서 레벨 50 달성,Transcendent,Reach level 50 in a single run,No
+all_skills,만능 해결사,모든 스킬 만렙 달성,All-Rounder,Reach max level for all active skills,No
+combo_100,화려한 콤보,100 콤보 달성,Stylish Combo,Reach 100 combo,No
+rainbow_roulette,무지개 심판,룰렛에서 서로 다른 3개 구슬 획득,Rainbow Verdict,Get 3 different orbs in roulette,No
+marbles_100,구슬 수집가,구슬 100개 획득,Orb Collector,Collect 100 orbs total,No
+legend_reached,고등학교의 전설,모든 업적 달성,Legend of Highschool,Unlock all achievements,Yes
