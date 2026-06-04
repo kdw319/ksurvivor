@@ -846,7 +846,7 @@ window.ARTIFACT_DATA = {
     art_r_8: { id: 'art_r_8', rarity: 'R', nameKo: "잉크 병", nameEn: "Ink Bottle", flavorKo: "검은 잉크 속에는 수많은 진술이 담겨 있습니다.", flavorEn: "Countless statements are contained within the black ink.", descKo: "투사체 속도 +10%", descEn: "Proj Speed +10%", icon: "🧪", type: 'passive', stats: { projSpeedMult: 0.1 } },
     art_r_9: { id: 'art_r_9', rarity: 'R', nameKo: "이름표", nameEn: "Name Tag", flavorKo: "잊혀져 가는 당신의 정체성을 붙잡아 줍니다.", flavorEn: "Hold onto your fading identity.", descKo: "경험치 획득 +5%", descEn: "EXP Gain +5%", icon: "🏷️", type: 'passive', stats: { expMult: 0.05 } },
     art_r_10: { id: 'art_r_10', rarity: 'R', nameKo: "옷핀", nameEn: "Safety Pin", flavorKo: "벌어진 상처를 임시방편으로나마 고정합니다.", flavorEn: "Temporarily secures an open wound.", descKo: "방어력 +5%", descEn: "Defense +5%", icon: "🧷", type: 'passive', stats: { defense: 0.05 } },
-    art_r_11: { id: 'art_r_11', rarity: 'R', nameKo: "황금 배지 케이스", nameEn: "Golden Badge Case", flavorKo: "가장 소중한 뱃지를 보관하던 케이스.", flavorEn: "A case for the most precious badges.", descKo: "스테이지 클리어 시 획득 뱃지 +10%", descEn: "Stage Clear Badge Bonus +10%", icon: "💼", type: 'passive', stats: { badgeBonus: 0.1 } },
+    art_r_11: { id: 'art_r_11', rarity: 'R', nameKo: "황금 배지 케이스", nameEn: "Golden Badge Case", flavorKo: "가장 소중한 뱃지를 보관하던 케이스.", flavorEn: "A case for the most precious badges.", descKo: "장착 시 방어력 +5%", descEn: "Defense +5%", icon: "💼", type: 'passive', stats: { defense: 0.05 } },
 
     // SR (10): Better Stats + Passive Effects
     art_sr_1: { id: 'art_sr_1', rarity: 'SR', nameKo: "반장 배지", nameEn: "President Badge", flavorKo: "책임감의 무게가 어깨를 짓누릅니다.", flavorEn: "The weight of responsibility presses on your shoulders.", descKo: "공격력 +10%", descEn: "ATK +10%", icon: "🥇", type: 'passive', stats: { damageMult: 0.1 } },
@@ -3208,8 +3208,9 @@ function startGame() {
 }
 
 class BadgeItem {
-    constructor(x, y, value=1) { this.x = x; this.y = y; this.value = value; this.radius = 10; this.life = 10.0; this.isMagnetic = false; }
+    constructor(x, y, value=1) { this.x = x; this.y = y; this.value = value; this.radius = 10; this.life = 10.0; this.isMagnetic = false; this.hp = 1; }
     update(dt) {
+        if (this.hp === 0) return;
         let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy;
         if(distSq < GameSettings.player.pickupRange * GameSettings.player.pickupRange) { this.isMagnetic = true; }
         if(this.isMagnetic) { 
@@ -3220,11 +3221,11 @@ class BadgeItem {
                 playerBadges += this.value; statsTracking.totalBadges += this.value; updateLobbyCurrency(); playSFX('exp'); 
                 // Collection effect instead of sticking
                 particles.push(new Particle(this.x, this.y, '#ffb142'));
-                this.life = 0; 
+                this.hp = 0; 
             } 
         }
     }
-    draw(ctx) { if(isOffScreen(this.x, this.y) || this.life <= 0) return; ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); ctx.fillStyle = '#ffb142'; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🏅', 0, 0); ctx.restore(); }
+    draw(ctx) { if(isOffScreen(this.x, this.y) || this.hp === 0) return; ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); ctx.fillStyle = '#ffb142'; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🏅', 0, 0); ctx.restore(); }
 }
 
 function triggerStageClear() {
@@ -4938,10 +4939,12 @@ class Enemy {
             if (Math.random() < badgeChance) {
                 let badgeVal = (this.type === 'boss' || this.type === 'midboss') ? 5 : 1;
                 expGems.push(new BadgeItem(this.x, this.y, badgeVal)); 
+                console.log(`Badge dropped: ${badgeVal}, source: ${this.type}`);
             }
             
             if(this.type === 'boss' && !isStageCleared) { 
                 isStageCleared = true;
+                console.log("Stage Cleared triggered by Boss death");
                 hitStopTimer = 0.3; 
                 screenShake = 30;
                 playSFX('bossKill');
