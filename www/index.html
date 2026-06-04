@@ -846,6 +846,7 @@ window.ARTIFACT_DATA = {
     art_r_8: { id: 'art_r_8', rarity: 'R', nameKo: "잉크 병", nameEn: "Ink Bottle", flavorKo: "검은 잉크 속에는 수많은 진술이 담겨 있습니다.", flavorEn: "Countless statements are contained within the black ink.", descKo: "투사체 속도 +10%", descEn: "Proj Speed +10%", icon: "🧪", type: 'passive', stats: { projSpeedMult: 0.1 } },
     art_r_9: { id: 'art_r_9', rarity: 'R', nameKo: "이름표", nameEn: "Name Tag", flavorKo: "잊혀져 가는 당신의 정체성을 붙잡아 줍니다.", flavorEn: "Hold onto your fading identity.", descKo: "경험치 획득 +5%", descEn: "EXP Gain +5%", icon: "🏷️", type: 'passive', stats: { expMult: 0.05 } },
     art_r_10: { id: 'art_r_10', rarity: 'R', nameKo: "옷핀", nameEn: "Safety Pin", flavorKo: "벌어진 상처를 임시방편으로나마 고정합니다.", flavorEn: "Temporarily secures an open wound.", descKo: "방어력 +5%", descEn: "Defense +5%", icon: "🧷", type: 'passive', stats: { defense: 0.05 } },
+    art_r_11: { id: 'art_r_11', rarity: 'R', nameKo: "황금 배지 케이스", nameEn: "Golden Badge Case", flavorKo: "가장 소중한 뱃지를 보관하던 케이스.", flavorEn: "A case for the most precious badges.", descKo: "스테이지 클리어 시 획득 뱃지 +10%", descEn: "Stage Clear Badge Bonus +10%", icon: "💼", type: 'passive', stats: { badgeBonus: 0.1 } },
 
     // SR (10): Better Stats + Passive Effects
     art_sr_1: { id: 'art_sr_1', rarity: 'SR', nameKo: "반장 배지", nameEn: "President Badge", flavorKo: "책임감의 무게가 어깨를 짓누릅니다.", flavorEn: "The weight of responsibility presses on your shoulders.", descKo: "공격력 +10%", descEn: "ATK +10%", icon: "🥇", type: 'passive', stats: { damageMult: 0.1 } },
@@ -858,6 +859,7 @@ window.ARTIFACT_DATA = {
     art_sr_8: { id: 'art_sr_8', rarity: 'SR', nameKo: "고농축 카페인", nameEn: "Caffeine Pill", flavorKo: "잠을 쫓고 심장 박동을 극대화합니다.", flavorEn: "Drive away sleep and maximize heartbeat.", descKo: "공격속도 +15%", descEn: "ATK SPD +15%", icon: "💊", type: 'passive', stats: { atkSpdMult: 0.15 } },
     art_sr_9: { id: 'art_sr_9', rarity: 'SR', nameKo: "거울 파편", nameEn: "Mirror Shard", flavorKo: "진실을 비추는 거울은 산산조각 났습니다.", flavorEn: "The mirror reflecting the truth is shattered.", descKo: "피격 시 10% 확률로 회피", descEn: "10% Chance to Dodge", icon: "🪞", type: 'passive', stats: { dodge: 0.1 } },
     art_sr_10: { id: 'art_sr_10', rarity: 'SR', nameKo: "낡은 녹음기", nameEn: "Old Recorder", flavorKo: "누군가의 마지막 목소리가 담겨 있을지도...", flavorEn: "Might contain someone's final voice...", descKo: "스킬 범위 +20%", descEn: "Skill Range +20%", icon: " cassette", icon: "📼", type: 'passive', stats: { rangeMult: 0.2 } },
+    art_sr_11: { id: 'art_sr_11', rarity: 'SR', nameKo: "반사의 법률", nameEn: "Law of Reflection", flavorKo: "모든 행위는 자신에게 되돌아오는 법.", flavorEn: "Every action eventually returns to itself.", descKo: "대쉬 중 15% 확률로 적의 투사체 반사", descEn: "15% Chance to reflect projectiles during Dash", icon: "💎", type: 'passive', stats: { reflectChance: 0.15 } },
 
     // SSR (5): Active Skills + Small Stat Bonus
     art_ssr_1: { id: 'art_ssr_1', rarity: 'SSR', nameKo: "정의의 저울", nameEn: "Justice Scale", flavorKo: "균형을 맞추지 못하면, 죽음뿐입니다.", flavorEn: "Failure to balance means death.", descKo: "공격력 +3% | 액티브: 5초간 가한 피해의 10% 흡혈", descEn: "ATK +3% | Active: 10% Life Steal for 5s", icon: "⚖️", type: 'active', cooldown: 30, duration: 5, effect: 'lifesteal', stats: { damageMult: 0.03 } },
@@ -865,13 +867,21 @@ window.ARTIFACT_DATA = {
     art_ssr_3: { id: 'art_ssr_3', rarity: 'SSR', nameKo: "검게 물든 의사봉", nameEn: "Black Gavel", flavorKo: "심판은 이미 끝났습니다. 이제 형행의 시간입니다.", flavorEn: "Judgment is over. Now is the time for execution.", descKo: "공격력 +3% | 액티브: 화면 내 모든 적 3초간 기절", descEn: "ATK +3% | Active: Stun all screen enemies (3s)", icon: "🔨", type: 'active', cooldown: 30, duration: 3, effect: 'stunAll', stats: { damageMult: 0.03 } },
     art_ssr_4: { id: 'art_ssr_4', rarity: 'SSR', nameKo: "멸균된 메스", nameEn: "Sterile Scalpel", flavorKo: "죄의 근원을 완벽하게 도려냅니다.", flavorEn: "Perfectly excise the root of sin.", descKo: "공격력 +3% | 액티브: 전방에 강력한 레이저 발사", descEn: "ATK +3% | Active: Fire powerful frontal laser", icon: "🗡️", type: 'active', cooldown: 30, effect: 'laser', stats: { damageMult: 0.03 } },
     art_ssr_5: { id: 'art_ssr_5', rarity: 'SSR', nameKo: "유령의 졸업장", nameEn: "Ghost Diploma", flavorKo: "죽음만이 유일한 졸업입니다.", flavorEn: "Only death is the true graduation.", descKo: "최대 체력 +3% | 액티브: 화면 내 모든 보석 자석 흡수", descEn: "Max HP +3% | Active: Pull all screen EXP gems", icon: "📜", type: 'active', cooldown: 30, effect: 'vacuum', stats: { maxHpMult: 0.03 } },
+    art_ssr_6: { id: 'art_ssr_6', rarity: 'SSR', nameKo: "정의의 탐욕", nameEn: "Justice's Greed", flavorKo: "합법적인 수단으로 모든 부를 축적합니다.", flavorEn: "Accumulate all wealth through legal means.", descKo: "이속 +3% | 액티브: 8초간 적 처치 시 뱃지 획득 +100%", descEn: "SPD +3% | Active: +100% Badge gain on kill (8s)", icon: "🤑", type: 'active', cooldown: 45, duration: 8, effect: 'greed', stats: { speedMult: 0.03 } },
 
     // UR (5): Ultimate Skills + Milestone Stat Bonus
     art_ur_1: { id: 'art_ur_1', rarity: 'UR', nameKo: "지배자의 왕관", nameEn: "Sovereign Crown", flavorKo: "이 법정의 진정한 주인은 누구인가?", flavorEn: "Who is the true master of this court?", descKo: "공격력 +5% | 액티브: 5초간 무적 및 소형몹 소탕", descEn: "ATK +5% | Active: Invincible (5s) + Wipe Mobs", icon: "👑", type: 'active', cooldown: 45, duration: 5, effect: 'sovereign', stats: { damageMult: 0.05 } },
     art_ur_2: { id: 'art_ur_2', rarity: 'UR', nameKo: "종말의 시계", nameEn: "Clock of End", flavorKo: "째깍, 째깍... 당신의 남은 시간이 끝났습니다.", flavorEn: "Tick, tock... your remaining time is up.", descKo: "쿨타임 -5% | 액티브: 4초간 시간 정지", descEn: "Cooldown -5% | Active: Freeze Time (4s)", icon: "⏳", type: 'active', cooldown: 45, duration: 4, effect: 'timeStop', stats: { cooldownMult: -0.05 } },
     art_ur_3: { id: 'art_ur_3', rarity: 'UR', nameKo: "심판의 소용돌이", nameEn: "Verdict Vortex", flavorKo: "운명의 소용돌이가 모든 것을 집어삼킵니다.", flavorEn: "The vortex of fate swallows everything.", descKo: "공격력 +5% | 액티브: 즉시 구슬 3개 획득 (트리플)", descEn: "ATK +5% | Active: Gain 3 same Verdict Orbs", icon: "🌀", type: 'active', cooldown: 45, effect: 'jackpot', stats: { damageMult: 0.05 } },
     art_ur_4: { id: 'art_ur_4', rarity: 'UR', nameKo: "구원의 날개", nameEn: "Redemption Wings", flavorKo: "하늘 높이 날아올라, 비극의 굴레를 벗어던지세요.", flavorEn: "Fly high into the sky, shed the cycle of tragedy.", descKo: "최대 체력 +5% | 액티브: 10초간 비행 및 자동 공격", descEn: "Max HP +5% | Active: Flight + Auto Attack (10s)", icon: "🪽", type: 'active', cooldown: 45, duration: 10, effect: 'ascension', stats: { maxHpMult: 0.05 } },
-    art_ur_5: { id: 'art_ur_5', rarity: 'UR', nameKo: "이솔의 잃어버린 기억", nameEn: "Isol's Memory", flavorKo: "진실을 마주할 준비가 되셨습니까?", flavorEn: "Are you ready to face the truth?", descKo: "공격력 +5% | 액티브: 체력 완전 회복 및 대폭발", descEn: "ATK +5% | Active: Full Heal + Mega Explosion", icon: "💎", type: 'active', cooldown: 45, effect: 'turnabout', stats: { damageMult: 0.05 } }
+    art_ur_5: { id: 'art_ur_5', rarity: 'UR', nameKo: "이솔의 잃어버린 기억", nameEn: "Isol's Memory", flavorKo: "진실을 마주할 준비가 되셨습니까?", flavorEn: "Are you ready to face the truth?", descKo: "공격력 +5% | 액티브: 체력 완전 회복 및 대폭발", descEn: "ATK +5% | Active: Full Heal + Mega Explosion", icon: "💎", type: 'active', cooldown: 45, effect: 'turnabout', stats: { damageMult: 0.05 } },
+    art_ur_6: { id: 'art_ur_6', rarity: 'UR', nameKo: "진실의 절대성", nameEn: "Truth's Absolute", flavorKo: "진실은 결코 굴절되지 않으며, 돌아올 뿐입니다.", flavorEn: "Truth never refracts, it only returns.", descKo: "공격력 +5% | 투사체가 화면 끝에서 1회 튕김", descEn: "ATK +5% | Projectiles bounce off screen once", icon: "🎇", type: 'passive', stats: { damageMult: 0.05, bounceCount: 1 } }
+};
+
+window.ARTIFACT_SYNERGIES = {
+    lawAndOrder: { nameKo: "⚖️ 법과 질서", nameEn: "⚖️ Law & Order", req: ['art_sr_1', 'art_ssr_1'], stats: { damageMult: 0.20 } },
+    digitalMaster: { nameKo: "💻 디지털 마스터", nameEn: "💻 Digital Master", req: ['art_sr_5', 'art_ssr_2'], stats: { atkSpdMult: 0.20 } },
+    finalArgument: { nameKo: "📜 최후의 변론", nameEn: "📜 Final Argument", req: ['art_ur_3', 'art_ssr_3'], stats: { artCooldownMult: -0.20 } }
 };
 
 window.artCooldowns = [0, 0, 0];
@@ -1186,6 +1196,10 @@ window.handleActiveSkill = function(slotIdx) {
             projectiles.push(new Projectile(player.x, player.y, Math.cos(ang)*600, Math.sin(ang)*600, 100 * player.getDamageMultiplier(), 'chalk', '#fff', true, 1));
         }, 200);
         setTimeout(() => { player.isFlying = false; }, art.duration * 1000);
+    } else if (art.effect === 'greed') {
+        player.greedActive = true;
+        showSystemNotice(currentLang === 'ko' ? "정의의 탐욕 발동!" : "JUSTICE'S GREED!");
+        setTimeout(() => { player.greedActive = false; }, art.duration * 1000);
     }
     updateHUD();
 };
@@ -2698,6 +2712,20 @@ function showSystemNotice(text) {
     }, 3000);
 }
 
+function syncSteamStats() {
+    if (window.steamAPI) {
+        // Sync real-time progress to Steam Stats
+        if (typeof window.steamAPI.setStat === 'function') {
+            window.steamAPI.setStat('stat_kills', statsTracking.totalKills);
+            window.steamAPI.setStat('stat_badges', statsTracking.totalBadges);
+            window.steamAPI.setStat('stat_stages', maxStageReached);
+            if (typeof window.steamAPI.storeStats === 'function') {
+                window.steamAPI.storeStats(); // Commit changes to Steam
+            }
+        }
+    }
+}
+
 function checkAchievements() {
     const lang = I18N[currentLang];
     ACHIEVEMENTS_DATA.forEach(ach => {
@@ -2713,15 +2741,17 @@ function checkAchievements() {
                 playSFX('clear');
 
                 // Steam Achievement Bridge
-                if (window.steamAPI) {
-                    const steamAchId = 'NEW_ACHIEVEMENT_' + ach.id.toUpperCase();
-                    window.steamAPI.unlockAchievement(steamAchId).then(success => {
-                        if (success) console.log(`Steam Achievement Unlocked: ${steamAchId}`);
+                if (window.steamAPI && typeof window.steamAPI.unlockAchievement === 'function') {
+                    // Use the direct ID set in Steamworks (matches Game ID, e.g., 'kills_100')
+                    window.steamAPI.unlockAchievement(ach.id).then(success => {
+                        if (success) console.log(`Steam Achievement Unlocked: ${ach.id}`);
                     });
                 }
             }
         }
     });
+    // Trigger Stat Sync whenever we check achievements
+    syncSteamStats();
 }
 function formatTime(sec) { 
     return `${Math.floor(sec / 60).toString().padStart(2, '0')}:${Math.floor(sec % 60).toString().padStart(2, '0')}`; 
@@ -3177,12 +3207,32 @@ function startGame() {
     if(window.updateSkillSlotsUI) window.updateSkillSlotsUI();
 }
 
+class BadgeItem {
+    constructor(x, y, value=1) { this.x = x; this.y = y; this.value = value; this.radius = 10; this.life = 10.0; this.isMagnetic = false; }
+    update(dt) {
+        let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy;
+        if(distSq < GameSettings.player.pickupRange * GameSettings.player.pickupRange) { this.isMagnetic = true; }
+        if(this.isMagnetic) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * 500 * dt; this.y += (dy/dist) * 500 * dt; if(distSq < (player.radius + this.radius)**2) { playerBadges += this.value; statsTracking.totalBadges += this.value; updateLobbyCurrency(); playSFX('exp'); this.life = 0; } }
+    }
+    draw(ctx) { if(isOffScreen(this.x, this.y)) return; ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); ctx.fillStyle = '#ffb142'; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🏅', 0, 0); ctx.restore(); }
+}
+
 function triggerStageClear() {
     if(window.gameState === 'clear') return; window.gameState = 'clear'; 
     let lvUI = document.getElementById('levelUpUI'); if (lvUI) lvUI.classList.add('hidden');
-    let reward = (currentStage % 5 === 0) ? GameSettings.economy.clearRewardBoss : GameSettings.economy.clearRewardBase; playerBadges += reward;
     
-    maxStageReached = Math.max(maxStageReached, currentStage + 1);
+    let rewardBase = (currentStage % 5 === 0) ? GameSettings.economy.clearRewardBoss : GameSettings.economy.clearRewardBase;
+    
+    // Artifact: Golden Badge Case (+10% Bonus)
+    let bonusMult = 1.0;
+    if (window.equippedArtifacts.includes('art_r_11')) {
+        const level = window.ownedArtifacts['art_r_11'] || 1;
+        bonusMult += (0.1 * (1.0 + (level - 1) * 0.1));
+    }
+    
+    let reward = Math.floor(rewardBase * bonusMult);
+    playerBadges += reward;
+    statsTracking.totalBadges += reward;
     // Upload Best_Stage to Steam leaderboard on stage clear
     if (window.steamAPI && typeof window.steamAPI.uploadLeaderboardStage === 'function') {
         window.steamAPI.uploadLeaderboardStage(maxStageReached).catch(err => console.error('Best_Stage upload failed:', err));
@@ -3985,12 +4035,22 @@ class Projectile {
         this.piercing = piercing; this.level = level; 
         this.life = 3.0; this.hitEnemies = new Set(); 
         this.sizeScale = 1 + (level * 0.2); 
+        this.bounceCount = 0;
+        this.maxBounces = (player && player.stats.bounceCount) ? player.stats.bounceCount : 0;
     }
     update(dt) { 
         this.x += this.vx * dt; 
         this.y += this.vy * dt; 
         this.life -= dt; 
         
+        // --- Bounce Logic (Truth's Absolute) ---
+        if (this.maxBounces > 0 && this.bounceCount < this.maxBounces) {
+            let margin = 20;
+            let bx = this.x - camera.x; let by = this.y - camera.y;
+            if (bx < margin || bx > gameWidth - margin) { this.vx *= -1; this.bounceCount++; }
+            if (by < margin || by > gameHeight - margin) { this.vy *= -1; this.bounceCount++; }
+        }
+
         enemies.forEach(e => { 
             if(!this.hitEnemies.has(e)) { 
                 let dx = e.x - this.x; 
@@ -4270,9 +4330,12 @@ class Player {
 
     playAnim(stateName) { this.animState = stateName; this.animTimer = 0.2 / this.stats.atkSpdMult; }
     recalculateStats() {
-        let artDmg = 0, artCool = 0, artSpd = 0, artHp = 0, artAtkSpd = 0;
-        if (window.equippedArtifacts && Array.isArray(window.equippedArtifacts)) {
-            window.equippedArtifacts.forEach(id => {
+        let artDmg = 0, artCool = 0, artSpd = 0, artHp = 0, artAtkSpd = 0, artCooldownMult = 1.0;
+        let reflectChance = 0, bounceCount = 0;
+        const equipped = window.equippedArtifacts || [];
+        
+        if (equipped && Array.isArray(equipped)) {
+            equipped.forEach(id => {
                 if(id && window.ARTIFACT_DATA && window.ARTIFACT_DATA[id]) {
                     const art = window.ARTIFACT_DATA[id];
                     const level = (window.ownedArtifacts && window.ownedArtifacts[id]) ? window.ownedArtifacts[id] : 1;
@@ -4283,7 +4346,18 @@ class Player {
                         if(art.stats.speedMult) artSpd += art.stats.speedMult * bonusMult;
                         if(art.stats.maxHpMult) artHp += art.stats.maxHpMult * bonusMult;
                         if(art.stats.atkSpdMult) artAtkSpd += art.stats.atkSpdMult * bonusMult;
+                        if(art.stats.reflectChance) reflectChance += art.stats.reflectChance * bonusMult;
+                        if(art.stats.bounceCount) bounceCount += art.stats.bounceCount;
                     }
+                }
+            });
+
+            // Apply Artifact Set Synergies
+            Object.values(window.ARTIFACT_SYNERGIES).forEach(syn => {
+                if (syn.req.every(reqId => equipped.includes(reqId))) {
+                    if (syn.stats.damageMult) artDmg += syn.stats.damageMult;
+                    if (syn.stats.atkSpdMult) artAtkSpd += syn.stats.atkSpdMult;
+                    if (syn.stats.artCooldownMult) artCooldownMult += syn.stats.artCooldownMult;
                 }
             });
         }
@@ -4293,6 +4367,9 @@ class Player {
         this.stats.speedMult = 1.0 + (permanentStats.speed * 0.0125) + artSpd;
         this.stats.maxHp = this.baseMaxHp * (1.0 + (permanentStats.maxHp * 0.0125) + artHp);
         this.stats.atkSpdMult = 1.0 + artAtkSpd;
+        this.stats.reflectChance = reflectChance;
+        this.stats.bounceCount = bounceCount;
+        this.artCooldownMult = artCooldownMult;
         
         if (window.orbStacks) {
             this.stats.damageMult += (window.orbStacks.red * 0.05);
@@ -4835,14 +4912,21 @@ class Enemy {
         if(particles.length < 50) { particles.push(new Particle(this.x, this.y, this.color)); }
         
         if(this.hp <= 0) { 
-            
-            
             statsTracking.totalKills++; checkAchievements();
             if (window.verdictGauge < window.MAX_GAUGE) {
                 window.verdictGauge++;
                 if (window.verdictGauge >= window.MAX_GAUGE) window.playSFX('exp');
             }
             expGems.push(new ExpGem(this.x, this.y, this.exp)); 
+
+            // Badge Drop Logic (Justice's Greed)
+            let badgeChance = 0.01; // Base 1%
+            if (player && player.greedActive) badgeChance += 0.50; // Add 50% during active
+            
+            if (Math.random() < badgeChance) {
+                let badgeVal = (this.type === 'boss' || this.type === 'midboss') ? 5 : 1;
+                expGems.push(new BadgeItem(this.x, this.y, badgeVal)); 
+            }
             
             if(this.type === 'boss' && !isStageCleared) { 
                 isStageCleared = true;
@@ -4859,8 +4943,38 @@ class Enemy {
 
 class EnemyProjectile {
     constructor(x, y, vx, vy, damage, color) { this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.damage = damage; this.color = color; this.life = 3.0; this.radius = 6; }
-    update(dt) { this.x += this.vx * dt; this.y += this.vy * dt; this.life -= dt; let dx = player.x - this.x; let dy = player.y - this.y; let rSum = player.radius + this.radius; if(dx*dx + dy*dy < rSum*rSum) { player.takeDamage(this.damage); this.life = 0; } }
-    draw(ctx) { if(isOffScreen(this.x, this.y)) return; ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, this.radius/2, 0, Math.PI*2); ctx.fill(); ctx.restore(); }
+    update(dt) { 
+        this.x += this.vx * dt; this.y += this.vy * dt; this.life -= dt; 
+        let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy;
+        let rSum = player.radius + this.radius; 
+        
+        if(distSq < rSum*rSum) { 
+            // Check for Reflection (Law of Reflection SR)
+            const reflectChance = (player && player.stats.reflectChance) ? player.stats.reflectChance : 0;
+            if (player.animState === 'dash' && reflectChance > 0 && Math.random() < reflectChance) {
+                this.vx *= -2; this.vy *= -2; // Send back faster
+                this.life = 2.0; 
+                this.reflected = true;
+                playSFX('perfectDash');
+                return;
+            }
+
+            if (!this.reflected) {
+                player.takeDamage(this.damage); this.life = 0; 
+            }
+        } 
+        
+        if (this.reflected) {
+            enemies.forEach(e => {
+                let edx = e.x - this.x; let edy = e.y - this.y;
+                if (edx*edx + edy*edy < (e.radius + this.radius)**2) {
+                    e.takeDamage(this.damage * 10); // Massive damage on reflection
+                    this.life = 0;
+                }
+            });
+        }
+    }
+    draw(ctx) { if(isOffScreen(this.x, this.y)) return; ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); ctx.fillStyle = this.reflected ? '#f1c40f' : this.color; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, this.radius/2, 0, Math.PI*2); ctx.fill(); ctx.restore(); }
 }
 
 class EnemyTrap {
