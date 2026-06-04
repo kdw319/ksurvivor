@@ -3212,28 +3212,40 @@ class BadgeItem {
     update(dt) {
         let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy;
         if(distSq < GameSettings.player.pickupRange * GameSettings.player.pickupRange) { this.isMagnetic = true; }
-        if(this.isMagnetic) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * 500 * dt; this.y += (dy/dist) * 500 * dt; if(distSq < (player.radius + this.radius)**2) { playerBadges += this.value; statsTracking.totalBadges += this.value; updateLobbyCurrency(); playSFX('exp'); this.life = 0; } }
+        if(this.isMagnetic) { 
+            let dist = Math.sqrt(distSq); 
+            this.x += (dx/dist) * 800 * dt; 
+            this.y += (dy/dist) * 800 * dt; 
+            if(distSq < (player.radius + this.radius + 10)**2) { 
+                playerBadges += this.value; statsTracking.totalBadges += this.value; updateLobbyCurrency(); playSFX('exp'); 
+                // Collection effect instead of sticking
+                particles.push(new Particle(this.x, this.y, '#ffb142'));
+                this.life = 0; 
+            } 
+        }
     }
-    draw(ctx) { if(isOffScreen(this.x, this.y)) return; ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); ctx.fillStyle = '#ffb142'; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🏅', 0, 0); ctx.restore(); }
+    draw(ctx) { if(isOffScreen(this.x, this.y) || this.life <= 0) return; ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); ctx.fillStyle = '#ffb142'; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🏅', 0, 0); ctx.restore(); }
 }
 
 function triggerStageClear() {
-    if(window.gameState === 'clear') return; window.gameState = 'clear'; 
+    if(window.gameState === 'clear') return; 
+    window.gameState = 'clear'; 
     let lvUI = document.getElementById('levelUpUI'); if (lvUI) lvUI.classList.add('hidden');
     
     let rewardBase = (currentStage % 5 === 0) ? GameSettings.economy.clearRewardBoss : GameSettings.economy.clearRewardBase;
     
     // Artifact: Golden Badge Case (+10% Bonus)
     let bonusMult = 1.0;
-    if (window.equippedArtifacts.includes('art_r_11')) {
-        const level = window.ownedArtifacts['art_r_11'] || 1;
+    if (window.equippedArtifacts && window.equippedArtifacts.includes('art_r_11')) {
+        const level = (window.ownedArtifacts && window.ownedArtifacts['art_r_11']) ? window.ownedArtifacts['art_r_11'] : 1;
         bonusMult += (0.1 * (1.0 + (level - 1) * 0.1));
     }
     
     let reward = Math.floor(rewardBase * bonusMult);
     playerBadges += reward;
     statsTracking.totalBadges += reward;
-    // Upload Best_Stage to Steam leaderboard on stage clear
+    
+    // Sync to Steam
     if (window.steamAPI && typeof window.steamAPI.uploadLeaderboardStage === 'function') {
         window.steamAPI.uploadLeaderboardStage(maxStageReached).catch(err => console.error('Best_Stage upload failed:', err));
     }
