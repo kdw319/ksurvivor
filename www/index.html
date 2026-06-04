@@ -4633,6 +4633,78 @@ class Enemy {
                 projectiles.push(new Projectile(this.x, this.y, (dx/dist)*150, (dy/dist)*150, this.damage*5, 'gavel', '#e74c3c', true, 1));
             }
 
+            // Stage 60: Spiral Verdict
+            if (this.imgKey === 'boss_60' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 6.0;
+                this.setSkillLabel(currentLang === 'ko' ? "판결의 소용돌이!" : "Spiral Verdict!");
+                for(let i=0; i<15; i++) {
+                    setTimeout(() => {
+                        let ang = (performance.now() * 0.005) + (i * 0.5);
+                        projectiles.push(new Projectile(this.x, this.y, Math.cos(ang)*200, Math.sin(ang)*200, this.damage*1.2, 'gavel', '#00d2d3', true, 1));
+                    }, i * 150);
+                }
+            }
+
+            // Stage 70: Explosive Evidence
+            if (this.imgKey === 'boss_70' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 7.0;
+                this.setSkillLabel(currentLang === 'ko' ? "증거 인멸 폭발!" : "Evidence Detonation!");
+                for(let i=0; i<6; i++) {
+                    let tx = player.x + (Math.random()-0.5)*300;
+                    let ty = player.y + (Math.random()-0.5)*300;
+                    setTimeout(() => {
+                        projectiles.push(new AreaExplosion(tx, ty, 100, this.damage*2, '#ff4757'));
+                    }, i * 500);
+                }
+            }
+
+            // Stage 80: Phantom Shadow
+            if (this.imgKey === 'boss_80' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 10.0;
+                this.setSkillLabel(currentLang === 'ko' ? "심판은 피할 수 없다!" : "No escape!");
+                for(let i=0; i<2; i++) {
+                    let clone = new Enemy(this.x + (Math.random()-0.5)*100, this.y + (Math.random()-0.5)*100, 'midboss');
+                    clone.hp = this.maxHp * 0.15; clone.maxHp = clone.hp;
+                    clone.imgKey = 'boss_mid';
+                    enemies.push(clone);
+                }
+            }
+
+            // Stage 90: Labyrinth of Justice
+            if (this.imgKey === 'boss_90' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 9.0;
+                this.setSkillLabel(currentLang === 'ko' ? "퇴로 차단!" : "Path Blocked!");
+                for(let i=0; i<16; i++) {
+                    let ang = (Math.PI*2/16) * i;
+                    let tx = player.x + Math.cos(ang) * 200;
+                    let ty = player.y + Math.sin(ang) * 200;
+                    groundTraps.push(new EnemyTrap(tx, ty, 60, this.damage, '#badc58'));
+                }
+            }
+
+            // Stage 100: Final Execution
+            if (this.imgKey === 'boss_100' && this.gimmickTimer <= 0) {
+                this.gimmickTimer = 5.0;
+                const p = Math.random();
+                if(p < 0.3) {
+                    this.setSkillLabel(currentLang === 'ko' ? "최종 사형 선고!!" : "FINAL EXECUTION!!");
+                    for(let i=0; i<20; i++) {
+                        let ang = (Math.PI*2/20) * i;
+                        projectiles.push(new Projectile(this.x, this.y, Math.cos(ang)*400, Math.sin(ang)*400, this.damage*3, 'gavel', '#f1c40f', true, 1));
+                    }
+                } else if (p < 0.6) {
+                    this.setSkillLabel(currentLang === 'ko' ? "법의 심판을 받아라!" : "Accept the Law!");
+                    let tx = player.x; let ty = player.y;
+                    projectiles.push(new AreaExplosion(tx, ty, 250, this.damage*4, '#e74c3c'));
+                } else {
+                    this.setSkillLabel(currentLang === 'ko' ? "무죄는 없다." : "No Innocence.");
+                    for(let i=0; i<10; i++) {
+                        groundTraps.push(new EnemyTrap(player.x + (Math.random()-0.5)*400, player.y + (Math.random()-0.5)*400, 80, this.damage, '#ff4757'));
+                    }
+                }
+                if (window.playSFX) playSFX('bossSkill');
+            }
+
             // Generic Boss Taunts
             if (this.gimmickTimer <= 0) {
                 this.gimmickTimer = 5.0 + Math.random() * 5.0;
@@ -4667,13 +4739,7 @@ class Enemy {
         } else if (this.subType === 'melee') { 
             if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
         } 
-        else if (this.subType === 'ranged') {
-            if(distSq > this.range*this.range) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; } 
-            else { this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; let dist = Math.sqrt(distSq); enemyProjectiles.push(new EnemyProjectile(this.x, this.y, (dx/dist)*200, (dy/dist)*200, this.damage, this.color)); playSFX('shoot'); } }
-        } else if (this.subType === 'trap') {
-            if(distSq > 0) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * this.speed * dt; this.y += (dy/dist) * this.speed * dt; }
-            this.attackTimer -= dt; if(this.attackTimer <= 0) { this.attackTimer = this.cooldown; groundTraps.push(new EnemyTrap(this.x, this.y, 60, this.damage, this.color)); }
-        }
+        
         let rSum = this.radius + player.radius;
         if(distSq < rSum*rSum && this.hitTimer <= 0) { player.takeDamage(this.damage); this.hitTimer = 0.5; }
         if(this.hitTimer > 0) this.hitTimer -= dt;
