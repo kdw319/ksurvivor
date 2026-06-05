@@ -1281,9 +1281,9 @@ const ACHIEVEMENTS_DATA = [
     { id: 'stage_20', name: "생존 전문가 III", enName: "Survivor III", desc: "스테이지 20 도달", enDesc: "Reach Stage 20", reqStage: 20, icon: "🏅" },
     { id: 'stage_30', name: "마스터 서바이버", enName: "Master Survivor", desc: "스테이지 30 도달", enDesc: "Reach Stage 30", reqStage: 30, icon: "💎" },
     { id: 'stage_50', name: "불멸의 학생", enName: "Immortal Student", desc: "스테이지 50 도달", enDesc: "Reach Stage 50", reqStage: 50, icon: "👑" },
-    { id: 'badges_1000', name: "매점 VIP", enName: "Snack Bar VIP", desc: "누적 뱃지 1,000개 획득", enDesc: "Collect 1,000 badges total", reqBadges: 1000, icon: "💰" },
-    { id: 'badges_5000', name: "자산가", enName: "Wealthy", desc: "누적 뱃지 5,000개 획득", enDesc: "Collect 5,000 badges total", reqBadges: 5000, icon: "💎" },
-    { id: 'badges_10000', name: "백만장자", enName: "Millionaire", desc: "누적 뱃지 10,000개 획득", enDesc: "Collect 10,000 badges total", reqBadges: 10000, icon: "🏦" },
+    { id: 'badges_1000', name: "매점 VIP", enName: "Snack Bar VIP", desc: "누적 뱃지 100개 획득", enDesc: "Collect 100 badges total", reqBadges: 100, icon: "💰" },
+    { id: 'badges_5000', name: "자산가", enName: "Wealthy", desc: "누적 뱃지 500개 획득", enDesc: "Collect 500 badges total", reqBadges: 500, icon: "💎" },
+    { id: 'badges_10000', name: "백만장자", enName: "Millionaire", desc: "누적 뱃지 1,000개 획득", enDesc: "Collect 1,000 badges total", reqBadges: 1000, icon: "🏦" },
     { id: 'roulette_1', name: "도박의 시작", enName: "First Gamble", desc: "심판의 룰렛 1회 사용", enDesc: "Use Verdict Roulette once", reqRoulette: 1, icon: "🎰" },
     { id: 'roulette_10', name: "룰렛 매니아", enName: "Roulette Lover", desc: "심판의 룰렛 10회 사용", enDesc: "Use Verdict Roulette 10 times", reqRoulette: 10, icon: "🎲" },
     { id: 'roulette_50', name: "운명에 맡긴 자", enName: "Fate's Gambler", desc: "심판의 룰렛 50회 사용", enDesc: "Use Verdict Roulette 50 times", reqRoulette: 50, icon: "🔮" },
@@ -1653,6 +1653,8 @@ let screenShake = 0;
 let hasSpawnedMidBoss = false;
 let hasSpawnedFinalBoss = false;
 let isStageCleared = false;
+window.lastRouletteResult = null;
+window.lastStageNoHit = true;
 
 let player = null; 
 let enemies = [];
@@ -2736,6 +2738,13 @@ function syncSteamStats() {
             window.steamAPI.setStat('stat_kills', statsTracking.totalKills);
             window.steamAPI.setStat('stat_badges', statsTracking.totalBadges);
             window.steamAPI.setStat('stat_stages', maxStageReached);
+            window.steamAPI.setStat('stat_dash', statsTracking.totalDash);
+            window.steamAPI.setStat('stat_roulette', statsTracking.totalRoulette);
+            window.steamAPI.setStat('stat_combo', statsTracking.maxCombo);
+            window.steamAPI.setStat('stat_marbles', statsTracking.marblesCollected);
+            window.steamAPI.setStat('stat_level', (player ? player.level : 1));
+            window.steamAPI.setStat('stat_time', Math.floor(statsTracking.totalTime));
+            
             if (typeof window.steamAPI.storeStats === 'function') {
                 window.steamAPI.storeStats().then(success => {
                     if (success) console.log(`[Steam] Stats stored: Kills=${statsTracking.totalKills}, Badges=${statsTracking.totalBadges}, Stage=${maxStageReached}`);
@@ -3254,18 +3263,20 @@ function triggerStageClear() {
     window.gameState = 'clear'; 
     let lvUI = document.getElementById('levelUpUI'); if (lvUI) lvUI.classList.add('hidden');
     
-    let rewardBase = (currentStage % 5 === 0) ? GameSettings.economy.clearRewardBoss : GameSettings.economy.clearRewardBase;
+    // Baseline rewards: 5 for regular, 10 for boss stages
+    let reward = (currentStage % 5 === 0) ? 10 : 5;
     
-    // Artifact: Golden Badge Case (+10% Bonus)
-    let bonusMult = 1.0;
+    // Artifact Bonus: +10% flat if equipped
     if (window.equippedArtifacts && window.equippedArtifacts.includes('art_r_11')) {
-        const level = (window.ownedArtifacts && window.ownedArtifacts['art_r_11']) ? window.ownedArtifacts['art_r_11'] : 1;
-        bonusMult += (0.1 * (1.0 + (level - 1) * 0.1));
+        reward = Math.floor(reward * 1.1);
     }
     
-    let reward = Math.floor(rewardBase * bonusMult);
+    // Safety Cap: Prevent any unexpected jumps
+    reward = Math.min(reward, 100);
+    
     playerBadges += reward;
     statsTracking.totalBadges += reward;
+    updateLobbyCurrency();
     
     // Sync to Steam
     if (window.steamAPI && typeof window.steamAPI.uploadLeaderboardStage === 'function') {
@@ -3290,6 +3301,8 @@ function resetStage(fullReset = false) {
     isStageCleared = false;
     hasSpawnedMidBoss = false;
     hasSpawnedFinalBoss = false;
+    window.lastStageNoHit = true;
+    window.lastRouletteResult = null;
     
     spotlight = null;
     spotlightSpawnTimer = 30.0;
@@ -4545,12 +4558,12 @@ class Player {
     }
     takeDamage(amount) {
         if(this.invincibleTimer > 0) return; 
-        
+        window.lastStageNoHit = false;
         this.hp -= amount; 
         this.invincibleTimer = 0.5; 
         this.hitTimer = 0.2; 
-        hitStopTimer = 0.05; 
-        screenShake = 15; 
+        hitStopTimer = 0.05;
+        screenShake = 15;
         
         updateHUD(); 
         playSFX('hit'); 
@@ -5031,13 +5044,24 @@ class EnemyTrap {
 }
 
 class ExpGem {
-    constructor(x, y, value) { this.x = x + (Math.random() * 20 - 10); this.y = y + (Math.random() * 20 - 10); this.value = value; this.color = value >= 20 ? '#e84118' : (value > 1 ? '#00a8ff' : '#4cd137'); this.radius = value >= 20 ? 8 : 4; this.isMagnetic = false; }
+    constructor(x, y, value) { this.x = x + (Math.random() * 20 - 10); this.y = y + (Math.random() * 20 - 10); this.value = value; this.color = value >= 20 ? '#e84118' : (value > 1 ? '#00a8ff' : '#4cd137'); this.radius = value >= 20 ? 8 : 4; this.isMagnetic = false; this.hp = 1; }
     update(dt) { 
+        if (this.hp === 0) return;
         let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy;
         if(distSq < GameSettings.player.pickupRange * GameSettings.player.pickupRange) { this.isMagnetic = true; }
-        if(this.isMagnetic) { let dist = Math.sqrt(distSq); this.x += (dx/dist) * 400 * dt; this.y += (dy/dist) * 400 * dt; let rSum = player.radius + this.radius; if(distSq < rSum*rSum) { player.gainExp(this.value); this.hp = 0; } } 
+        if(this.isMagnetic) { 
+            let dist = Math.sqrt(distSq); 
+            this.x += (dx/dist) * 850 * dt; 
+            this.y += (dy/dist) * 850 * dt; 
+            let rSum = player.radius + this.radius + 15; 
+            if(distSq < rSum*rSum) { 
+                player.gainExp(this.value); 
+                particles.push(new Particle(this.x, this.y, this.color));
+                this.hp = 0; 
+            } 
+        } 
     }
-    draw(ctx) { if(isOffScreen(this.x, this.y)) return; ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore(); }
+    draw(ctx) { if(isOffScreen(this.x, this.y) || this.hp === 0) return; ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore(); }
 }
 
 class FieldItem {
@@ -5670,6 +5694,7 @@ window.checkRouletteSynergy = function() {
     const lang = window.I18N[window.currentLang];
     
     if (counts.red === 3 || counts.yellow === 3 || counts.green === 3) {
+        window.lastRouletteResult = 'perfect';
         const type = inv[0];
         window.verdictBuffs[type] += 0.15;
         if (window.player) {
@@ -5679,6 +5704,7 @@ window.checkRouletteSynergy = function() {
         if (window.playSFX) window.playSFX('verdictJackpot');
         if (window.showSystemNotice) window.showSystemNotice(`🎉 ${lang.syn_triple}`);
     } else if (counts.red === 2 || counts.yellow === 2 || counts.green === 2) {
+        window.lastRouletteResult = 'pair';
         const type = Object.keys(counts).find(k => counts[k] === 2);
         window.verdictBuffs[type] += 0.05;
         if (window.player) window.player.recalculateStats();
@@ -5691,6 +5717,7 @@ window.checkRouletteSynergy = function() {
         if (window.playSFX) window.playSFX('verdictPair');
         if (window.showSystemNotice) window.showSystemNotice(`✨ ${lang.syn_double}`);
     } else {
+        window.lastRouletteResult = 'rainbow';
         if (window.player) window.player.stats.cooldownMult *= 0.85;
         if (window.playSFX) window.playSFX('verdictStraight');
         if (window.showSystemNotice) window.showSystemNotice(`🃏 ${lang.syn_mix}`);
