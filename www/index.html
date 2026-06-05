@@ -403,7 +403,6 @@
         .aos-build #fullscreenBtn { display: none !important; }
         
         /* PC Build Optimization */
-        .pc-build #mobileDashBtn,
         .pc-build .portrait-warning { display: none !important; }
         .pc-build #fullscreenBtn { 
             display: flex !important; 
@@ -847,6 +846,8 @@ window.ARTIFACT_DATA = {
     art_r_9: { id: 'art_r_9', rarity: 'R', nameKo: "이름표", nameEn: "Name Tag", flavorKo: "잊혀져 가는 당신의 정체성을 붙잡아 줍니다.", flavorEn: "Hold onto your fading identity.", descKo: "경험치 획득 +5%", descEn: "EXP Gain +5%", icon: "🏷️", type: 'passive', stats: { expMult: 0.05 } },
     art_r_10: { id: 'art_r_10', rarity: 'R', nameKo: "옷핀", nameEn: "Safety Pin", flavorKo: "벌어진 상처를 임시방편으로나마 고정합니다.", flavorEn: "Temporarily secures an open wound.", descKo: "방어력 +5%", descEn: "Defense +5%", icon: "🧷", type: 'passive', stats: { defense: 0.05 } },
     art_r_11: { id: 'art_r_11', rarity: 'R', nameKo: "황금 배지 케이스", nameEn: "Golden Badge Case", flavorKo: "가장 소중한 뱃지를 보관하던 케이스.", flavorEn: "A case for the most precious badges.", descKo: "장착 시 방어력 +5%", descEn: "Defense +5%", icon: "💼", type: 'passive', stats: { defense: 0.05 } },
+    art_r_12: { id: 'art_r_12', rarity: 'R', nameKo: "몽당연필", nameEn: "Stubby Pencil", flavorKo: "수많은 시험을 이겨낸 흔적.", flavorEn: "Traces of surviving countless exams.", descKo: "공격력 +2%, 쿨타임 -2%", descEn: "ATK +2%, Cooldown -2%", icon: "✏️", type: 'passive', stats: { damageMult: 0.02, cooldownMult: -0.02 } },
+    art_r_13: { id: 'art_r_13', rarity: 'R', nameKo: "낡은 이어폰", nameEn: "Old Earphones", flavorKo: "세상과 단절되는 나만의 공간.", flavorEn: "My own space cut off from the world.", descKo: "공격속도 +3%, 쿨타임 -2%", descEn: "ATK SPD +3%, Cooldown -2%", icon: "🎧", type: 'passive', stats: { atkSpdMult: 0.03, cooldownMult: -0.02 } },
 
     // SR (10): Better Stats + Passive Effects
     art_sr_1: { id: 'art_sr_1', rarity: 'SR', nameKo: "반장 배지", nameEn: "President Badge", flavorKo: "책임감의 무게가 어깨를 짓누릅니다.", flavorEn: "The weight of responsibility presses on your shoulders.", descKo: "공격력 +10%", descEn: "ATK +10%", icon: "🥇", type: 'passive', stats: { damageMult: 0.1 } },
@@ -860,6 +861,8 @@ window.ARTIFACT_DATA = {
     art_sr_9: { id: 'art_sr_9', rarity: 'SR', nameKo: "거울 파편", nameEn: "Mirror Shard", flavorKo: "진실을 비추는 거울은 산산조각 났습니다.", flavorEn: "The mirror reflecting the truth is shattered.", descKo: "피격 시 10% 확률로 회피", descEn: "10% Chance to Dodge", icon: "🪞", type: 'passive', stats: { dodge: 0.1 } },
     art_sr_10: { id: 'art_sr_10', rarity: 'SR', nameKo: "낡은 녹음기", nameEn: "Old Recorder", flavorKo: "누군가의 마지막 목소리가 담겨 있을지도...", flavorEn: "Might contain someone's final voice...", descKo: "스킬 범위 +20%", descEn: "Skill Range +20%", icon: " cassette", icon: "📼", type: 'passive', stats: { rangeMult: 0.2 } },
     art_sr_11: { id: 'art_sr_11', rarity: 'SR', nameKo: "반사의 법률", nameEn: "Law of Reflection", flavorKo: "모든 행위는 자신에게 되돌아오는 법.", flavorEn: "Every action eventually returns to itself.", descKo: "대쉬 중 15% 확률로 적의 투사체 반사", descEn: "15% Chance to reflect projectiles during Dash", icon: "💎", type: 'passive', stats: { reflectChance: 0.15 } },
+    art_sr_12: { id: 'art_sr_12', rarity: 'SR', nameKo: "분실물 열쇠", nameEn: "Lost & Found Key", flavorKo: "누군가의 소중한 물건을 찾을 수 있을까요?", flavorEn: "Can we find someone's precious item?", descKo: "공격력 +10%, 쿨타임 -5%", descEn: "ATK +10%, Cooldown -5%", icon: "🗝️", type: 'passive', stats: { damageMult: 0.1, cooldownMult: -0.05 } },
+    art_sr_13: { id: 'art_sr_13', rarity: 'SR', nameKo: "비밀의 일기장", nameEn: "Secret Diary", flavorKo: "아무에게도 말할 수 없는 비밀.", flavorEn: "A secret that cannot be told to anyone.", descKo: "최대 체력 +10%, 이동속도 +10%", descEn: "Max HP +10%, SPD +10%", icon: "📓", type: 'passive', stats: { maxHpMult: 0.1, speedMult: 0.1 } },
 
     // SSR (5): Active Skills + Small Stat Bonus
     art_ssr_1: { id: 'art_ssr_1', rarity: 'SSR', nameKo: "정의의 저울", nameEn: "Justice Scale", flavorKo: "균형을 맞추지 못하면, 죽음뿐입니다.", flavorEn: "Failure to balance means death.", descKo: "공격력 +3% | 액티브: 5초간 가한 피해의 10% 흡혈", descEn: "ATK +3% | Active: 10% Life Steal for 5s", icon: "⚖️", type: 'active', cooldown: 30, duration: 5, effect: 'lifesteal', stats: { damageMult: 0.03 } },
@@ -868,6 +871,7 @@ window.ARTIFACT_DATA = {
     art_ssr_4: { id: 'art_ssr_4', rarity: 'SSR', nameKo: "멸균된 메스", nameEn: "Sterile Scalpel", flavorKo: "죄의 근원을 완벽하게 도려냅니다.", flavorEn: "Perfectly excise the root of sin.", descKo: "공격력 +3% | 액티브: 전방에 강력한 레이저 발사", descEn: "ATK +3% | Active: Fire powerful frontal laser", icon: "🗡️", type: 'active', cooldown: 30, effect: 'laser', stats: { damageMult: 0.03 } },
     art_ssr_5: { id: 'art_ssr_5', rarity: 'SSR', nameKo: "유령의 졸업장", nameEn: "Ghost Diploma", flavorKo: "죽음만이 유일한 졸업입니다.", flavorEn: "Only death is the true graduation.", descKo: "최대 체력 +3% | 액티브: 화면 내 모든 보석 자석 흡수", descEn: "Max HP +3% | Active: Pull all screen EXP gems", icon: "📜", type: 'active', cooldown: 30, effect: 'vacuum', stats: { maxHpMult: 0.03 } },
     art_ssr_6: { id: 'art_ssr_6', rarity: 'SSR', nameKo: "정의의 탐욕", nameEn: "Justice's Greed", flavorKo: "합법적인 수단으로 모든 부를 축적합니다.", flavorEn: "Accumulate all wealth through legal means.", descKo: "이속 +3% | 액티브: 8초간 적 처치 시 뱃지 획득 +100%", descEn: "SPD +3% | Active: +100% Badge gain on kill (8s)", icon: "🤑", type: 'active', cooldown: 45, duration: 8, effect: 'greed', stats: { speedMult: 0.03 } },
+    art_ssr_7: { id: 'art_ssr_7', rarity: 'SSR', nameKo: "광기의 호루라기", nameEn: "Whistle of Madness", flavorKo: "이성을 잃고 오직 본능에만 의존합니다.", flavorEn: "Lose reason and rely only on instinct.", descKo: "공속 +5% | 액티브: 8초간 공속 +100%, 이속 -20%", descEn: "ATK SPD +5% | Active: +100% ATK SPD, -20% SPD (8s)", icon: "🚨", type: 'active', cooldown: 40, duration: 8, effect: 'madness', stats: { atkSpdMult: 0.05 } },
 
     // UR (5): Ultimate Skills + Milestone Stat Bonus
     art_ur_1: { id: 'art_ur_1', rarity: 'UR', nameKo: "지배자의 왕관", nameEn: "Sovereign Crown", flavorKo: "이 법정의 진정한 주인은 누구인가?", flavorEn: "Who is the true master of this court?", descKo: "공격력 +5% | 액티브: 5초간 무적 및 소형몹 소탕", descEn: "ATK +5% | Active: Invincible (5s) + Wipe Mobs", icon: "👑", type: 'active', cooldown: 45, duration: 5, effect: 'sovereign', stats: { damageMult: 0.05 } },
@@ -875,13 +879,17 @@ window.ARTIFACT_DATA = {
     art_ur_3: { id: 'art_ur_3', rarity: 'UR', nameKo: "심판의 소용돌이", nameEn: "Verdict Vortex", flavorKo: "운명의 소용돌이가 모든 것을 집어삼킵니다.", flavorEn: "The vortex of fate swallows everything.", descKo: "공격력 +5% | 액티브: 즉시 구슬 3개 획득 (트리플)", descEn: "ATK +5% | Active: Gain 3 same Verdict Orbs", icon: "🌀", type: 'active', cooldown: 45, effect: 'jackpot', stats: { damageMult: 0.05 } },
     art_ur_4: { id: 'art_ur_4', rarity: 'UR', nameKo: "구원의 날개", nameEn: "Redemption Wings", flavorKo: "하늘 높이 날아올라, 비극의 굴레를 벗어던지세요.", flavorEn: "Fly high into the sky, shed the cycle of tragedy.", descKo: "최대 체력 +5% | 액티브: 10초간 비행 및 자동 공격", descEn: "Max HP +5% | Active: Flight + Auto Attack (10s)", icon: "🪽", type: 'active', cooldown: 45, duration: 10, effect: 'ascension', stats: { maxHpMult: 0.05 } },
     art_ur_5: { id: 'art_ur_5', rarity: 'UR', nameKo: "이솔의 잃어버린 기억", nameEn: "Isol's Memory", flavorKo: "진실을 마주할 준비가 되셨습니까?", flavorEn: "Are you ready to face the truth?", descKo: "공격력 +5% | 액티브: 체력 완전 회복 및 대폭발", descEn: "ATK +5% | Active: Full Heal + Mega Explosion", icon: "💎", type: 'active', cooldown: 45, effect: 'turnabout', stats: { damageMult: 0.05 } },
-    art_ur_6: { id: 'art_ur_6', rarity: 'UR', nameKo: "진실의 절대성", nameEn: "Truth's Absolute", flavorKo: "진실은 결코 굴절되지 않으며, 돌아올 뿐입니다.", flavorEn: "Truth never refracts, it only returns.", descKo: "공격력 +5% | 투사체가 화면 끝에서 1회 튕김", descEn: "ATK +5% | Projectiles bounce off screen once", icon: "🎇", type: 'passive', stats: { damageMult: 0.05, bounceCount: 1 } }
+    art_ur_6: { id: 'art_ur_6', rarity: 'UR', nameKo: "진실의 절대성", nameEn: "Truth's Absolute", flavorKo: "진실은 결코 굴절되지 않으며, 돌아올 뿐입니다.", flavorEn: "Truth never refracts, it only returns.", descKo: "공격력 +5% | 투사체가 화면 끝에서 1회 튕김", descEn: "ATK +5% | Projectiles bounce off screen once", icon: "🎇", type: 'passive', stats: { damageMult: 0.05, bounceCount: 1 } },
+    art_ur_7: { id: 'art_ur_7', rarity: 'UR', nameKo: "금단의 교무수첩", nameEn: "Forbidden Register", flavorKo: "이름이 적히는 순간, 그들의 운명은 결정됩니다.", flavorEn: "The moment the name is written, their fate is sealed.", descKo: "공격력 +5% | 액티브: 10초간 스킬 쿨타임 -80%", descEn: "ATK +5% | Active: -80% Skill Cooldown (10s)", icon: "📓", type: 'active', cooldown: 60, duration: 10, effect: 'rapidfire', stats: { damageMult: 0.05 } }
 };
 
 window.ARTIFACT_SYNERGIES = {
     lawAndOrder: { nameKo: "⚖️ 법과 질서", nameEn: "⚖️ Law & Order", req: ['art_sr_1', 'art_ssr_1'], stats: { damageMult: 0.20 } },
     digitalMaster: { nameKo: "💻 디지털 마스터", nameEn: "💻 Digital Master", req: ['art_sr_5', 'art_ssr_2'], stats: { atkSpdMult: 0.20 } },
-    finalArgument: { nameKo: "📜 최후의 변론", nameEn: "📜 Final Argument", req: ['art_ur_3', 'art_ssr_3'], stats: { artCooldownMult: -0.20 } }
+    finalArgument: { nameKo: "📜 최후의 변론", nameEn: "📜 Final Argument", req: ['art_ur_3', 'art_ssr_3'], stats: { artCooldownMult: -0.20 } },
+    studyHard: { nameKo: "📚 열공 모드", nameEn: "📚 Study Hard", req: ['art_r_12', 'art_r_3'], stats: { artCooldownMult: -0.15 } },
+    secretClub: { nameKo: "🤫 비밀 동아리", nameEn: "🤫 Secret Club", req: ['art_sr_13', 'art_ssr_7'], stats: { atkSpdMult: 0.25 } },
+    forbiddenKnowledge: { nameKo: "🚫 금단의 지식", nameEn: "🚫 Forbidden Knowledge", req: ['art_ur_7', 'art_sr_5'], stats: { damageMult: 0.30 } }
 };
 
 window.artCooldowns = [0, 0, 0];
@@ -1200,6 +1208,15 @@ window.handleActiveSkill = function(slotIdx) {
         player.greedActive = true;
         showSystemNotice(currentLang === 'ko' ? "정의의 탐욕 발동!" : "JUSTICE'S GREED!");
         setTimeout(() => { player.greedActive = false; }, art.duration * 1000);
+    } else if (art.effect === 'madness') {
+        player.stats.atkSpdMult += 1.0;
+        player.stats.speedMult -= 0.2;
+        showSystemNotice(currentLang === 'ko' ? "광기 발동!" : "MADNESS!");
+        setTimeout(() => { player.stats.atkSpdMult -= 1.0; player.stats.speedMult += 0.2; updateHUD(); }, art.duration * 1000);
+    } else if (art.effect === 'rapidfire') {
+        player.stats.cooldownMult -= 0.8;
+        showSystemNotice(currentLang === 'ko' ? "스킬 연사!" : "RAPID FIRE!");
+        setTimeout(() => { player.stats.cooldownMult += 0.8; }, art.duration * 1000);
     }
     updateHUD();
 };
@@ -5262,7 +5279,7 @@ canvas.addEventListener('touchcancel', e => {
 
 let dashBtnEl = document.getElementById('mobileDashBtn');
 if (dashBtnEl) {
-    dashBtnEl.addEventListener('touchstart', e => {
+    const dashHandler = e => {
         e.preventDefault();
         if(window.gameState === 'playing' && player && player.dashCooldownTimer <= 0 && player.dashTimer <= 0) {
             let dx = 0; let dy = 0;
@@ -5272,7 +5289,9 @@ if (dashBtnEl) {
             }
             player.executeDash(dx, dy);
         }
-    }, {passive: false});
+    };
+    dashBtnEl.addEventListener('touchstart', dashHandler, {passive: false});
+    dashBtnEl.addEventListener('mousedown', dashHandler, {passive: false});
 }
 
 function gameLoop(timestamp) {
