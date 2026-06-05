@@ -2737,8 +2737,12 @@ function syncSteamStats() {
             window.steamAPI.setStat('stat_badges', statsTracking.totalBadges);
             window.steamAPI.setStat('stat_stages', maxStageReached);
             if (typeof window.steamAPI.storeStats === 'function') {
-                window.steamAPI.storeStats(); // Commit changes to Steam
+                window.steamAPI.storeStats().then(success => {
+                    if (success) console.log(`[Steam] Stats stored: Kills=${statsTracking.totalKills}, Badges=${statsTracking.totalBadges}, Stage=${maxStageReached}`);
+                });
             }
+        } else {
+            console.warn("[Steam] steamAPI.setStat is not available.");
         }
     }
 }

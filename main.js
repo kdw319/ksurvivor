@@ -84,6 +84,30 @@ ipcMain.handle('steam-unlock-achievement', (event, achievementId) => {
   return false;
 });
 
+ipcMain.handle('steam-set-stat', (event, name, value) => {
+  if (client) {
+    try {
+      client.stats.set(name, value);
+      return true;
+    } catch (e) {
+      console.error(`Failed to set stat ${name}:`, e);
+    }
+  }
+  return false;
+});
+
+ipcMain.handle('steam-store-stats', () => {
+  if (client) {
+    try {
+      client.stats.store();
+      return true;
+    } catch (e) {
+      console.error('Failed to store stats:', e);
+    }
+  }
+  return false;
+});
+
 const fs = require('fs');
 
 ipcMain.on('quit-app', () => {
