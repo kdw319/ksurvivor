@@ -1661,7 +1661,7 @@ let enemies = [];
 // Verdict Roulette System
 window.verdictGauge = 0;
 window.verdictInventory = [];
-window.verdictBuffs = { red: 0, yellow: 0, green: 0 };
+window.verdictBuffs = { red: 0, yellow: 0, green: 0, cooldown: 1.0 };
 window.MAX_GAUGE = 50;
  
 let projectiles = []; 
@@ -3296,7 +3296,7 @@ function nextStage() {
 }
 
 function resetStage(fullReset = false) {
-    stageTime = 0; enemies = []; window.verdictGauge = 0; window.verdictInventory = []; window.verdictBuffs = { red: 0, yellow: 0, green: 0 }; if(window.updateVerdictUI) window.updateVerdictUI(); stageKills = 0; window.orbStacks = { red: 0, yellow: 0, green: 0 }; projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = [];
+    stageTime = 0; enemies = []; window.verdictGauge = 0; window.verdictInventory = []; window.verdictBuffs = { red: 0, yellow: 0, green: 0, cooldown: 1.0 }; if(window.updateVerdictUI) window.updateVerdictUI(); stageKills = 0; window.orbStacks = { red: 0, yellow: 0, green: 0 }; projectiles = []; enemyProjectiles = []; groundTraps = []; expGems = []; damageTexts = []; particles = []; items = [];
     verdictOrbs = []; stageKills = 0; stageMarblesDropped = 0;
     isStageCleared = false;
     hasSpawnedMidBoss = false;
@@ -4240,7 +4240,7 @@ class RecorderWeapon extends Weapon {
     update(dt) {
         this.timer -= dt;
         if(this.timer <= 0) {
-            this.timer = (this.settings.cooldown * Math.max(0.4, (1 - this.level*0.1))) * player.stats.cooldownMult;
+            this.timer = (this.settings.cooldown * Math.max(0.4, (1 - this.level*0.1))) * player.stats.cooldownMult / player.stats.atkSpdMult;
             player.playAnim('swing');
             let hitAny = false; 
             let currentRange = this.settings.range * (1 + this.level*0.2); 
@@ -4326,7 +4326,7 @@ class SmartPhoneWeapon extends Weapon {
     update(dt) {
         this.timer -= dt;
         if(this.timer <= 0) {
-            this.timer = (this.settings.cooldown * Math.max(0.4, (1 - this.level*0.1))) * player.stats.cooldownMult;
+            this.timer = (this.settings.cooldown * Math.max(0.4, (1 - this.level*0.1))) * player.stats.cooldownMult / player.stats.atkSpdMult;
             player.playAnim('cast');
             let finalDamage = (this.settings.damage * this.level) * player.getDamageMultiplier(); 
             if (this.isAwakened) finalDamage *= 3.0;
@@ -4420,19 +4420,23 @@ class Player {
         
         if (window.orbStacks) {
             this.stats.damageMult += (window.orbStacks.red * 0.05);
-            this.stats.maxHp += (window.orbStacks.yellow * 0.05 * this.baseMaxHp);
+            this.stats.atkSpdMult += (window.orbStacks.yellow * 0.05);
             this.stats.speedMult += (window.orbStacks.green * 0.05);
         }
         
         if (window.verdictBuffs) {
             this.stats.damageMult += window.verdictBuffs.red;
-            this.stats.maxHp += (window.verdictBuffs.yellow * this.baseMaxHp);
+            this.stats.atkSpdMult += window.verdictBuffs.yellow;
             this.stats.speedMult += window.verdictBuffs.green;
         }
         this.weapons.forEach(w => { let bonus = w.settings.statBonus; if(bonus && bonus.type !== 'none') { this.stats[bonus.type] += (bonus.value * w.level); } });
         
         if (this.activeSynergies.proGamer) {
             this.stats.atkSpdMult += 0.2;
+        }
+
+        if (window.verdictBuffs && window.verdictBuffs.cooldown) {
+            this.stats.cooldownMult *= window.verdictBuffs.cooldown;
         }
 
         this.stats.cooldownMult = Math.max(0.2, this.stats.cooldownMult); updateHUD(); 
@@ -5443,6 +5447,7 @@ function gameLoop(timestamp) {
             
             
             if (frameCount % 5 === 0) drawMinimap();
+            if (frameCount % 10 === 0) updateHUD();
             if (window.updateVerdictUI) window.updateVerdictUI();
 
             // Update Artifact Cooldowns
@@ -5639,7 +5644,7 @@ gameLoopId = requestAnimationFrame(gameLoop);
 <script>
 window.verdictGauge = 0;
 window.verdictInventory = [];
-window.verdictBuffs = { red: 0, yellow: 0, green: 0 };
+window.verdictBuffs = { red: 0, yellow: 0, green: 0, cooldown: 1.0 };
 window.MAX_GAUGE = 50;
 
 window.useVerdictRoulette = function() {
@@ -5699,7 +5704,6 @@ window.checkRouletteSynergy = function() {
         window.verdictBuffs[type] += 0.15;
         if (window.player) {
             window.player.hp = Math.min(window.player.maxHp, window.player.hp + (window.player.maxHp * 0.5));
-            window.player.recalculateStats();
         }
         if (window.playSFX) window.playSFX('verdictJackpot');
         if (window.showSystemNotice) window.showSystemNotice(`🎉 ${lang.syn_triple}`);
@@ -5707,7 +5711,6 @@ window.checkRouletteSynergy = function() {
         window.lastRouletteResult = 'pair';
         const type = Object.keys(counts).find(k => counts[k] === 2);
         window.verdictBuffs[type] += 0.05;
-        if (window.player) window.player.recalculateStats();
         if (window.enemies && window.player) {
             window.enemies.forEach(e => {
                 let dx = e.x - window.player.x; let dy = e.y - window.player.y; let dist = Math.hypot(dx, dy);
@@ -5718,10 +5721,11 @@ window.checkRouletteSynergy = function() {
         if (window.showSystemNotice) window.showSystemNotice(`✨ ${lang.syn_double}`);
     } else {
         window.lastRouletteResult = 'rainbow';
-        if (window.player) window.player.stats.cooldownMult *= 0.85;
+        window.verdictBuffs.cooldown *= 0.85; // Permanent CDR for this stage
         if (window.playSFX) window.playSFX('verdictStraight');
         if (window.showSystemNotice) window.showSystemNotice(`🃏 ${lang.syn_mix}`);
     }
+    if (window.player) window.player.recalculateStats();
 };
 
 window.updateVerdictUI = function() {
