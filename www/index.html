@@ -2850,19 +2850,18 @@ function drawBackground(ctx, inLobby) {
             let h = bgImg.height * scale * 1.1;
             ctx.drawImage(bgImg, (gameWidth/2 - w/2 + px)|0, (gameHeight/2 - h/2 + py)|0, w|0, h|0);
             
-            // --- SPOTLIGHT MASK (Centered on Character) ---
+            // --- CENTRAL DARK MASK (For Character Contrast) ---
             let charY = gameHeight/2 + 50; 
-            let grad = ctx.createRadialGradient(gameWidth/2, charY - 30, 40, gameWidth/2, charY - 30, 350);
-            grad.addColorStop(0, 'rgba(0,0,0,0)');
-            grad.addColorStop(0.4, 'rgba(0,0,0,0.4)');
-            grad.addColorStop(1, 'rgba(0,0,0,0.95)');
+            let grad = ctx.createRadialGradient(gameWidth/2, charY - 30, 0, gameWidth/2, charY - 30, 250);
+            grad.addColorStop(0, 'rgba(0,0,0,0.7)'); // Darkest behind character
+            grad.addColorStop(1, 'rgba(0,0,0,0)');   // Fade out to original background
             ctx.fillStyle = grad;
             ctx.fillRect(0,0,gameWidth,gameHeight);
 
-            // Bottom gradient for button clarity (Ultra)
+            // Bottom gradient for button clarity (Approved)
             let bGrad = ctx.createLinearGradient(0, gameHeight * 0.5, 0, gameHeight);
             bGrad.addColorStop(0, 'rgba(0,0,0,0)');
-            bGrad.addColorStop(1, 'rgba(0,0,0,0.95)');
+            bGrad.addColorStop(1, 'rgba(0,0,0,0.85)');
             ctx.fillStyle = bGrad;
             ctx.fillRect(0, gameHeight * 0.5, gameWidth, gameHeight * 0.5);
         } else {
