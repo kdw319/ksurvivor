@@ -2834,8 +2834,13 @@ function drawBackground(ctx, inLobby) {
     ctx.save(); 
     if (inLobby) {
         const bgImg = loadedImages.lobby_bg;
+        let px = 0, py = 0;
+        if (typeof window.mouseX !== 'undefined') {
+            px = (window.mouseX - window.innerWidth/2) * 0.02;
+            py = (window.mouseY - window.innerHeight/2) * 0.02;
+        }
+
         if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
-            // ... (keep the rest of the code) ...
             let scale = Math.max(gameWidth / bgImg.width, gameHeight / bgImg.height);
             let w = bgImg.width * scale * 1.1; 
             let h = bgImg.height * scale * 1.1;
