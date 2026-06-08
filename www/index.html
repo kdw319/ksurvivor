@@ -823,8 +823,8 @@ function loadAssets() {
         if (srcData && srcData.trim() !== "") {
             const img = new Image();
             img.src = srcData.startsWith('data:') || srcData.startsWith('http') ? srcData : './assets/' + srcData;
-            img.onload = () => console.log(`[Asset] Loaded: ${key}`);
-            img.onerror = () => console.error(`[Asset] Failed to load: ${key}`);
+            img.onload = () => console.log(`[Asset] Successfully loaded: ${key} from ${img.src}`);
+            img.onerror = (e) => console.error(`[Asset] Failed to load: ${key} from ${img.src}`, e);
             loadedImages[key] = img;
         }
     }
