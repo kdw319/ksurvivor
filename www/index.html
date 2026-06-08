@@ -824,7 +824,7 @@ function loadAssets() {
             const img = new Image();
             img.src = srcData.startsWith('data:') || srcData.startsWith('http') ? srcData : './assets/' + srcData;
             img.onload = () => console.log(`[Asset] Successfully loaded: ${key} from ${img.src}`);
-            img.onerror = (e) => console.error(`[Asset] Failed to load: ${key} from ${img.src}`, e);
+            img.onerror = (e) => console.error(`[Asset] FAILED to load: ${key} from ${img.src}. Event:`, e);
             loadedImages[key] = img;
         }
     }
@@ -2855,7 +2855,7 @@ function drawBackground(ctx, inLobby) {
             ctx.fillStyle = bGrad;
             ctx.fillRect(0, gameHeight * 0.7, gameWidth, gameHeight * 0.3);
         } else {
-            console.log("Lobby background not loaded yet", bgImg);
+            console.warn(`Lobby background NOT READY. complete: ${bgImg ? bgImg.complete : 'null'}, width: ${bgImg ? bgImg.naturalWidth : 'null'}, src: ${bgImg ? bgImg.src : 'null'}`);
             ctx.fillStyle = lobbyPattern;
             ctx.fillRect(0, 0, gameWidth, gameHeight);
         }
