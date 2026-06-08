@@ -2848,27 +2848,18 @@ function drawBackground(ctx, inLobby) {
             let h = bgImg.naturalHeight * scale;
             ctx.drawImage(bgImg, (gameWidth/2 - w/2 + px)|0, (gameHeight/2 - h/2 + py)|0, w|0, h|0);
             
-            // --- CENTRAL DARK MASK (For Character Contrast) ---
+            // --- CENTRAL DARK MASK ---
             let charY = gameHeight/2 + 50; 
             let grad = ctx.createRadialGradient(gameWidth/2, charY - 30, 0, gameWidth/2, charY - 30, 350);
-            grad.addColorStop(0, 'rgba(0,0,0,0.85)'); // Dark circle behind Isol
-            grad.addColorStop(1, 'rgba(0,0,0,0)');    // Fades out to reveal background
+            grad.addColorStop(0, 'rgba(0,0,0,0.75)');
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = grad;
             ctx.fillRect(0,0,gameWidth,gameHeight);
 
-            // Bottom gradient for button clarity (Approved)
+            // Bottom UI clarity gradient
             let bGrad = ctx.createLinearGradient(0, gameHeight * 0.5, 0, gameHeight);
             bGrad.addColorStop(0, 'rgba(0,0,0,0)');
-            bGrad.addColorStop(1, 'rgba(0,0,0,0.95)');
-            ctx.fillStyle = bGrad;
-            ctx.fillRect(0, gameHeight * 0.5, gameWidth, gameHeight * 0.5);
-        } else {
-            ctx.fillStyle = lobbyPattern;
-            ctx.fillRect(0, 0, gameWidth, gameHeight);
-        }
-    } else {
-            bGrad.addColorStop(0, 'rgba(0,0,0,0)');
-            bGrad.addColorStop(1, 'rgba(0,0,0,0.85)');
+            bGrad.addColorStop(1, 'rgba(0,0,0,0.9)');
             ctx.fillStyle = bGrad;
             ctx.fillRect(0, gameHeight * 0.5, gameWidth, gameHeight * 0.5);
         } else {
