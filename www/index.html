@@ -823,6 +823,8 @@ function loadAssets() {
         if (srcData && srcData.trim() !== "") {
             const img = new Image();
             img.src = srcData.startsWith('data:') || srcData.startsWith('http') ? srcData : './assets/' + srcData;
+            img.onload = () => console.log(`[Asset] Loaded: ${key}`);
+            img.onerror = () => console.error(`[Asset] Failed to load: ${key}`);
             loadedImages[key] = img;
         }
     }
@@ -2833,16 +2835,9 @@ function drawBackground(ctx, inLobby) {
     if (inLobby) {
         const bgImg = loadedImages.lobby_bg;
         if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
-            // --- PARALLAX EFFECT ---
-            let px = 0, py = 0;
-            if (typeof window.mouseX !== 'undefined') {
-                px = (window.mouseX - window.innerWidth/2) * 0.02;
-                py = (window.mouseY - window.innerHeight/2) * 0.02;
-            }
-            
-            // Draw centered and cover
+            // ... (keep the rest of the code) ...
             let scale = Math.max(gameWidth / bgImg.width, gameHeight / bgImg.height);
-            let w = bgImg.width * scale * 1.1; // Slightly larger for parallax
+            let w = bgImg.width * scale * 1.1; 
             let h = bgImg.height * scale * 1.1;
             ctx.drawImage(bgImg, (gameWidth/2 - w/2 + px)|0, (gameHeight/2 - h/2 + py)|0, w|0, h|0);
             
@@ -2860,6 +2855,7 @@ function drawBackground(ctx, inLobby) {
             ctx.fillStyle = bGrad;
             ctx.fillRect(0, gameHeight * 0.7, gameWidth, gameHeight * 0.3);
         } else {
+            console.log("Lobby background not loaded yet", bgImg);
             ctx.fillStyle = lobbyPattern;
             ctx.fillRect(0, 0, gameWidth, gameHeight);
         }
