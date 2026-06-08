@@ -5155,14 +5155,15 @@ class VerdictOrb {
         if(this.isMagnetic) { 
             let dist = Math.sqrt(distSq); this.x += (dx/dist) * 900 * dt; this.y += (dy/dist) * 900 * dt; 
             if(distSq < (player.radius + this.radius + 20)**2) { 
-                if (player.marblePocket.length >= 3) player.marblePocket.shift();
-                player.marblePocket.push(this.type);
+                if (window.verdictInventory.length >= 3) window.verdictInventory.shift();
+                window.verdictInventory.push(this.type);
                 window.orbStacks[this.type]++;
                 statsTracking.marblesCollected++;
                 player.recalculateStats();
                 playSFX('exp');
                 particles.push(new Particle(this.x, this.y, this.color));
                 this.hp = 0;
+                if(window.updateVerdictUI) window.updateVerdictUI();
                 showSystemNotice(`${window.I18N[currentLang].orb_get} ${this.icon}`);
             } 
         }
@@ -5878,6 +5879,7 @@ window.updateVerdictUI = function() {
     
     for(let i=0; i<3; i++) {
         const slot = document.getElementById('vo-slot-' + i);
+        console.log(`Checking slot vo-slot-${i}:`, slot);
         if (slot) {
             const type = window.verdictInventory[i];
             slot.className = 'r-slot'; // reset classes
