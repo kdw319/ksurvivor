@@ -813,8 +813,9 @@ player_idle: "character_idle.webp",
     stage10_floor: "stage10_floor.png",
     // 🎭 Color Variations
     vari_color1_front: "vari/front_vari_color1.png", vari_color1_back: "vari/back_vari_color1.png", vari_color1_left: "vari/left_vari_color1.png", vari_color1_right: "vari/right_vari_color1.png", vari_color1_dash: "vari/dash_vari_color1.png",
-    vari_color2_front: "vari/front_vari_color2.png", vari_color2_back: "vari/back_vari_color2.png", vari_color2_left: "vari/left_vari_color2.png", vari_color2_right: "vari/right_vari_color2.png", vari_color2_dash: "vari/dash_vari_color2.png"
-};
+    vari_color2_front: "vari/front_vari_color2.png", vari_color2_back: "vari/back_vari_color2.png", vari_color2_left: "vari/left_vari_color2.png", vari_color2_right: "vari/right_vari_color2.png", vari_color2_dash: "vari/dash_vari_color2.png",
+    lobby_bg: "lobby_bg.png"
+    };
 const loadedImages = {};
 
 function loadAssets() {
@@ -848,6 +849,7 @@ window.ARTIFACT_DATA = {
     art_r_11: { id: 'art_r_11', rarity: 'R', nameKo: "황금 배지 케이스", nameEn: "Golden Badge Case", flavorKo: "가장 소중한 뱃지를 보관하던 케이스.", flavorEn: "A case for the most precious badges.", descKo: "장착 시 방어력 +5%", descEn: "Defense +5%", icon: "💼", type: 'passive', stats: { defense: 0.05 } },
     art_r_12: { id: 'art_r_12', rarity: 'R', nameKo: "몽당연필", nameEn: "Stubby Pencil", flavorKo: "수많은 시험을 이겨낸 흔적.", flavorEn: "Traces of surviving countless exams.", descKo: "공격력 +2%, 쿨타임 -2%", descEn: "ATK +2%, Cooldown -2%", icon: "✏️", type: 'passive', stats: { damageMult: 0.02, cooldownMult: -0.02 } },
     art_r_13: { id: 'art_r_13', rarity: 'R', nameKo: "낡은 이어폰", nameEn: "Old Earphones", flavorKo: "세상과 단절되는 나만의 공간.", flavorEn: "My own space cut off from the world.", descKo: "공격속도 +3%, 쿨타임 -2%", descEn: "ATK SPD +3%, Cooldown -2%", icon: "🎧", type: 'passive', stats: { atkSpdMult: 0.03, cooldownMult: -0.02 } },
+    art_r_14: { id: 'art_r_14', rarity: 'R', nameKo: "낡은 안경", nameEn: "Old Glasses", flavorKo: "흐릿하던 세상이 명확해집니다.", flavorEn: "The blurry world becomes clear.", descKo: "습득 범위 +20%", descEn: "Pickup Range +20%", icon: "👓", type: 'passive', stats: { pickupMult: 0.2 } },
 
     // SR (10): Better Stats + Passive Effects
     art_sr_1: { id: 'art_sr_1', rarity: 'SR', nameKo: "반장 배지", nameEn: "President Badge", flavorKo: "책임감의 무게가 어깨를 짓누릅니다.", flavorEn: "The weight of responsibility presses on your shoulders.", descKo: "공격력 +10%", descEn: "ATK +10%", icon: "🥇", type: 'passive', stats: { damageMult: 0.1 } },
@@ -863,6 +865,7 @@ window.ARTIFACT_DATA = {
     art_sr_11: { id: 'art_sr_11', rarity: 'SR', nameKo: "반사의 법률", nameEn: "Law of Reflection", flavorKo: "모든 행위는 자신에게 되돌아오는 법.", flavorEn: "Every action eventually returns to itself.", descKo: "대쉬 중 15% 확률로 적의 투사체 반사", descEn: "15% Chance to reflect projectiles during Dash", icon: "💎", type: 'passive', stats: { reflectChance: 0.15 } },
     art_sr_12: { id: 'art_sr_12', rarity: 'SR', nameKo: "분실물 열쇠", nameEn: "Lost & Found Key", flavorKo: "누군가의 소중한 물건을 찾을 수 있을까요?", flavorEn: "Can we find someone's precious item?", descKo: "공격력 +10%, 쿨타임 -5%", descEn: "ATK +10%, Cooldown -5%", icon: "🗝️", type: 'passive', stats: { damageMult: 0.1, cooldownMult: -0.05 } },
     art_sr_13: { id: 'art_sr_13', rarity: 'SR', nameKo: "비밀의 일기장", nameEn: "Secret Diary", flavorKo: "아무에게도 말할 수 없는 비밀.", flavorEn: "A secret that cannot be told to anyone.", descKo: "최대 체력 +10%, 이동속도 +10%", descEn: "Max HP +10%, SPD +10%", icon: "📓", type: 'passive', stats: { maxHpMult: 0.1, speedMult: 0.1 } },
+    art_sr_14: { id: 'art_sr_14', rarity: 'SR', nameKo: "신속의 스텝", nameEn: "Quick Step", flavorKo: "더욱 현란하게 법정을 누빕니다.", flavorEn: "Move across the court even more dazzingly.", descKo: "대쉬 쿨타임 -15%", descEn: "Dash Cooldown -15%", icon: "👟", type: 'passive', stats: { dashCoolMult: -0.15 } },
 
     // SSR (5): Active Skills + Small Stat Bonus
     art_ssr_1: { id: 'art_ssr_1', rarity: 'SSR', nameKo: "정의의 저울", nameEn: "Justice Scale", flavorKo: "균형을 맞추지 못하면, 죽음뿐입니다.", flavorEn: "Failure to balance means death.", descKo: "공격력 +3% | 액티브: 5초간 가한 피해의 10% 흡혈", descEn: "ATK +3% | Active: 10% Life Steal for 5s", icon: "⚖️", type: 'active', cooldown: 30, duration: 5, effect: 'lifesteal', stats: { damageMult: 0.03 } },
@@ -1216,7 +1219,11 @@ window.handleActiveSkill = function(slotIdx) {
     } else if (art.effect === 'rapidfire') {
         player.stats.cooldownMult -= 0.8;
         showSystemNotice(currentLang === 'ko' ? "스킬 연사!" : "RAPID FIRE!");
-        setTimeout(() => { player.stats.cooldownMult += 0.8; }, art.duration * 1000);
+        setTimeout(() => { player.stats.cooldownMult += 0.8; updateHUD(); }, art.duration * 1000);
+    } else if (art.effect === 'overcharge') {
+        player.stats.atkSpdMult += 1.0;
+        showSystemNotice(currentLang === 'ko' ? "과부하 배터리 발동!" : "OVERCHARGE!");
+        setTimeout(() => { player.stats.atkSpdMult -= 1.0; updateHUD(); }, art.duration * 1000);
     }
     updateHUD();
 };
@@ -2823,17 +2830,48 @@ function drawBackground(ctx, inLobby) {
     if(!lobbyPattern) lobbyPattern = ctx.createPattern(lobbyCanvas, 'repeat');
     
     ctx.save(); 
-    // Snap camera to integers to prevent sub-pixel jitter
-    let camX = (camera.x) | 0;
-    let camY = (camera.y) | 0;
-    
-    let offsetX = -(camX % currentTileSize); 
-    let offsetY = -(camY % currentTileSize);
-    ctx.translate(offsetX, offsetY); 
-    
-    ctx.fillStyle = inLobby ? lobbyPattern : (currentBgPattern || bgPattern); 
-    // Draw a larger area to ensure no gaps during fast movement
-    ctx.fillRect(-currentTileSize, -currentTileSize, gameWidth + currentTileSize * 2, gameHeight + currentTileSize * 2); 
+    if (inLobby) {
+        const bgImg = loadedImages.lobby_bg;
+        if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
+            // --- PARALLAX EFFECT ---
+            let px = 0, py = 0;
+            if (typeof window.mouseX !== 'undefined') {
+                px = (window.mouseX - window.innerWidth/2) * 0.02;
+                py = (window.mouseY - window.innerHeight/2) * 0.02;
+            }
+            
+            // Draw centered and cover
+            let scale = Math.max(gameWidth / bgImg.width, gameHeight / bgImg.height);
+            let w = bgImg.width * scale * 1.1; // Slightly larger for parallax
+            let h = bgImg.height * scale * 1.1;
+            ctx.drawImage(bgImg, (gameWidth/2 - w/2 + px)|0, (gameHeight/2 - h/2 + py)|0, w|0, h|0);
+            
+            // --- SPOTLIGHT MASK ---
+            let grad = ctx.createRadialGradient(gameWidth/2, gameHeight/2, 50, gameWidth/2, gameHeight/2, gameWidth/1.2);
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.7)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0,0,gameWidth,gameHeight);
+
+            // Bottom gradient for button clarity
+            let bGrad = ctx.createLinearGradient(0, gameHeight * 0.7, 0, gameHeight);
+            bGrad.addColorStop(0, 'rgba(0,0,0,0)');
+            bGrad.addColorStop(1, 'rgba(0,0,0,0.6)');
+            ctx.fillStyle = bGrad;
+            ctx.fillRect(0, gameHeight * 0.7, gameWidth, gameHeight * 0.3);
+        } else {
+            ctx.fillStyle = lobbyPattern;
+            ctx.fillRect(0, 0, gameWidth, gameHeight);
+        }
+    } else {
+        let camX = (camera.x) | 0;
+        let camY = (camera.y) | 0;
+        let offsetX = -(camX % currentTileSize); 
+        let offsetY = -(camY % currentTileSize);
+        ctx.translate(offsetX, offsetY); 
+        ctx.fillStyle = currentBgPattern || bgPattern; 
+        ctx.fillRect(-currentTileSize, -currentTileSize, gameWidth + currentTileSize * 2, gameHeight + currentTileSize * 2); 
+    }
     ctx.restore();
 }
 
@@ -4361,6 +4399,8 @@ class Player {
         this.aimX = 1; this.aimY = 0; 
         this.hitTimer = 0;
         this.artTickTimer = 0; this.artHealTimer = 0;
+        this.currentCombo = 0; this.comboTimer = 0;
+        this.marblePocket = [];
         this.recalculateStats();
     }
     
@@ -4378,7 +4418,7 @@ class Player {
     playAnim(stateName) { this.animState = stateName; this.animTimer = 0.2 / this.stats.atkSpdMult; }
     recalculateStats() {
         let artDmg = 0, artCool = 0, artSpd = 0, artHp = 0, artAtkSpd = 0, artCooldownMult = 1.0;
-        let reflectChance = 0, bounceCount = 0;
+        let reflectChance = 0, bounceCount = 0, dashCoolMult = 1.0, verdictMult = 1.0, expMult = 1.0, projSpeedMult = 1.0, pickupMult = 1.0;
         const equipped = window.equippedArtifacts || [];
         
         if (equipped && Array.isArray(equipped)) {
@@ -4395,6 +4435,11 @@ class Player {
                         if(art.stats.atkSpdMult) artAtkSpd += art.stats.atkSpdMult * bonusMult;
                         if(art.stats.reflectChance) reflectChance += art.stats.reflectChance * bonusMult;
                         if(art.stats.bounceCount) bounceCount += art.stats.bounceCount;
+                        if(art.stats.dashCoolMult) dashCoolMult += art.stats.dashCoolMult * bonusMult;
+                        if(art.stats.verdictMult) verdictMult += art.stats.verdictMult * bonusMult;
+                        if(art.stats.expMult) expMult += art.stats.expMult * bonusMult;
+                        if(art.stats.projSpeedMult) projSpeedMult += art.stats.projSpeedMult * bonusMult;
+                        if(art.stats.pickupMult) pickupMult += art.stats.pickupMult * bonusMult;
                     }
                 }
             });
@@ -4405,6 +4450,9 @@ class Player {
                     if (syn.stats.damageMult) artDmg += syn.stats.damageMult;
                     if (syn.stats.atkSpdMult) artAtkSpd += syn.stats.atkSpdMult;
                     if (syn.stats.artCooldownMult) artCooldownMult += syn.stats.artCooldownMult;
+                    if (syn.stats.projSpeedMult) projSpeedMult += syn.stats.projSpeedMult;
+                    if (syn.stats.knockback) this.stats.knockbackBonus = (this.stats.knockbackBonus || 0) + syn.stats.knockback;
+                    if (syn.stats.expMult) expMult += syn.stats.expMult;
                 }
             });
         }
@@ -4416,6 +4464,11 @@ class Player {
         this.stats.atkSpdMult = 1.0 + artAtkSpd;
         this.stats.reflectChance = reflectChance;
         this.stats.bounceCount = bounceCount;
+        this.stats.dashCoolMult = dashCoolMult;
+        this.stats.verdictMult = verdictMult;
+        this.stats.expMult = expMult;
+        this.stats.projSpeedMult = projSpeedMult;
+        this.stats.pickupMult = pickupMult;
         this.artCooldownMult = artCooldownMult;
         
         if (window.orbStacks) {
@@ -4476,9 +4529,10 @@ class Player {
                 }
             });
         } else {
-            this.dashCooldownTimer = GameSettings.player.dashCooldown; 
+            this.dashCooldownTimer = GameSettings.player.dashCooldown * (this.stats.dashCoolMult || 1.0); 
             playSFX('dash'); 
         }
+        statsTracking.totalDash++;
         updateHUD();
     }
 
@@ -4963,9 +5017,21 @@ class Enemy {
         if(particles.length < 50) { particles.push(new Particle(this.x, this.y, this.color)); }
         
         if(this.hp <= 0) { 
+            stageKills++;
             statsTracking.totalKills++; checkAchievements();
+            
+            // --- Verdict Orb (Marble) Spawning ---
+            if (stageKills % 50 === 0 && stageMarblesDropped < MAX_MARBLES_PER_STAGE) {
+                stageMarblesDropped++;
+                const types = ['red', 'yellow', 'green'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                expGems.push(new VerdictOrb(this.x, this.y, type));
+            }
+
+            // Verdict Gauge Gain
             if (window.verdictGauge < window.MAX_GAUGE) {
-                window.verdictGauge++;
+                const gain = 1.0 * (player.stats.verdictMult || 1.0);
+                window.verdictGauge = Math.min(window.MAX_GAUGE, window.verdictGauge + gain);
                 if (window.verdictGauge >= window.MAX_GAUGE) window.playSFX('exp');
             }
             expGems.push(new ExpGem(this.x, this.y, this.exp)); 
@@ -5066,6 +5132,44 @@ class ExpGem {
         } 
     }
     draw(ctx) { if(isOffScreen(this.x, this.y) || this.hp === 0) return; ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0); ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore(); }
+}
+
+class VerdictOrb {
+    constructor(x, y, type) { 
+        this.x = x; this.y = y; this.type = type; 
+        this.radius = 12; this.life = 30.0; this.isMagnetic = false; this.hp = 1;
+        const data = window.MARBLE_TYPES.find(m => m.type === type);
+        this.color = data.color; this.glow = data.glow; this.icon = data.icon;
+    }
+    update(dt) {
+        if (this.hp === 0) return;
+        this.life -= dt; if (this.life <= 0) this.hp = 0;
+        let dx = player.x - this.x; let dy = player.y - this.y; let distSq = dx*dx + dy*dy;
+        if(distSq < GameSettings.player.pickupRange * 1.5 * GameSettings.player.pickupRange * 1.5) { this.isMagnetic = true; }
+        if(this.isMagnetic) { 
+            let dist = Math.sqrt(distSq); this.x += (dx/dist) * 900 * dt; this.y += (dy/dist) * 900 * dt; 
+            if(distSq < (player.radius + this.radius + 20)**2) { 
+                if (player.marblePocket.length >= 3) player.marblePocket.shift();
+                player.marblePocket.push(this.type);
+                window.orbStacks[this.type]++;
+                statsTracking.marblesCollected++;
+                player.recalculateStats();
+                playSFX('exp');
+                particles.push(new Particle(this.x, this.y, this.color));
+                this.hp = 0;
+                showSystemNotice(`${window.I18N[currentLang].orb_get} ${this.icon}`);
+            } 
+        }
+    }
+    draw(ctx) {
+        if(isOffScreen(this.x, this.y) || this.hp === 0) return;
+        ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0);
+        ctx.shadowBlur = 15; ctx.shadowColor = this.glow;
+        ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(this.icon, 0, 0);
+        ctx.restore();
+    }
 }
 
 class FieldItem {
@@ -5369,6 +5473,7 @@ function gameLoop(timestamp) {
         }
         else if(window.gameState === 'playing' && !isPaused) {
             stageTime += dt; 
+            statsTracking.totalTime += dt;
             let timeLeft = GameSettings.stage.maxTime - stageTime; 
             if(timeLeft <= 0) timeLeft = 0;
             
@@ -5657,7 +5762,9 @@ window.useVerdictRoulette = function() {
     }
     
     window.verdictGauge -= window.MAX_GAUGE;
+    statsTracking.totalRoulette++;
     if (window.playSFX) window.playSFX('verdictUse');
+    syncSteamStats();
     
     const types = ['red', 'yellow', 'green'];
     const result = types[Math.floor(Math.random() * types.length)];
