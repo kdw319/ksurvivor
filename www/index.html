@@ -83,6 +83,9 @@
                 top: 120px; /* 상단바 완전 회피 */
                 padding: 0 var(--m-buffer);
             }
+            #lobbyTitle { top: 360px; font-size: 1.6rem; }
+            #lobbyTitleText { background: rgba(0,0,0,0.85); padding: 25px 40px; border-radius: 15px; display: inline-block; border: 2px solid rgba(255,255,255,0.4); box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+            
             #hudLeft { 
                 top: 150px; 
                 left: var(--m-buffer); 
@@ -111,8 +114,8 @@
                 padding: 0 60px;
                 justify-content: space-around;
             }
-            #lobbyTitle { top: 330px; font-size: 1.6rem; }
-            #lobbyTitleText { background: rgba(0,0,0,0.6); padding: 15px; border-radius: 10px; display: inline-block; }
+            #lobbyTitle { top: 360px; font-size: 1.6rem; }
+            #lobbyTitleText { background: rgba(0,0,0,0.85); padding: 25px 40px; border-radius: 15px; display: inline-block; border: 2px solid rgba(255,255,255,0.4); box-shadow: 0 0 30px rgba(0,0,0,0.8); }
             
             #hudLeft { top: 180px; left: 60px; }
             #hudRight { top: 180px; right: 60px; }
@@ -2848,20 +2851,19 @@ function drawBackground(ctx, inLobby) {
             ctx.drawImage(bgImg, (gameWidth/2 - w/2 + px)|0, (gameHeight/2 - h/2 + py)|0, w|0, h|0);
             
             // --- SPOTLIGHT MASK ---
-            let grad = ctx.createRadialGradient(gameWidth/2, gameHeight/2, 50, gameWidth/2, gameHeight/2, gameWidth/1.2);
+            let grad = ctx.createRadialGradient(gameWidth/2, gameHeight/2, 100, gameWidth/2, gameHeight/2, gameWidth/0.8);
             grad.addColorStop(0, 'rgba(0,0,0,0)');
-            grad.addColorStop(1, 'rgba(0,0,0,0.7)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.85)');
             ctx.fillStyle = grad;
             ctx.fillRect(0,0,gameWidth,gameHeight);
 
             // Bottom gradient for button clarity
-            let bGrad = ctx.createLinearGradient(0, gameHeight * 0.7, 0, gameHeight);
+            let bGrad = ctx.createLinearGradient(0, gameHeight * 0.6, 0, gameHeight);
             bGrad.addColorStop(0, 'rgba(0,0,0,0)');
-            bGrad.addColorStop(1, 'rgba(0,0,0,0.6)');
+            bGrad.addColorStop(1, 'rgba(0,0,0,0.85)');
             ctx.fillStyle = bGrad;
-            ctx.fillRect(0, gameHeight * 0.7, gameWidth, gameHeight * 0.3);
+            ctx.fillRect(0, gameHeight * 0.6, gameWidth, gameHeight * 0.4);
         } else {
-            console.warn(`Lobby background NOT READY. complete: ${bgImg ? bgImg.complete : 'null'}, width: ${bgImg ? bgImg.naturalWidth : 'null'}, src: ${bgImg ? bgImg.src : 'null'}`);
             ctx.fillStyle = lobbyPattern;
             ctx.fillRect(0, 0, gameWidth, gameHeight);
         }

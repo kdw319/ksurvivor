@@ -13,3 +13,5 @@ check_syntax_detailed.js
 debug_diff.txt
 stable_full_tail.txt
 stable_script_block.txt
+
+assets/
