@@ -826,9 +826,7 @@ function loadAssets() {
     for (const [key, srcData] of Object.entries(GAME_ASSETS)) {
         if (srcData && srcData.trim() !== "") {
             const img = new Image();
-            img.src = srcData.startsWith('data:') || srcData.startsWith('http') ? srcData : './assets/' + srcData;
-            img.onload = () => console.log(`[Asset] Successfully loaded: ${key} from ${img.src}`);
-            img.onerror = (e) => console.error(`[Asset] FAILED to load: ${key} from ${img.src}. Event:`, e);
+            img.src = srcData.startsWith('data:') || srcData.startsWith('http') ? srcData : 'assets/' + srcData;
             loadedImages[key] = img;
         }
     }
@@ -2839,27 +2837,36 @@ function drawBackground(ctx, inLobby) {
     if (inLobby) {
         const bgImg = loadedImages.lobby_bg;
         let px = 0, py = 0;
-        if (typeof window.mouseX !== 'undefined') {
-            px = (window.mouseX - window.innerWidth/2) * 0.02;
-            py = (window.mouseY - window.innerHeight/2) * 0.02;
+        if (typeof window.mouseX !== 'undefined' && window.mouseX !== null) {
+            px = (window.mouseX - window.innerWidth/2) * 0.015;
+            py = (window.mouseY - window.innerHeight/2) * 0.015;
         }
 
         if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
-            let scale = Math.max(gameWidth / bgImg.width, gameHeight / bgImg.height);
-            let w = bgImg.width * scale * 1.1; 
-            let h = bgImg.height * scale * 1.1;
+            let scale = Math.max(gameWidth / bgImg.naturalWidth, gameHeight / bgImg.naturalHeight);
+            let w = bgImg.naturalWidth * scale; 
+            let h = bgImg.naturalHeight * scale;
             ctx.drawImage(bgImg, (gameWidth/2 - w/2 + px)|0, (gameHeight/2 - h/2 + py)|0, w|0, h|0);
             
             // --- CENTRAL DARK MASK (For Character Contrast) ---
             let charY = gameHeight/2 + 50; 
-            let grad = ctx.createRadialGradient(gameWidth/2, charY - 30, 0, gameWidth/2, charY - 30, 250);
-            grad.addColorStop(0, 'rgba(0,0,0,0.7)'); // Darkest behind character
-            grad.addColorStop(1, 'rgba(0,0,0,0)');   // Fade out to original background
+            let grad = ctx.createRadialGradient(gameWidth/2, charY - 30, 0, gameWidth/2, charY - 30, 350);
+            grad.addColorStop(0, 'rgba(0,0,0,0.85)'); // Dark circle behind Isol
+            grad.addColorStop(1, 'rgba(0,0,0,0)');    // Fades out to reveal background
             ctx.fillStyle = grad;
             ctx.fillRect(0,0,gameWidth,gameHeight);
 
             // Bottom gradient for button clarity (Approved)
             let bGrad = ctx.createLinearGradient(0, gameHeight * 0.5, 0, gameHeight);
+            bGrad.addColorStop(0, 'rgba(0,0,0,0)');
+            bGrad.addColorStop(1, 'rgba(0,0,0,0.95)');
+            ctx.fillStyle = bGrad;
+            ctx.fillRect(0, gameHeight * 0.5, gameWidth, gameHeight * 0.5);
+        } else {
+            ctx.fillStyle = lobbyPattern;
+            ctx.fillRect(0, 0, gameWidth, gameHeight);
+        }
+    } else {
             bGrad.addColorStop(0, 'rgba(0,0,0,0)');
             bGrad.addColorStop(1, 'rgba(0,0,0,0.85)');
             ctx.fillStyle = bGrad;
