@@ -83,7 +83,7 @@
                 top: 120px; /* 상단바 완전 회피 */
                 padding: 0 var(--m-buffer);
             }
-            #lobbyTitle { top: 360px; font-size: 1.6rem; }
+            #lobbyTitle { top: 330px; font-size: 1.6rem; }
             #lobbyTitleText { background: rgba(0,0,0,0.85); padding: 25px 40px; border-radius: 15px; display: inline-block; border: 2px solid rgba(255,255,255,0.4); box-shadow: 0 0 30px rgba(0,0,0,0.8); }
             
             #hudLeft { 
@@ -114,7 +114,7 @@
                 padding: 0 60px;
                 justify-content: space-around;
             }
-            #lobbyTitle { top: 360px; font-size: 1.6rem; }
+            #lobbyTitle { top: 330px; font-size: 1.6rem; }
             #lobbyTitleText { background: rgba(0,0,0,0.85); padding: 25px 40px; border-radius: 15px; display: inline-block; border: 2px solid rgba(255,255,255,0.4); box-shadow: 0 0 30px rgba(0,0,0,0.8); }
             
             #hudLeft { top: 180px; left: 60px; }
@@ -2850,19 +2850,21 @@ function drawBackground(ctx, inLobby) {
             let h = bgImg.height * scale * 1.1;
             ctx.drawImage(bgImg, (gameWidth/2 - w/2 + px)|0, (gameHeight/2 - h/2 + py)|0, w|0, h|0);
             
-            // --- SPOTLIGHT MASK ---
-            let grad = ctx.createRadialGradient(gameWidth/2, gameHeight/2, 100, gameWidth/2, gameHeight/2, gameWidth/0.8);
+            // --- SPOTLIGHT MASK (Centered on Character) ---
+            let charY = gameHeight/2 + 50; 
+            let grad = ctx.createRadialGradient(gameWidth/2, charY - 30, 40, gameWidth/2, charY - 30, 350);
             grad.addColorStop(0, 'rgba(0,0,0,0)');
-            grad.addColorStop(1, 'rgba(0,0,0,0.85)');
+            grad.addColorStop(0.4, 'rgba(0,0,0,0.4)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.95)');
             ctx.fillStyle = grad;
             ctx.fillRect(0,0,gameWidth,gameHeight);
 
-            // Bottom gradient for button clarity
-            let bGrad = ctx.createLinearGradient(0, gameHeight * 0.6, 0, gameHeight);
+            // Bottom gradient for button clarity (Ultra)
+            let bGrad = ctx.createLinearGradient(0, gameHeight * 0.5, 0, gameHeight);
             bGrad.addColorStop(0, 'rgba(0,0,0,0)');
-            bGrad.addColorStop(1, 'rgba(0,0,0,0.85)');
+            bGrad.addColorStop(1, 'rgba(0,0,0,0.95)');
             ctx.fillStyle = bGrad;
-            ctx.fillRect(0, gameHeight * 0.6, gameWidth, gameHeight * 0.4);
+            ctx.fillRect(0, gameHeight * 0.5, gameWidth, gameHeight * 0.5);
         } else {
             ctx.fillStyle = lobbyPattern;
             ctx.fillRect(0, 0, gameWidth, gameHeight);
@@ -2944,9 +2946,12 @@ function drawAdvancedCharacter(ctx, dirX, scale = 1, animState = 'idle', animTim
 
     const targetImg = loadedImages[imgKey] || loadedImages['player_down'];
     
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10 * scale, 5 * scale, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
+    // Skip small shadow in lobby for cleaner look
+    if (window.gameState !== 'lobby') {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; ctx.beginPath(); ctx.ellipse(0, 2, 10 * scale, 5 * scale, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+    }
 
     if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
         ctx.save();
