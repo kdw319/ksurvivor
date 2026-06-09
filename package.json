@@ -36,8 +36,7 @@
     "files": [
       "main.js",
       "preload.js",
-      "www/**/*",
-      "node_modules/**/*"
+      "www/**/*"
     ]
   }
 }
