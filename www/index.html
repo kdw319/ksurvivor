@@ -214,7 +214,7 @@
         #hudRight { position: absolute; top: 90px; right: 110px; pointer-events: none; z-index: 5; color: white; text-shadow: 1px 1px 2px black; text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
         #hudCenter { position: absolute; top: 85px !important; left: 50%; transform: translateX(-50%); pointer-events: none; z-index: 5; color: #e0d0a0; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px black; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; border: 1px solid #b89947; }
 
-        .exp-bar-container { position: absolute; top: 0 !important; left: 0; width: 100%; height: 15px; background: #222; z-index: 6; }
+        .exp-bar-container { position: absolute; top: 0; left: 0; width: 100%; height: 15px; background: #222; z-index: 6; }
         .exp-bar-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 0%; transition: width 0.2s; }
 
         #inventory { 
@@ -437,9 +437,11 @@
     <button id="fullscreenBtn" onclick="window.toggleFullscreen()" class="btn" style="position:fixed; top:10px; right:80px; padding:10px; font-size:12px; z-index:100; width:30px; height:30px; background:rgba(0,0,0,0.6); color:white; border:2px solid #b89947; border-radius:50%; pointer-events:auto; display:flex; justify-content:center; align-items:center;">⛶</button>
     <div class="portrait-warning">PLEASE ROTATE TO LANDSCAPE</div>
 
-<div id="gameContainer">
-    <div id="flashOverlay"></div>
     <div class="exp-bar-container"><div class="exp-bar-fill" id="expBar"></div></div>
+
+<div id="gameContainer">
+    <div id="speechBubble" class="speech-bubble" style="opacity: 0; position: absolute; z-index: 100;">빨리 시작하자!</div>
+    <div id="flashOverlay"></div>
 
     <div id="hudLeft" class="hidden">
         <div style="font-size: 24px; font-weight: bold; color: #ffb142;" id="stageDispUI">STAGE 1 : 낡은 재판소</div>
@@ -2352,9 +2354,14 @@ function playSFX(type) {
         osc.type = 'triangle'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(659.25, now + 0.1); osc.frequency.setValueAtTime(783.99, now + 0.2); osc.frequency.setValueAtTime(1046.50, now + 0.3); 
         gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8); osc.start(now); osc.stop(now + 0.8); 
     } 
-    else if(type === 'clear') { 
-        osc.type = 'sine'; osc.frequency.setValueAtTime(440.00, now); osc.frequency.setValueAtTime(554.37, now + 0.2); osc.frequency.setValueAtTime(659.25, now + 0.4); osc.frequency.setValueAtTime(880.00, now + 0.6); 
-        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 2.5); osc.start(now); osc.stop(now + 2.5); 
+    else if(type === 'objection') {
+        // Softened high-pitched chime/shout effect to prevent tearing
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(500 * pitch, now); osc.frequency.exponentialRampToValueAtTime(1000 * pitch, now + 0.1); 
+        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4); osc.start(now); osc.stop(now + 0.4); 
+    }
+    else if(type === 'explosion') {
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100 * pitch, now); osc.frequency.exponentialRampToValueAtTime(30 * pitch, now + 0.4); 
+        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4); osc.start(now); osc.stop(now + 0.4); 
     }
     else if(type === 'exp') { 
         osc.type = 'sine'; osc.frequency.setValueAtTime((800 + Math.random()*200) * pitch, now); 
@@ -2653,6 +2660,11 @@ function updateHUD() {
     
     let expBarEl = document.getElementById('expBar');
     if (expBarEl) expBarEl.style.width = `${(player.exp / player.maxExp) * 100}%`;
+    
+    const expBarContainer = document.querySelector('.exp-bar-container');
+    if(expBarContainer) {
+        expBarContainer.style.display = (window.gameState === 'playing') ? 'block' : 'none';
+    }
     
     let progEl = document.getElementById('progressDisp');
     if (progEl) progEl.innerText = Math.min(100, Math.floor((stageTime / GameSettings.stage.maxTime) * 100));
@@ -3256,6 +3268,7 @@ function returnToLobby() {
     window.gameState = 'lobby'; isPaused = false; startBGM(); gameSpeedMultiplier = 1.0;
     window.artCooldowns = [0, 0, 0];
     if(window.updateSkillSlotsUI) window.updateSkillSlotsUI();
+    updateHUD(); // Trigger UI refresh to hide combat elements
     ['gameOverUI', 'pauseUI', 'stageClearUI', 'hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'systemNoticeList', 'pauseBtn', 'mobileDashBtn'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
     let orbPocketUI = document.getElementById('orbPocketUI');
     if (orbPocketUI && player && player.marblePocket) {
@@ -5155,18 +5168,28 @@ class VerdictOrb {
         if(this.isMagnetic) { 
             let dist = Math.sqrt(distSq); this.x += (dx/dist) * 900 * dt; this.y += (dy/dist) * 900 * dt; 
             if(distSq < (player.radius + this.radius + 20)**2) { 
-                if (player.marblePocket.length >= 3) player.marblePocket.shift();
-                player.marblePocket.push(this.type);
+                if (window.verdictInventory.length >= 3) window.verdictInventory.shift();
+                window.verdictInventory.push(this.type);
                 window.orbStacks[this.type]++;
                 statsTracking.marblesCollected++;
                 player.recalculateStats();
                 playSFX('exp');
                 particles.push(new Particle(this.x, this.y, this.color));
                 this.hp = 0;
+                
+                if (window.updateVerdictUI) window.updateVerdictUI();
+
+                // Trigger synergy every 3 orbs
+                if (window.verdictInventory.length === 3) {
+                    if (window.checkRouletteSynergy) window.checkRouletteSynergy();
+                    window.verdictInventory = []; // Clear for next set
+                    if (window.updateVerdictUI) window.updateVerdictUI();
+                }
+
                 showSystemNotice(`${window.I18N[currentLang].orb_get} ${this.icon}`);
-            } 
-        }
-    }
+                } 
+                }
+                }
     draw(ctx) {
         if(isOffScreen(this.x, this.y) || this.hp === 0) return;
         ctx.save(); ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0);
@@ -5202,12 +5225,64 @@ class FieldItem {
 // ==========================================
 // 8. Main Game Loop
 // ==========================================
+// --- [NEW] Judgment Field Active Skill (Consumable AoE Nuke triggered at MAX Gauge) ---
+
+function triggerJudgmentField() {
+    console.log("Judgment Field Triggered. Current Gauge:", window.verdictGauge, "Max:", window.MAX_GAUGE);
+    if (window.verdictGauge < window.MAX_GAUGE) {
+        showSystemNotice(currentLang === 'ko' ? `심판의 게이지가 가득 차지 않았습니다! (${window.verdictGauge}/${window.MAX_GAUGE})` : `Verdict Gauge not full! (${window.verdictGauge}/${window.MAX_GAUGE})`);
+        return;
+    }
+    
+    // Nuke Logic
+    console.log("Judgment Field (Nuke) triggered at MAX Gauge!");
+    window.verdictGauge = 0; // Consume Gauge
+    if (window.updateVerdictUI) window.updateVerdictUI();
+    
+    // Trigger speech bubble
+    const bubble = document.getElementById('speechBubble');
+    if (!player) console.warn("Player object is undefined in triggerJudgmentField");
+    if (bubble && player) {
+        bubble.innerText = currentLang === 'ko' ? "이의 있습니다!" : "Objection!";
+        bubble.style.position = 'absolute';
+        bubble.style.opacity = 1;
+        // Fade out after 2 seconds
+        setTimeout(() => { if(bubble) bubble.style.opacity = 0; }, 2000);
+    }
+    
+    // AoE Damage Logic
+    enemies.forEach(e => {
+        let dx = e.x - player.x;
+        let dy = e.y - player.y;
+        if (Math.sqrt(dx*dx + dy*dy) < 300) { // 300px radius
+            e.takeDamage(1000); // Massive damage for 'nuke'
+            // Added particle burst visual for impact
+            for(let i=0; i<10; i++) particles.push(new Particle(e.x, e.y, '#f1c40f'));
+        }
+    });
+    playSFX('explosion');
+    playSFX('objection');
+}
+
+// Update bubble position in gameLoop
+function updateSpeechBubblePosition() {
+    const bubble = document.getElementById('speechBubble');
+    const canvas = document.querySelector('canvas');
+    if (bubble && bubble.style.opacity === '1' && player && canvas) {
+        const rect = canvas.getBoundingClientRect();
+        bubble.style.position = 'fixed';
+        bubble.style.left = `${rect.left + (player.x - camera.x)}px`;
+        bubble.style.top = `${rect.top + (player.y - camera.y - 120)}px`;
+    }
+}
+
 window.addEventListener('keydown', e => {
     keys[e.key.toLowerCase()] = true;
     if(e.key === ' ' && window.gameState === 'playing') {
         initAudio();
-        if(window.useVerdictRoulette) window.useVerdictRoulette();
+        triggerJudgmentField();
     }
+    // ... existing key handlers
     if((e.key === '1' || e.key === '2' || e.key === '3') && window.gameState === 'playing') {
         initAudio();
         const idx = e.key === '1' ? 0 : (e.key === '2' ? 1 : 2);
@@ -5444,6 +5519,8 @@ function gameLoop(timestamp) {
         lastTime = timestamp;
         
         let dt = rawDt * gameSpeedMultiplier; 
+        
+        if (window.updateSpeechBubblePosition) updateSpeechBubblePosition();
         
         if (hitStopTimer > 0) {
             hitStopTimer -= rawDt;
@@ -5842,6 +5919,7 @@ window.checkRouletteSynergy = function() {
 };
 
 window.updateVerdictUI = function() {
+    console.log("updateVerdictUI called with inventory:", window.verdictInventory);
     let ui = document.getElementById('verdictUI');
     if (!ui) {
         ui = document.createElement('div');
@@ -5896,5 +5974,3 @@ setInterval(() => { if (window.updateVerdictUI && document.getElementById('vo-co
 </script>
 </body>
 </html>
-/ /   T r i g g e r   d e p l o y m e n t  
- 
