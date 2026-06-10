@@ -4675,6 +4675,7 @@ class Player {
         
         // Render Speech Bubble if skillLabelTimer is active
         if (this.skillLabelTimer > 0) {
+            console.log("Drawing bubble:", this.skillLabel, this.skillLabelTimer);
             drawSpeechBubble(ctx, this.skillLabel, 0, -85);
         }
 
@@ -5576,7 +5577,6 @@ function gameLoop(timestamp) {
             drawAdvancedCharacter(ctx, 1, 3, 'idle', 0); 
             
             if (player && player.skillLabelTimer > 0) {
-                player.skillLabelTimer -= rawDt;
                 drawSpeechBubble(ctx, player.skillLabel, 0, -180);
             }
             ctx.restore();
