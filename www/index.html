@@ -440,7 +440,6 @@
     <div class="exp-bar-container"><div class="exp-bar-fill" id="expBar"></div></div>
 
 <div id="gameContainer">
-    <div id="speechBubble" class="speech-bubble" style="opacity: 0; position: absolute; z-index: 100;">빨리 시작하자!</div>
     <div id="flashOverlay"></div>
 
     <div id="hudLeft" class="hidden">
@@ -499,8 +498,6 @@
         <button id="btnDataLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #0984e3; color: white;" onclick="window.openSaveLoad()">데이터 센터</button>
         <button id="btnExitLobby" class="btn" style="font-size: 1.2rem; padding: 15px 30px; background: #d63031; color: white; display: none;" onclick="window.openExitConfirm()">게임 종료</button>
     </div>
-
-    <div id="speechBubble" class="speech-bubble" style="opacity: 0;">빨리 시작하자!</div>
 
     <div id="exitConfirmUI" class="overlay hidden">
         <div class="panel" style="max-width: 400px;">
@@ -2844,6 +2841,43 @@ function generateMapPattern(theme) {
 // ==========================================
 // 4.5 Rendering Functions
 // ==========================================
+function drawSpeechBubble(ctx, text, bx, by) {
+    ctx.save();
+    ctx.font = "bold 18px 'Noto Sans KR'"; 
+    const textWidth = ctx.measureText(text).width;
+    const padding = 14;
+    const bubbleW = textWidth + padding * 2;
+    const bubbleH = 36;
+    const tx = bx - bubbleW / 2;
+    const ty = by - bubbleH;
+
+    // Speech Bubble Background
+    ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(tx, ty, bubbleW, bubbleH, 10); else ctx.rect(tx, ty, bubbleW, bubbleH);
+    ctx.fill();
+    ctx.stroke();
+
+    // Bubble tail
+    ctx.beginPath();
+    ctx.moveTo(bx - 12, ty + bubbleH);
+    ctx.lineTo(bx, ty + bubbleH + 12);
+    ctx.lineTo(bx + 12, ty + bubbleH);
+    ctx.fill();
+    ctx.stroke();
+
+    // Text with Glow
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#fff";
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = "#f1c40f";
+    ctx.fillText(text, bx, ty + bubbleH / 2);
+    ctx.restore();
+}
+
 function drawBackground(ctx, inLobby) {
     if(!bgPattern) bgPattern = ctx.createPattern(bgCanvas, 'repeat');
     if(!lobbyPattern) lobbyPattern = ctx.createPattern(lobbyCanvas, 'repeat');
@@ -3288,7 +3322,7 @@ function returnToLobby() {
 
 function startGame() {
     initAudio(); 
-    let bubble = document.getElementById('speechBubble'); if(bubble) bubble.style.opacity = 0;
+    if(player) player.skillLabelTimer = 0;
     ['lobbyTopBar', 'lobbyTitle', 'lobbyBottomBar'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
     ['hudLeft', 'hudCenter', 'hudRight', 'statsPanel', 'inventory', 'minimapCanvas', 'pauseBtn', 'mobileDashBtn', 'orbPocketUI', 'activeSkillSlots'].forEach(id => { let el = document.getElementById(id); if(el) el.classList.remove('hidden'); });
     let synList = document.getElementById('systemNoticeList'); if(synList) synList.innerHTML = ''; 
@@ -4423,9 +4457,16 @@ class Player {
         this.artTickTimer = 0; this.artHealTimer = 0;
         this.currentCombo = 0; this.comboTimer = 0;
         this.marblePocket = [];
+        this.skillLabel = "";
+        this.skillLabelTimer = 0;
         this.recalculateStats();
     }
-    
+
+    setSkillLabel(txt, duration = 2.0) {
+        this.skillLabel = txt;
+        this.skillLabelTimer = duration;
+    }
+
     getDamageMultiplier() {
         let mult = this.stats.damageMult;
         if (spotlight) {
@@ -4559,6 +4600,7 @@ class Player {
     }
 
     update(dt) {
+        if (this.skillLabelTimer > 0) this.skillLabelTimer -= dt;
         if (this.dashCooldownTimer > 0) this.dashCooldownTimer -= dt; if (this.dashTimer > 0) this.dashTimer -= dt; if (this.invincibleTimer > 0) this.invincibleTimer -= dt; if (this.animTimer > 0) this.animTimer -= dt;
         if (this.hitTimer > 0) this.hitTimer -= dt;
 
@@ -4631,6 +4673,11 @@ class Player {
         
         drawAdvancedCharacter(ctx, this.dirX, 1.5, this.animState, this.animTimer, this.animDir); 
         
+        // Render Speech Bubble if skillLabelTimer is active
+        if (this.skillLabelTimer > 0) {
+            drawSpeechBubble(ctx, this.skillLabel, 0, -85);
+        }
+
         ctx.filter = 'none';
         ctx.restore();
         
@@ -5242,15 +5289,9 @@ function triggerJudgmentField() {
     window.verdictGauge = 0; // Consume Gauge
     if (window.updateVerdictUI) window.updateVerdictUI();
     
-    // Trigger speech bubble
-    const bubble = document.getElementById('speechBubble');
-    if (!player) console.warn("Player object is undefined in triggerJudgmentField");
-    if (bubble && player) {
-        bubble.innerText = currentLang === 'ko' ? "이의 있습니다!" : "Objection!";
-        bubble.style.position = 'absolute';
-        bubble.style.opacity = 1;
-        // Fade out after 2 seconds
-        setTimeout(() => { if(bubble) bubble.style.opacity = 0; }, 2000);
+    // Trigger speech bubble (Canvas-based)
+    if (player) {
+        player.setSkillLabel(currentLang === 'ko' ? "이의 있습니다!" : "Objection!");
     }
     
     // AoE Damage Logic
@@ -5265,18 +5306,6 @@ function triggerJudgmentField() {
     });
     playSFX('explosion');
     playSFX('objection');
-}
-
-// Update bubble position in gameLoop
-function updateSpeechBubblePosition() {
-    const bubble = document.getElementById('speechBubble');
-    const canvas = document.querySelector('canvas');
-    if (bubble && bubble.style.opacity === '1' && player && canvas) {
-        const rect = canvas.getBoundingClientRect();
-        bubble.style.position = 'fixed';
-        bubble.style.left = `${rect.left + (player.x - camera.x)}px`;
-        bubble.style.top = `${rect.top + (player.y - camera.y - 120)}px`;
-    }
 }
 
 window.addEventListener('keydown', e => {
@@ -5411,14 +5440,8 @@ window.addEventListener('pointerdown', e => {
                 lobbyParticles.push(new Particle(cx, cy - 50, '#ff4757'));
             }
             
-            const bubble = document.getElementById('speechBubble');
-            if (bubble) {
-                bubble.innerText = I18N[currentLang].speech[Math.floor(Math.random() * I18N[currentLang].speech.length)];
-                bubble.style.left = `${cx | 0}px`; 
-                bubble.style.top = `${(cy - 180) | 0}px`; 
-                bubble.style.transform = 'translateX(-50%)'; 
-                bubble.style.opacity = 1;
-                setTimeout(() => { if(window.gameState === 'lobby') bubble.style.opacity = 0; }, 2000);
+            if (player) {
+                player.setSkillLabel(I18N[currentLang].speech[Math.floor(Math.random() * I18N[currentLang].speech.length)]);
             }
         }
     }
@@ -5521,10 +5544,8 @@ function gameLoop(timestamp) {
         if(rawDt > 0.1) rawDt = 0.1; 
         lastTime = timestamp;
         
-        let dt = rawDt * gameSpeedMultiplier; 
-        
-        if (window.updateSpeechBubblePosition) updateSpeechBubblePosition();
-        
+        let dt = rawDt * gameSpeedMultiplier;
+
         if (hitStopTimer > 0) {
             hitStopTimer -= rawDt;
             dt *= 0.05; 
@@ -5549,8 +5570,15 @@ function gameLoop(timestamp) {
             }
             
             ctx.save(); 
-            ctx.translate(Math.round(gameWidth / 2), Math.round(gameHeight / 2 + 50 + lobbyCharY)); 
+            let cx = Math.round(gameWidth / 2);
+            let cy = Math.round(gameHeight / 2 + 50 + lobbyCharY);
+            ctx.translate(cx, cy); 
             drawAdvancedCharacter(ctx, 1, 3, 'idle', 0); 
+            
+            if (player && player.skillLabelTimer > 0) {
+                player.skillLabelTimer -= rawDt;
+                drawSpeechBubble(ctx, player.skillLabel, 0, -180);
+            }
             ctx.restore();
             
             lobbyParticles.forEach(p => p.update(rawDt)); 
