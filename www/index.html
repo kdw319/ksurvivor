@@ -2318,6 +2318,19 @@ function startBGM() {
     }
 }
 
+async function syncInitialSteamStats() {
+    if (window.steamAPI && typeof window.steamAPI.getStat === 'function') {
+        try {
+            const steamKills = await window.steamAPI.getStat('stat_kills');
+            if (steamKills > statsTracking.totalKills) statsTracking.totalKills = steamKills;
+            console.log("[Steam] Cumulative Kills Synced:", statsTracking.totalKills);
+            checkAchievements();
+        } catch (e) {
+            console.error("[Steam] Stats Sync Failed:", e);
+        }
+    }
+}
+
 function stopBGM() {
     if(bgmInterval) clearInterval(bgmInterval);
     if(currentBgmAudio) {
