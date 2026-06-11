@@ -4294,12 +4294,64 @@ class MeleeEffect {
     }
     update(dt) { this.life -= dt; this.x = player.x; this.y = player.y; }
     draw(ctx) { 
-        if(isOffScreen(this.x, this.y, this.range*2)) return; 
-        ctx.save(); let alpha = this.life / this.maxLife; ctx.globalAlpha = alpha; 
-        let cx = (this.x - camera.x)|0; let cy = (this.y - camera.y)|0; 
-        ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(cx, cy, this.range, this.angle - Math.PI/3, this.angle + Math.PI/3); ctx.lineTo(cx, cy); ctx.fill(); 
-        if(this.level > 2) { ctx.lineWidth = 4; ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, this.range * 0.9, this.angle - Math.PI/3, this.angle + Math.PI/3); ctx.stroke(); } 
-        ctx.restore(); 
+        if(isOffScreen(this.x, this.y, this.range*2)) return;
+        ctx.save(); let alpha = this.life / this.maxLife; ctx.globalAlpha = alpha;
+        let cx = (this.x - camera.x)|0; let cy = (this.y - camera.y)|0;
+        ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(cx, cy, this.range, this.angle - Math.PI/3, this.angle + Math.PI/3); ctx.lineTo(cx, cy); ctx.fill();
+        if(this.level > 2) { ctx.lineWidth = 4; ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, this.range * 0.9, this.angle - Math.PI/3, this.angle + Math.PI/3); ctx.stroke(); }
+        ctx.restore();
+    }
+}
+
+class EnergyWave {
+    constructor(x, y, angle, damage) {
+        this.x = x; this.y = y; this.angle = angle;
+        this.vx = Math.cos(angle) * 800;
+        this.vy = Math.sin(angle) * 800;
+        this.life = 0.8; this.maxLife = 0.8;
+        this.damage = damage;
+        this.hitEnemies = new Set();
+        this.width = 120;
+    }
+    update(dt) {
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.life -= dt;
+
+        enemies.forEach(e => {
+            if (this.hitEnemies.has(e)) return;
+            let dx = e.x - this.x; let dy = e.y - this.y;
+            if (dx*dx + dy*dy < (this.width/2 + e.radius)**2) {
+                e.takeDamage(this.damage);
+                this.hitEnemies.add(e);
+                for(let i=0; i<3; i++) particles.push(new Particle(e.x, e.y, '#f1c40f'));
+            }
+        });
+    }
+    draw(ctx) {
+        if (isOffScreen(this.x, this.y, this.width)) return;
+        ctx.save();
+        let alpha = this.life / this.maxLife;
+        ctx.globalAlpha = alpha;
+        ctx.translate((this.x - camera.x)|0, (this.y - camera.y)|0);
+        ctx.rotate(this.angle);
+
+        // Draw Energy Crescent
+        ctx.shadowBlur = 15; ctx.shadowColor = "#f1c40f";
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(0, 0, this.width / 2, -Math.PI / 2, Math.PI / 2);
+        ctx.arc(-10, 0, this.width / 2, Math.PI / 2, -Math.PI / 2, true);
+        ctx.fill();
+
+        // Outer Glow
+        ctx.strokeStyle = "#f1c40f";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.width / 2, -Math.PI / 2, Math.PI / 2);
+        ctx.stroke();
+
+        ctx.restore();
     }
 }
 
