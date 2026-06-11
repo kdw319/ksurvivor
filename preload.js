@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('steamAPI', {
   getName: () => ipcRenderer.invoke('steam-get-name'),
+  getStat: (name) => ipcRenderer.invoke('steam-get-stat', name),
   unlockAchievement: (id) => ipcRenderer.invoke('steam-unlock-achievement', id),
   setStat: (name, value) => ipcRenderer.invoke('steam-set-stat', name, value),
   storeStats: () => ipcRenderer.invoke('steam-store-stats'),

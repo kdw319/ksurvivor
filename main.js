@@ -16,7 +16,11 @@ function initializeSteam() {
   try {
     // K-Highschool Survivor (4353510)
     client = steamworks.init(4353510);
-    console.log('Steamworks initialized successfully:', client.localplayer.getName());
+    if (client) {
+      console.log('Steamworks initialized successfully:', client.localplayer.getName());
+      // Request stats from Steam servers to enable setting/getting them
+      client.stats.request();
+    }
   } catch (e) {
     console.error('Steamworks failed to initialize:', e);
   }
@@ -74,6 +78,17 @@ app.on('window-all-closed', () => {
 // IPC handlers for Steamworks
 ipcMain.handle('steam-get-name', () => {
   return client ? client.localplayer.getName() : 'Player';
+});
+
+ipcMain.handle('steam-get-stat', (event, name) => {
+  if (client) {
+    try {
+      return client.stats.get(name);
+    } catch (e) {
+      console.error(`Failed to get stat ${name}:`, e);
+    }
+  }
+  return 0;
 });
 
 ipcMain.handle('steam-unlock-achievement', (event, achievementId) => {
