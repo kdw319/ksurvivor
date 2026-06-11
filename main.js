@@ -92,9 +92,17 @@ ipcMain.handle('steam-get-stat', (event, name) => {
 });
 
 ipcMain.handle('steam-unlock-achievement', (event, achievementId) => {
-  if (client && client.achievement.unlock(achievementId)) {
-    console.log(`Achievement unlocked: ${achievementId}`);
-    return true;
+  if (client) {
+    try {
+      const success = client.achievement.activate(achievementId);
+      if (success) {
+        console.log(`Achievement activated: ${achievementId}`);
+        client.stats.store(); // Commit immediately
+      }
+      return success;
+    } catch (e) {
+      console.error(`Failed to activate achievement ${achievementId}:`, e);
+    }
   }
   return false;
 });
