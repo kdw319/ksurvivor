@@ -4306,9 +4306,9 @@ class MeleeEffect {
 class EnergyWave {
     constructor(x, y, angle, damage) {
         this.x = x; this.y = y; this.angle = angle;
-        this.vx = Math.cos(angle) * 800;
-        this.vy = Math.sin(angle) * 800;
-        this.life = 0.8; this.maxLife = 0.8;
+        this.vx = Math.cos(angle) * 900;
+        this.vy = Math.sin(angle) * 900;
+        this.life = 1.2; this.maxLife = 1.2;
         this.damage = damage;
         this.hitEnemies = new Set();
         this.width = 120;
