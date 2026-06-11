@@ -4648,19 +4648,8 @@ class Player {
             showSystemNotice(currentLang === 'ko' ? "퍼펙트 대쉬!" : "PERFECT DASH!");
             
             let dashAngle = Math.atan2(this.dashDir.y, this.dashDir.x);
-            projectiles.push(new MeleeEffect(this.x, this.y, dashAngle, 250, '#f1c40f', 5));
-            
-            enemies.forEach(e => {
-                let edx = e.x - this.x; let edy = e.y - this.y;
-                let distSq = edx*edx + edy*edy;
-                if(distSq < 250*250) {
-                    let eAngle = Math.atan2(edy, edx);
-                    let diff = Math.abs(eAngle - dashAngle);
-                    if (diff > Math.PI) diff = 2 * Math.PI - diff;
-                    if (diff < Math.PI / 2.5) e.takeDamage(GameSettings.rhythm.perfectDamage * this.getDamageMultiplier());
-                }
-            });
-        } else {
+            projectiles.push(new EnergyWave(this.x, this.y, dashAngle, GameSettings.rhythm.perfectDamage * this.getDamageMultiplier()));
+            } else {
             this.dashCooldownTimer = GameSettings.player.dashCooldown * (this.stats.dashCoolMult || 1.0); 
             playSFX('dash'); 
         }
