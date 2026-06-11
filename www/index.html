@@ -2376,18 +2376,22 @@ function playSFX(type) {
         osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100 * pitch, now); osc.frequency.exponentialRampToValueAtTime(30 * pitch, now + 0.4); 
         gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4); osc.start(now); osc.stop(now + 0.4); 
     }
+    else if(type === 'clear') { 
+        osc.type = 'sine'; osc.frequency.setValueAtTime(440.00, now); osc.frequency.setValueAtTime(554.37, now + 0.2); osc.frequency.setValueAtTime(659.25, now + 0.4); osc.frequency.setValueAtTime(880.00, now + 0.6); 
+        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 2.5); osc.start(now); osc.stop(now + 2.5); 
+    }
+    else if(type === 'clear') { 
+        osc.type = 'sine'; osc.frequency.setValueAtTime(440.00, now); osc.frequency.setValueAtTime(554.37, now + 0.2); osc.frequency.setValueAtTime(659.25, now + 0.4); osc.frequency.setValueAtTime(880.00, now + 0.6); 
+        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 2.5); osc.start(now); osc.stop(now + 2.5); 
+    }
     else if(type === 'exp') { 
-        osc.type = 'sine'; osc.frequency.setValueAtTime((800 + Math.random()*200) * pitch, now); 
+        osc.type = 'sine'; osc.frequency.setValueAtTime((800 + Math.random()*200) * pitch, now);
         gain.gain.setValueAtTime(0.02, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05); osc.start(now); osc.stop(now + 0.05); 
-    } 
-    else if(type === 'explosion') { 
-        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100 * pitch, now); osc.frequency.exponentialRampToValueAtTime(20 * pitch, now + 0.2); 
-        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2); 
     } 
     else if(type === 'dash') { 
         osc.type = 'sine'; osc.frequency.setValueAtTime(200, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.15); 
         gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15); 
-    } 
+    }
     else if(type === 'gacha') { 
         osc.type = 'square'; osc.frequency.setValueAtTime(300, now); osc.frequency.setValueAtTime(600, now + 0.1); osc.frequency.setValueAtTime(1200, now + 0.3); 
         gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.6); osc.start(now); osc.stop(now + 0.6); 
