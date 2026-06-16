@@ -2335,14 +2335,19 @@ async function syncInitialSteamStats() {
                             if (success) {
                                 console.log(`[Steam] Auto-synced achievement: ${ach.id}`);
                             }
-                        } catch (err) {
+                            } catch (err) {
                             console.error(`[Steam] Failed to sync achievement ${ach.id}:`, err);
-                        }
-                    }
-                }
-            }
-            
-            checkAchievements();
+                            }
+                            }
+                            }
+                            // Commit synced achievements
+                            if (typeof window.steamAPI.storeStats === 'function') {
+                            await window.steamAPI.storeStats();
+                            console.log("[Steam] Auto-synced achievements committed.");
+                            }
+                            }
+
+                            checkAchievements();
         } catch (e) {
             console.error("[Steam] Stats Sync Failed:", e);
         }

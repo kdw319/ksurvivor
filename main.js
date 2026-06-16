@@ -40,7 +40,9 @@ function initializeSteam() {
     logDebug('Initializing Steamworks for AppID 4353510...');
     client = steamworks.init(4353510);
     if (client) {
-      logDebug(`Steamworks initialized successfully. Player Name: ${client.localplayer.getName()}, SteamID: ${client.localplayer.getSteamId().steamId.toString()}`);
+      let playerName = "Unknown";
+      try { playerName = client.localplayer.getName(); } catch(e) {}
+      logDebug(`Steamworks initialized successfully. Player Name: ${playerName}`);
       // Request stats from Steam servers
       client.stats.request();
     } else {
