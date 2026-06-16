@@ -12,17 +12,42 @@ if (steamworks.electronEnableSteamOverlay) {
   steamworks.electronEnableSteamOverlay();
 }
 
+const fs = require('fs');
+const saveDir = path.join(app.getPath('userData'), 'Saves');
+if (!fs.existsSync(saveDir)) {
+  fs.mkdirSync(saveDir, { recursive: true });
+}
+const logPath = path.join(saveDir, 'steam_debug.log');
+
+function logDebug(msg) {
+  const time = new Date().toISOString();
+  const line = `[${time}] ${msg}\n`;
+  console.log(msg);
+  try {
+    fs.appendFileSync(logPath, line, 'utf8');
+  } catch (e) {
+    // ignore
+  }
+}
+
+// Clean up old log on start
+try {
+  if (fs.existsSync(logPath)) fs.unlinkSync(logPath);
+} catch (e) {}
+
 function initializeSteam() {
   try {
-    // K-Highschool Survivor (4353510)
+    logDebug('Initializing Steamworks for AppID 4353510...');
     client = steamworks.init(4353510);
     if (client) {
-      console.log('Steamworks initialized successfully:', client.localplayer.getName());
-      // Request stats from Steam servers to enable setting/getting them
+      logDebug(`Steamworks initialized successfully. Player Name: ${client.localplayer.getName()}, SteamID: ${client.localplayer.getSteamId().steamId.toString()}`);
+      // Request stats from Steam servers
       client.stats.request();
+    } else {
+      logDebug('Steamworks init returned null or undefined client.');
     }
   } catch (e) {
-    console.error('Steamworks failed to initialize:', e);
+    logDebug(`Steamworks failed to initialize: ${e.message}\n${e.stack}`);
   }
 }
 
@@ -77,32 +102,44 @@ app.on('window-all-closed', () => {
 
 // IPC handlers for Steamworks
 ipcMain.handle('steam-get-name', () => {
-  return client ? client.localplayer.getName() : 'Player';
+  const name = client ? client.localplayer.getName() : 'Player';
+  logDebug(`IPC: steam-get-name -> ${name}`);
+  return name;
 });
 
 ipcMain.handle('steam-get-stat', (event, name) => {
   if (client) {
     try {
-      return client.stats.get(name);
+      const val = client.stats.get(name);
+      logDebug(`IPC: steam-get-stat(${name}) -> ${val}`);
+      return val;
     } catch (e) {
-      console.error(`Failed to get stat ${name}:`, e);
+      logDebug(`IPC: Failed to get stat ${name}: ${e.message}`);
     }
+  } else {
+    logDebug(`IPC: steam-get-stat(${name}) requested but Steam client is not initialized.`);
   }
   return 0;
 });
 
-ipcMain.handle('steam-unlock-achievement', (event, achievementId) => {
+ipcMain.handle('steam-activate-achievement', (event, achievementId) => {
   if (client) {
     try {
+      logDebug(`IPC: steam-activate-achievement(${achievementId}) requested...`);
       const success = client.achievement.activate(achievementId);
       if (success) {
-        console.log(`Achievement activated: ${achievementId}`);
+        logDebug(`IPC: Achievement activated successfully on Steam client: ${achievementId}`);
         client.stats.store(); // Commit immediately
+        logDebug(`IPC: Stats stored after achievement activation.`);
+      } else {
+        logDebug(`IPC: Achievement activation returned false (already unlocked or invalid ID): ${achievementId}`);
       }
       return success;
     } catch (e) {
-      console.error(`Failed to activate achievement ${achievementId}:`, e);
+      logDebug(`IPC: Failed to activate achievement ${achievementId}: ${e.message}`);
     }
+  } else {
+    logDebug(`IPC: steam-activate-achievement(${achievementId}) requested but Steam client is not initialized.`);
   }
   return false;
 });
@@ -111,10 +148,13 @@ ipcMain.handle('steam-set-stat', (event, name, value) => {
   if (client) {
     try {
       client.stats.set(name, value);
+      logDebug(`IPC: steam-set-stat(${name}, ${value}) set successfully.`);
       return true;
     } catch (e) {
-      console.error(`Failed to set stat ${name}:`, e);
+      logDebug(`IPC: Failed to set stat ${name}: ${e.message}`);
     }
+  } else {
+    logDebug(`IPC: steam-set-stat(${name}, ${value}) requested but Steam client is not initialized.`);
   }
   return false;
 });
@@ -123,24 +163,22 @@ ipcMain.handle('steam-store-stats', () => {
   if (client) {
     try {
       client.stats.store();
+      logDebug('IPC: steam-store-stats committed successfully.');
       return true;
     } catch (e) {
-      console.error('Failed to store stats:', e);
+      logDebug(`IPC: Failed to store stats: ${e.message}`);
     }
+  } else {
+    logDebug('IPC: steam-store-stats requested but Steam client is not initialized.');
   }
   return false;
 });
 
-const fs = require('fs');
 
 ipcMain.on('quit-app', () => {
   app.quit();
 });
 
-const saveDir = path.join(app.getPath('userData'), 'Saves');
-if (!fs.existsSync(saveDir)) {
-  fs.mkdirSync(saveDir, { recursive: true });
-}
 
 ipcMain.on('save-data-sync', (event, key, data) => {
   try {

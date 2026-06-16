@@ -2324,6 +2324,24 @@ async function syncInitialSteamStats() {
             const steamKills = await window.steamAPI.getStat('stat_kills');
             if (steamKills > statsTracking.totalKills) statsTracking.totalKills = steamKills;
             console.log("[Steam] Cumulative Kills Synced:", statsTracking.totalKills);
+            
+            // Sync locally unlocked achievements to Steam in case they were missed
+            if (typeof window.steamAPI.unlockAchievement === 'function') {
+                console.log("[Steam] Syncing locally unlocked achievements to Steam...");
+                for (const ach of ACHIEVEMENTS_DATA) {
+                    if (achievements[ach.id] === true) {
+                        try {
+                            const success = await window.steamAPI.unlockAchievement(ach.id);
+                            if (success) {
+                                console.log(`[Steam] Auto-synced achievement: ${ach.id}`);
+                            }
+                        } catch (err) {
+                            console.error(`[Steam] Failed to sync achievement ${ach.id}:`, err);
+                        }
+                    }
+                }
+            }
+            
             checkAchievements();
         } catch (e) {
             console.error("[Steam] Stats Sync Failed:", e);
@@ -2796,9 +2814,9 @@ function syncSteamStats() {
     }
 }
 
-function checkAchievements() {
+async function checkAchievements() {
     const lang = I18N[currentLang];
-    ACHIEVEMENTS_DATA.forEach(ach => {
+    for (const ach of ACHIEVEMENTS_DATA) {
         if (!achievements[ach.id]) {
             let unlocked = false;
             if (ach.reqKills && statsTracking.totalKills >= ach.reqKills) unlocked = true;
@@ -2812,14 +2830,18 @@ function checkAchievements() {
 
                 // Steam Achievement Bridge
                 if (window.steamAPI && typeof window.steamAPI.unlockAchievement === 'function') {
-                    // Use the direct ID set in Steamworks (matches Game ID, e.g., 'kills_100')
-                    window.steamAPI.unlockAchievement(ach.id).then(success => {
-                        if (success) console.log(`Steam Achievement Unlocked: ${ach.id}`);
-                    });
+                    try {
+                        const success = await window.steamAPI.unlockAchievement(ach.id);
+                        if (success) {
+                            console.log(`[Steam] Achievement Unlocked & Committed: ${ach.id}`);
+                        }
+                    } catch (err) {
+                        console.error(`[Steam] Failed to unlock ${ach.id}:`, err);
+                    }
                 }
             }
         }
-    });
+    }
     // Trigger Stat Sync whenever we check achievements
     syncSteamStats();
 }
